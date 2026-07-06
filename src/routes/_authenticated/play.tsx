@@ -108,22 +108,41 @@ function progressTone(v: number, invert = false) {
   return "bg-amber-400";
 }
 
+function scenariosForPhase(p: PhaseId): Scenario[] {
+  return PHASE_SCENARIOS.filter((s) => s.phase === p).slice(0, QUESTIONS_PER_PHASE);
+}
+
 function Simulator() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<Metrics>(INITIAL_METRICS);
   const [phaseIdx, setPhaseIdx] = useState(0);
+  const [phaseStep, setPhaseStep] = useState(0); // 0..QUESTIONS_PER_PHASE-1
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [current, setCurrent] = useState<Scenario>(() => PHASE_SCENARIOS[0]);
+  // Simulation begins with the business case, before Initiation questions.
+  const [current, setCurrent] = useState<Scenario>(() => BUSINESS_CASE);
+  const [businessCaseDone, setBusinessCaseDone] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
   const [coachText, setCoachText] = useState<string | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const eventsFired = useRef<Set<string>>(new Set());
 
   const phase: PhaseId = PHASE_ORDER[phaseIdx];
   const level = getLevel(xp);
   const badges = useMemo(() => computeBadges(decisions), [decisions]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  }
 
   async function chooseOption(choice: Choice) {
     if (pendingChoice) return;
@@ -187,7 +206,26 @@ function Simulator() {
     setPendingChoice(null);
     setCoachText(null);
 
-    // If we're in exec/monitoring, chance to inject an event we haven't used.
+    // Business case → first initiation question.
+    if (!businessCaseDone) {
+      setBusinessCaseDone(true);
+      setCurrent(scenariosForPhase("initiation")[0]);
+      setPhaseIdx(0);
+      setPhaseStep(0);
+      return;
+    }
+
+    // If the just-answered scenario was a random event, resume the same phase step.
+    if (current.kind === "event") {
+      const list = scenariosForPhase(phase);
+      const next = list[phaseStep];
+      if (next) {
+        setCurrent(next);
+        return;
+      }
+    }
+
+    // Random event chance (execution/monitoring only) between phase questions.
     const eligible = RANDOM_EVENTS.filter(
       (e) =>
         !eventsFired.current.has(e.id) &&
@@ -196,8 +234,9 @@ function Simulator() {
     if (
       (phase === "execution" || phase === "monitoring") &&
       eligible.length > 0 &&
-      Math.random() < 0.7 &&
-      current.kind !== "event"
+      Math.random() < 0.5 &&
+      current.kind !== "event" &&
+      phaseStep < QUESTIONS_PER_PHASE // still questions left in this phase
     ) {
       const ev = eligible[Math.floor(Math.random() * eligible.length)];
       eventsFired.current.add(ev.id);
@@ -205,33 +244,98 @@ function Simulator() {
       return;
     }
 
-    // Move to next phase
+    // Next scenario within the phase.
+    const nextStep = phaseStep + 1;
+    if (nextStep < QUESTIONS_PER_PHASE) {
+      const list = scenariosForPhase(phase);
+      setPhaseStep(nextStep);
+      setCurrent(list[nextStep]);
+      return;
+    }
+
+    // Advance to next phase, reset step.
     if (phaseIdx + 1 >= PHASE_ORDER.length) {
       setFinished(true);
       return;
     }
     const nextIdx = phaseIdx + 1;
     setPhaseIdx(nextIdx);
-    const next = PHASE_SCENARIOS.find((s) => s.phase === PHASE_ORDER[nextIdx]);
-    if (next) setCurrent(next);
+    setPhaseStep(0);
+    setCurrent(scenariosForPhase(PHASE_ORDER[nextIdx])[0]);
   }
 
   function restart() {
     setMetrics(INITIAL_METRICS);
     setPhaseIdx(0);
+    setPhaseStep(0);
     setDecisions([]);
     setXp(0);
     setStreak(0);
-    setCurrent(PHASE_SCENARIOS[0]);
+    setCurrent(BUSINESS_CASE);
+    setBusinessCaseDone(false);
     setPendingChoice(null);
     setCoachText(null);
     setFinished(false);
+    setSaved(false);
     eventsFired.current = new Set();
   }
 
+  // Save run once when we finish.
+  useEffect(() => {
+    if (!finished || saved) return;
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) return;
+      const score = Math.round(
+        metrics.budget * 0.2 +
+          (50 + metrics.schedule / 2) * 0.15 +
+          metrics.scope * 0.15 +
+          (100 - metrics.risk) * 0.15 +
+          metrics.stakeholders * 0.2 +
+          metrics.morale * 0.15,
+      );
+      const { error: runErr } = await supabase.from("simulation_runs").insert({
+        user_id: user.id,
+        score,
+        xp_earned: xp,
+        metrics: metrics as unknown as Record<string, number>,
+        badges: badges as unknown as string[],
+        decisions: decisions as unknown as Record<string, unknown>[],
+      });
+      if (runErr) {
+        toast.error("Couldn't save your run");
+        return;
+      }
+      // Bump profile totals (best-effort).
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("total_xp, runs_completed")
+        .eq("id", user.id)
+        .maybeSingle();
+      await supabase
+        .from("profiles")
+        .update({
+          total_xp: (prof?.total_xp ?? 0) + xp,
+          runs_completed: (prof?.runs_completed ?? 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+      setSaved(true);
+      toast.success("Run saved to your profile");
+    })();
+  }, [finished, saved, metrics, xp, badges, decisions]);
+
   return (
     <div className="min-h-screen bg-[#0b1020] text-slate-100">
-      <Header xp={xp} level={level} streak={streak} />
+      <Header
+        xp={xp}
+        level={level}
+        streak={streak}
+        userEmail={userEmail}
+        onSignOut={signOut}
+      />
+
 
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
         <PhaseRail phaseIdx={phaseIdx} finished={finished} />
