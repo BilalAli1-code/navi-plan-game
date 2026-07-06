@@ -9,55 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
+import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiCoachRoute = ApiCoachRouteImport.update({
   id: '/api/coach',
   path: '/api/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPlayRoute = AuthenticatedPlayRouteImport.update({
+  id: '/_authenticated/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/coach'
+  fullPaths: '/play' | '/api/coach'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/coach'
-  id: '__root__' | '/' | '/api/coach'
+  to: '/play' | '/api/coach'
+  id: '__root__' | '/_authenticated/play' | '/api/coach'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
   ApiCoachRoute: typeof ApiCoachRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/coach': {
       id: '/api/coach'
       path: '/api/coach'
@@ -65,11 +58,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/play': {
+      id: '/_authenticated/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof AuthenticatedPlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedPlayRoute: AuthenticatedPlayRoute,
   ApiCoachRoute: ApiCoachRoute,
 }
 export const routeTree = rootRouteImport

@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/play")({
   head: () => ({
     meta: [
       { title: "ProjectSim — PMBOK Project Management Training Simulator" },
