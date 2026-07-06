@@ -299,9 +299,9 @@ function Simulator() {
         user_id: user.id,
         score,
         xp_earned: xp,
-        metrics: metrics as unknown as Record<string, number>,
-        badges: badges as unknown as string[],
-        decisions: decisions as unknown as Record<string, unknown>[],
+        metrics: metrics as never,
+        badges: badges as never,
+        decisions: decisions as never,
       });
       if (runErr) {
         toast.error("Couldn't save your run");
