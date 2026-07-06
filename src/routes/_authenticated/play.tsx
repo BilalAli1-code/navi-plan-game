@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -6,6 +6,8 @@ import {
   PHASE_META,
   PHASE_SCENARIOS,
   RANDOM_EVENTS,
+  BUSINESS_CASE,
+  QUESTIONS_PER_PHASE,
 } from "@/lib/simulator/scenarios";
 import type {
   Choice,
@@ -17,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/play")({
   head: () => ({
