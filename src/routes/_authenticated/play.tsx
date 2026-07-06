@@ -378,10 +378,14 @@ function Header({
   xp,
   level,
   streak,
+  userEmail,
+  onSignOut,
 }: {
   xp: number;
   level: LevelInfo;
   streak: number;
+  userEmail: string | null;
+  onSignOut: () => void;
 }) {
   const pct =
     level.next === null
@@ -425,6 +429,23 @@ function Header({
           <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/10">
             🔥 {streak}
           </Badge>
+          <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/10">
+            🔥 {streak}
+          </Badge>
+          {userEmail && (
+            <div className="hidden text-right md:block">
+              <div className="text-[11px] uppercase tracking-widest text-slate-400">Signed in</div>
+              <div className="max-w-[160px] truncate text-xs text-slate-200">{userEmail}</div>
+            </div>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onSignOut}
+            className="border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+          >
+            Sign out
+          </Button>
         </div>
       </div>
     </header>
