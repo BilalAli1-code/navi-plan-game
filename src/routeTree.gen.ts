@@ -17,6 +17,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedExamIndexRouteImport } from './routes/_authenticated/exam.index'
 import { Route as AuthenticatedExamSessionRouteImport } from './routes/_authenticated/exam.session'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -62,6 +63,11 @@ const AuthenticatedPerformanceRoute =
     path: '/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamIndexRoute = AuthenticatedExamIndexRouteImport.update({
   id: '/exam/',
   path: '/exam/',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/performance': typeof AuthenticatedPerformanceRoute
   '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pricing'
+    | '/analytics'
     | '/performance'
     | '/play'
     | '/api/coach'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pricing'
+    | '/analytics'
     | '/performance'
     | '/play'
     | '/api/coach'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/pricing'
+    | '/_authenticated/analytics'
     | '/_authenticated/performance'
     | '/_authenticated/play'
     | '/api/coach'
@@ -238,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exam/': {
       id: '/_authenticated/exam/'
       path: '/exam'
@@ -270,6 +289,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedPerformanceRoute: typeof AuthenticatedPerformanceRoute
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
   AuthenticatedExamSessionRoute: typeof AuthenticatedExamSessionRoute
@@ -278,6 +298,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedPerformanceRoute: AuthenticatedPerformanceRoute,
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
   AuthenticatedExamSessionRoute: AuthenticatedExamSessionRoute,
