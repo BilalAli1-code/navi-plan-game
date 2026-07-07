@@ -17,7 +17,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
-import { Route as AuthenticatedExamRouteImport } from './routes/_authenticated/exam'
+import { Route as AuthenticatedExamIndexRouteImport } from './routes/_authenticated/exam.index'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const PricingRoute = PricingRouteImport.update({
@@ -60,9 +60,9 @@ const AuthenticatedPerformanceRoute =
     path: '/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedExamRoute = AuthenticatedExamRouteImport.update({
-  id: '/exam',
-  path: '/exam',
+const AuthenticatedExamIndexRoute = AuthenticatedExamIndexRouteImport.update({
+  id: '/exam/',
+  path: '/exam/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicPaymentsWebhookRoute =
@@ -76,22 +76,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/exam': typeof AuthenticatedExamRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/exam/': typeof AuthenticatedExamIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/exam': typeof AuthenticatedExamRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/exam': typeof AuthenticatedExamIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -100,11 +100,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/_authenticated/exam': typeof AuthenticatedExamRoute
   '/_authenticated/performance': typeof AuthenticatedPerformanceRoute
   '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/_authenticated/exam/': typeof AuthenticatedExamIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -113,22 +113,22 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pricing'
-    | '/exam'
     | '/performance'
     | '/play'
     | '/api/coach'
     | '/checkout/return'
+    | '/exam/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/pricing'
-    | '/exam'
     | '/performance'
     | '/play'
     | '/api/coach'
     | '/checkout/return'
+    | '/exam'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -136,11 +136,11 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/pricing'
-    | '/_authenticated/exam'
     | '/_authenticated/performance'
     | '/_authenticated/play'
     | '/api/coach'
     | '/checkout/return'
+    | '/_authenticated/exam/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -212,11 +212,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/exam': {
-      id: '/_authenticated/exam'
+    '/_authenticated/exam/': {
+      id: '/_authenticated/exam/'
       path: '/exam'
-      fullPath: '/exam'
-      preLoaderRoute: typeof AuthenticatedExamRouteImport
+      fullPath: '/exam/'
+      preLoaderRoute: typeof AuthenticatedExamIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/payments/webhook': {
@@ -230,15 +230,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedExamRoute: typeof AuthenticatedExamRoute
   AuthenticatedPerformanceRoute: typeof AuthenticatedPerformanceRoute
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
+  AuthenticatedExamIndexRoute: typeof AuthenticatedExamIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedExamRoute: AuthenticatedExamRoute,
   AuthenticatedPerformanceRoute: AuthenticatedPerformanceRoute,
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
+  AuthenticatedExamIndexRoute: AuthenticatedExamIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
