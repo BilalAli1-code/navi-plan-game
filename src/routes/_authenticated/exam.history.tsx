@@ -24,6 +24,7 @@ import {
   Legend,
 } from "recharts";
 import { ArrowDown, ArrowRight, ArrowUp, TrendingUp } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/exam/history")({
   head: () => ({
