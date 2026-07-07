@@ -230,8 +230,15 @@ export function ExamStateProvider({ children }: { children: ReactNode }) {
     let captured: ExamReport | null = null;
     setSession((prev) => {
       if (!prev) return prev;
+      if (prev.status === "submitted") {
+        // Already submitted — reuse the latest report from history via captured stays null.
+        return prev;
+      }
       captured = buildReport({ ...prev, status: "submitted" });
-      return null;
+      // Keep the session around (status=submitted) so the session view can
+      // render a "Submitting…" state instead of "No exam in progress" while
+      // the caller navigates to the report. The report page clears it.
+      return { ...prev, status: "submitted" };
     });
     const report = captured as ExamReport | null;
     if (!report) return null;
@@ -252,6 +259,7 @@ export function ExamStateProvider({ children }: { children: ReactNode }) {
     });
     return report;
   }, []);
+
 
   const abandonExam = useCallback(() => setSession(null), []);
   const clearHistory = useCallback(() => setHistory([]), []);
