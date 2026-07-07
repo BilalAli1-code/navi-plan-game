@@ -271,7 +271,7 @@ function ExamHistoryPage() {
           </>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
 
