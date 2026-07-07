@@ -235,6 +235,34 @@ function Simulator() {
   );
 }
 
+function ExamFocusBanner() {
+  const { latest, weakestKAs, passProbability } = useExamWeaknesses(3);
+  if (!latest || weakestKAs.length === 0) return null;
+  return (
+    <div className="border-b border-cyan-400/20 bg-cyan-400/5">
+      <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs">
+        <div className="text-slate-300">
+          <span className="mr-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-cyan-200">
+            Exam-tuned
+          </span>
+          Focusing scenarios on your weakest areas:{" "}
+          <span className="font-medium text-cyan-200">
+            {weakestKAs.join(" · ")}
+          </span>
+          {passProbability !== null && (
+            <span className="ml-2 text-slate-400">
+              (last exam pass probability {passProbability}%)
+            </span>
+          )}
+        </div>
+        <Link to="/exam" className="text-cyan-200 hover:underline">
+          Take another exam →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function Header({
   xp,
   level,
