@@ -39,9 +39,9 @@ function ExamLanding() {
   const goToSession = () => navigate({ to: "/exam/session" });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <TopBar />
+    <AppShell variant="app">
       <div className="mx-auto max-w-6xl px-6 py-10">
+
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">
