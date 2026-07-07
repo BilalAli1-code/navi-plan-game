@@ -240,10 +240,10 @@ function ExamHistoryPage() {
                             <span className="flex items-center gap-1">
                               <Badge variant="secondary">{r.readiness}</Badge>
                               {readinessDelta > 0 && (
-                                <ArrowUp className="h-3 w-3 text-emerald-400" />
+                                <ArrowUp className="h-3 w-3 text-success" />
                               )}
                               {readinessDelta < 0 && (
-                                <ArrowDown className="h-3 w-3 text-red-400" />
+                                <ArrowDown className="h-3 w-3 text-destructive" />
                               )}
                             </span>
                           </TableCell>
@@ -325,7 +325,7 @@ function DeltaPill({
     <span
       className={
         "inline-flex items-center gap-1 text-xs " +
-        (up ? "text-emerald-400" : "text-red-400")
+        (up ? "text-success" : "text-destructive")
       }
     >
       {up ? (
@@ -357,31 +357,3 @@ function computeStats(sortedAsc: ExamReport[]) {
   return { latest, best, avgScore, avgPass, scoreDelta };
 }
 
-function TopBar() {
-  return (
-    <div className="border-b border-border/60 bg-card/50">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <Link to="/" className="text-sm font-semibold tracking-tight">
-          ProjectSim
-        </Link>
-        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-          <Link to="/play" className="hover:text-foreground">
-            Simulator
-          </Link>
-          <Link to="/exam" className="hover:text-foreground">
-            Exam
-          </Link>
-          <Link to="/exam/history" className="text-foreground">
-            History
-          </Link>
-          <Link to="/analytics" className="hover:text-foreground">
-            Analytics
-          </Link>
-          <Link to="/performance" className="hover:text-foreground">
-            Performance
-          </Link>
-        </nav>
-      </div>
-    </div>
-  );
-}
