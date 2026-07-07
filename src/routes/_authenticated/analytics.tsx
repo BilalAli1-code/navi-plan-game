@@ -391,7 +391,7 @@ function StreakGrid({ dates }: { dates: string[] }) {
           title={c.label}
           className={
             "h-6 rounded " +
-            (c.active ? "bg-emerald-500/70" : "bg-muted/40")
+            (c.active ? "bg-success/70" : "bg-muted/40")
           }
         />
       ))}

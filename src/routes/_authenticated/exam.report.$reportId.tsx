@@ -313,7 +313,7 @@ function AiCoachPanel({ report }: { report: ReportForCoach }) {
           </Button>
         </div>
         {error && (
-          <div className="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+          <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
