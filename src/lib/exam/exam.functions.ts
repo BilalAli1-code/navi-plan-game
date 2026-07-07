@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ExamReport } from "./types";
 
 type SaveInput = { report: ExamReport };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const asJson = (v: unknown) => v as any;
 
 export const saveExamReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -27,11 +29,11 @@ export const saveExamReport = createServerFn({ method: "POST" })
         duration_taken_ms: r.durationTakenMs,
         avg_time_per_question_ms: Math.round(r.avgTimePerQuestionMs),
         avg_confidence: r.avgConfidence,
-        domain_scores: r.domainScores as unknown as Record<string, unknown>[],
-        knowledge_area_scores: r.knowledgeAreaScores as unknown as Record<string, unknown>[],
-        strongest_topics: r.strongestTopics,
-        weakest_topics: r.weakestTopics,
-        difficulty_breakdown: r.difficultyBreakdown as unknown as Record<string, unknown>,
+        domain_scores: asJson(r.domainScores),
+        knowledge_area_scores: asJson(r.knowledgeAreaScores),
+        strongest_topics: asJson(r.strongestTopics),
+        weakest_topics: asJson(r.weakestTopics),
+        difficulty_breakdown: asJson(r.difficultyBreakdown),
         too_fast_count: r.tooFast.length,
         too_slow_count: r.tooSlow.length,
         completed_at: new Date(r.completedAt).toISOString(),
@@ -39,17 +41,37 @@ export const saveExamReport = createServerFn({ method: "POST" })
       { onConflict: "id" },
     );
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true as const };
   });
+
+export type StoredExamReport = {
+  id: string;
+  session_id: string | null;
+  overall_percent: number;
+  pass_probability: number;
+  readiness: string;
+  total_questions: number;
+  correct_count: number;
+  duration_taken_ms: number;
+  avg_time_per_question_ms: number;
+  avg_confidence: number;
+  weakest_topics: string[];
+  strongest_topics: string[];
+  domain_scores: Array<{ domain: string; correct: number; total: number; percent: number }>;
+  knowledge_area_scores: Array<{ knowledgeArea: string; correct: number; total: number; percent: number }>;
+  completed_at: string;
+};
 
 export const listExamReports = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<StoredExamReport[]> => {
     const { data, error } = await context.supabase
       .from("exam_reports")
-      .select("*")
+      .select(
+        "id, session_id, overall_percent, pass_probability, readiness, total_questions, correct_count, duration_taken_ms, avg_time_per_question_ms, avg_confidence, weakest_topics, strongest_topics, domain_scores, knowledge_area_scores, completed_at",
+      )
       .order("completed_at", { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown[];
+    return (data ?? []) as unknown as StoredExamReport[];
   });
