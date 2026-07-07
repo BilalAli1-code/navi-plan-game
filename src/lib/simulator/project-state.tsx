@@ -142,6 +142,36 @@ function scenariosForPhase(p: PhaseId): Scenario[] {
   return PHASE_SCENARIOS.filter((s) => s.phase === p).slice(0, QUESTIONS_PER_PHASE);
 }
 
+// Adaptive: reorder a phase's remaining scenarios so ones matching the
+// learner's weakest perf categories come first.
+function adaptivePhaseOrder(
+  phaseScenarios: Scenario[],
+  perf: PerfScores,
+): Scenario[] {
+  const weak = new Set<string>();
+  for (const cat of weakestCategories(perf, 3)) {
+    for (const ka of knowledgeAreasFor(cat)) weak.add(ka);
+  }
+  return [...phaseScenarios].sort((a, b) => {
+    const aWeak = weak.has(getScenarioMeta(a).knowledgeArea) ? 0 : 1;
+    const bWeak = weak.has(getScenarioMeta(b).knowledgeArea) ? 0 : 1;
+    return aWeak - bWeak;
+  });
+}
+
+function pickAdaptiveEvent(
+  eligible: Scenario[],
+  perf: PerfScores,
+): Scenario {
+  const weakKAs = new Set<string>();
+  for (const cat of weakestCategories(perf, 3)) {
+    for (const ka of knowledgeAreasFor(cat)) weakKAs.add(ka);
+  }
+  const preferred = eligible.filter((e) => weakKAs.has(getScenarioMeta(e).knowledgeArea));
+  const pool = preferred.length ? preferred : eligible;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // ---------- Context ----------
 
 type ProjectStateValue = {
@@ -160,6 +190,8 @@ type ProjectStateValue = {
   coachLoading: boolean;
   consequences: ConsequenceFlag[];
   consequenceNote: string | null;
+  perfScores: PerfScores;
+  perfImpactPreview: Partial<Record<import("./types").PerfCategory, number>> | null;
   // actions
   choose: (choice: Choice, coach: (text: string | null) => Promise<string> | string) => Promise<void>;
   advance: () => void;
@@ -188,7 +220,13 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
   const [coachText, setCoachText] = useState<string | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [perfScores, setPerfScores] = useState<PerfScores>(() => initialPerfScores());
+  const [perfImpactPreview, setPerfImpactPreview] = useState<
+    Partial<Record<import("./types").PerfCategory, number>> | null
+  >(null);
   const eventsFired = useRef<Set<string>>(new Set());
+  // Freeze the adaptive order for the current phase to avoid re-shuffling mid-phase.
+  const phaseOrderRef = useRef<Scenario[] | null>(null);
 
   const phase: PhaseId = PHASE_ORDER[phaseIdx];
   const consequences = useMemo(
@@ -216,6 +254,10 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
 
       const meta = getScenarioMeta(current);
       const correct = choice.id === meta.correctChoiceId;
+      const perfImpact = perfImpactFor(current, choice);
+      setPerfImpactPreview(perfImpact);
+      setPerfScores((prev) => applyPerfImpact(prev, perfImpact));
+
       const decision: Decision = {
         scenarioId: current.id,
         scenarioTitle: current.title,
@@ -248,17 +290,20 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
   const advance = useCallback(() => {
     setPendingChoice(null);
     setCoachText(null);
+    setPerfImpactPreview(null);
 
     if (!businessCaseDone) {
       setBusinessCaseDone(true);
-      setCurrent(scenariosForPhase("initiation")[0]);
+      const list = adaptivePhaseOrder(scenariosForPhase("initiation"), perfScores);
+      phaseOrderRef.current = list;
+      setCurrent(list[0]);
       setPhaseIdx(0);
       setPhaseStep(0);
       return;
     }
 
     if (current.kind === "event") {
-      const list = scenariosForPhase(phase);
+      const list = phaseOrderRef.current ?? scenariosForPhase(phase);
       const next = list[phaseStep];
       if (next) {
         setCurrent(next);
@@ -271,14 +316,22 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
         !eventsFired.current.has(e.id) &&
         (e.phase === phase || (phase === "execution" && e.phase === "monitoring")),
     );
+    // Adaptive random event: higher chance when the learner has a weak
+    // category and an eligible event targets it.
+    const weak = weakestCategories(perfScores, 2);
+    const hasWeakEvent = eligible.some((e) => {
+      const ka = getScenarioMeta(e).knowledgeArea;
+      return weak.some((c) => knowledgeAreasFor(c).includes(ka));
+    });
+    const eventChance = hasWeakEvent ? 0.7 : 0.4;
     if (
       (phase === "execution" || phase === "monitoring") &&
       eligible.length > 0 &&
-      Math.random() < 0.5 &&
+      Math.random() < eventChance &&
       current.kind !== "event" &&
       phaseStep < QUESTIONS_PER_PHASE
     ) {
-      const ev = eligible[Math.floor(Math.random() * eligible.length)];
+      const ev = pickAdaptiveEvent(eligible, perfScores);
       eventsFired.current.add(ev.id);
       setCurrent(ev);
       return;
@@ -286,7 +339,7 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
 
     const nextStep = phaseStep + 1;
     if (nextStep < QUESTIONS_PER_PHASE) {
-      const list = scenariosForPhase(phase);
+      const list = phaseOrderRef.current ?? scenariosForPhase(phase);
       setPhaseStep(nextStep);
       setCurrent(list[nextStep]);
       return;
@@ -297,10 +350,15 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
       return;
     }
     const nextIdx = phaseIdx + 1;
+    const list = adaptivePhaseOrder(
+      scenariosForPhase(PHASE_ORDER[nextIdx]),
+      perfScores,
+    );
+    phaseOrderRef.current = list;
     setPhaseIdx(nextIdx);
     setPhaseStep(0);
-    setCurrent(scenariosForPhase(PHASE_ORDER[nextIdx])[0]);
-  }, [businessCaseDone, current, phase, phaseIdx, phaseStep]);
+    setCurrent(list[0]);
+  }, [businessCaseDone, current, phase, phaseIdx, phaseStep, perfScores]);
 
   const restart = useCallback(() => {
     setMetrics(INITIAL_METRICS);
@@ -314,7 +372,10 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     setPendingChoice(null);
     setCoachText(null);
     setFinished(false);
+    setPerfScores(initialPerfScores());
+    setPerfImpactPreview(null);
     eventsFired.current = new Set();
+    phaseOrderRef.current = null;
   }, []);
 
   const setCoach = useCallback((text: string | null, loading: boolean) => {
@@ -338,6 +399,8 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     coachLoading,
     consequences,
     consequenceNote,
+    perfScores,
+    perfImpactPreview,
     choose,
     advance,
     restart,
@@ -348,3 +411,4 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     <ProjectStateCtx.Provider value={value}>{children}</ProjectStateCtx.Provider>
   );
 }
+
