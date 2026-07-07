@@ -227,14 +227,14 @@ export function ExamStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const submitExam = useCallback<ExamContextValue["submitExam"]>(() => {
-    let finalized: ExamReport | null = null;
+    let captured: ExamReport | null = null;
     setSession((prev) => {
       if (!prev) return prev;
-      finalized = buildReport({ ...prev, status: "submitted" });
+      captured = buildReport({ ...prev, status: "submitted" });
       return null;
     });
-    if (!finalized) return null;
-    const report = finalized;
+    const report = captured as ExamReport | null;
+    if (!report) return null;
     setHistory((prev) => [report, ...prev.filter((r) => r.id !== report.id)].slice(0, 50));
     setGamification((prev) => {
       const withStreak = updateStreak(prev);
