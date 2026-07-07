@@ -90,11 +90,15 @@ function PricingPage() {
               <span className="text-5xl font-black">$19</span>
               <span className="text-slate-500">/ month</span>
             </div>
+            <div className="mt-2 inline-flex rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+              7-day free trial · cancel anytime
+            </div>
             <ul className="mt-6 space-y-3 text-sm text-slate-200">
               <li>✓ Unlimited full simulation runs</li>
               <li>✓ All PMBOK 6 & 7 scenarios</li>
               <li>✓ AI PMP coach on every decision</li>
               <li>✓ XP, badges & progress history</li>
+              <li>✓ +500 XP welcome bonus on activation</li>
               <li>✓ Installable mobile app</li>
             </ul>
             {loading ? (
