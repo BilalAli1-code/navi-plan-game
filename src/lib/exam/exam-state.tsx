@@ -17,6 +17,7 @@ import type {
 import { composeExam, type ExamComposition } from "./question-service";
 import { buildReport } from "./scoring";
 import { evaluateAchievements, updateStreak, xpForReport } from "./gamification";
+import { saveExamReport } from "./exam.functions";
 
 const SESSION_KEY = "pmp_exam_session_v1";
 const HISTORY_KEY = "pmp_exam_history_v1";

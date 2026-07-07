@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExamCoachRoute = ApiExamCoachRouteImport.update({
+  id: '/api/exam-coach',
+  path: '/api/exam-coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCoachRoute = ApiCoachRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
   '/exam/': typeof AuthenticatedExamIndexRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
   '/exam': typeof AuthenticatedExamIndexRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/performance': typeof AuthenticatedPerformanceRoute
   '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
   '/_authenticated/exam/': typeof AuthenticatedExamIndexRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/play'
     | '/api/coach'
+    | '/api/exam-coach'
     | '/checkout/return'
     | '/exam/session'
     | '/exam/'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/play'
     | '/api/coach'
+    | '/api/exam-coach'
     | '/checkout/return'
     | '/exam/session'
     | '/exam'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/performance'
     | '/_authenticated/play'
     | '/api/coach'
+    | '/api/exam-coach'
     | '/checkout/return'
     | '/_authenticated/exam/session'
     | '/_authenticated/exam/'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
   ApiCoachRoute: typeof ApiCoachRoute
+  ApiExamCoachRoute: typeof ApiExamCoachRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/exam-coach': {
+      id: '/api/exam-coach'
+      path: '/api/exam-coach'
+      fullPath: '/api/exam-coach'
+      preLoaderRoute: typeof ApiExamCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/coach': {
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
   ApiCoachRoute: ApiCoachRoute,
+  ApiExamCoachRoute: ApiExamCoachRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
