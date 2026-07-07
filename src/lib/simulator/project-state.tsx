@@ -13,6 +13,7 @@ import type {
   Decision,
   Impact,
   Metrics,
+  PerfScores,
   PhaseId,
   Scenario,
 } from "./types";
@@ -24,6 +25,13 @@ import {
   RANDOM_EVENTS,
   getScenarioMeta,
 } from "./scenarios";
+import {
+  applyPerfImpact,
+  initialPerfScores,
+  knowledgeAreasFor,
+  perfImpactFor,
+  weakestCategories,
+} from "./performance";
 
 export const INITIAL_METRICS: Metrics = {
   budget: 100,
