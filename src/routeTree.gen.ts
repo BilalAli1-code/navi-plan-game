@@ -21,6 +21,7 @@ import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedExamIndexRouteImport } from './routes/_authenticated/exam.index'
 import { Route as AuthenticatedExamSessionRouteImport } from './routes/_authenticated/exam.session'
+import { Route as AuthenticatedExamHistoryRouteImport } from './routes/_authenticated/exam.history'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AuthenticatedExamReportReportIdRouteImport } from './routes/_authenticated/exam.report.$reportId'
 
@@ -85,6 +86,12 @@ const AuthenticatedExamSessionRoute =
     path: '/exam/session',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedExamHistoryRoute =
+  AuthenticatedExamHistoryRouteImport.update({
+    id: '/exam/history',
+    path: '/exam/history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
   '/exam/': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
@@ -123,6 +131,7 @@ export interface FileRoutesByTo {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
   '/exam': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
@@ -140,6 +149,7 @@ export interface FileRoutesById {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
   '/_authenticated/exam/': typeof AuthenticatedExamIndexRoute
   '/_authenticated/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/checkout/return'
+    | '/exam/history'
     | '/exam/session'
     | '/exam/'
     | '/exam/report/$reportId'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/checkout/return'
+    | '/exam/history'
     | '/exam/session'
     | '/exam'
     | '/exam/report/$reportId'
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/checkout/return'
+    | '/_authenticated/exam/history'
     | '/_authenticated/exam/session'
     | '/_authenticated/exam/'
     | '/_authenticated/exam/report/$reportId'
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamSessionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exam/history': {
+      id: '/_authenticated/exam/history'
+      path: '/exam/history'
+      fullPath: '/exam/history'
+      preLoaderRoute: typeof AuthenticatedExamHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -312,6 +332,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedPerformanceRoute: typeof AuthenticatedPerformanceRoute
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
+  AuthenticatedExamHistoryRoute: typeof AuthenticatedExamHistoryRoute
   AuthenticatedExamSessionRoute: typeof AuthenticatedExamSessionRoute
   AuthenticatedExamIndexRoute: typeof AuthenticatedExamIndexRoute
   AuthenticatedExamReportReportIdRoute: typeof AuthenticatedExamReportReportIdRoute
@@ -321,6 +342,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedPerformanceRoute: AuthenticatedPerformanceRoute,
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
+  AuthenticatedExamHistoryRoute: AuthenticatedExamHistoryRoute,
   AuthenticatedExamSessionRoute: AuthenticatedExamSessionRoute,
   AuthenticatedExamIndexRoute: AuthenticatedExamIndexRoute,
   AuthenticatedExamReportReportIdRoute: AuthenticatedExamReportReportIdRoute,
