@@ -356,6 +356,7 @@ const SCENARIO_META_OVERRIDES: Record<
       "Business cases are validated against benefits realization (NPV, strategic fit) before charter. Phased funding controls downside risk when markets shift.",
     pmMindset:
       "A PM protects value delivery — never rubber-stamp, never over-reject. Use real options to keep decisions reversible.",
+    examTip: "The PMP expects PMs to validate benefits and use phased delivery under uncertainty, not to rubber-stamp or reject outright.",
   },
   "init-1": {
     knowledgeArea: "Integration",
