@@ -6,14 +6,13 @@ import type {
   Choice,
   Decision,
   Impact,
+  KnowledgeArea,
   Metrics,
-  PhaseId,
+  PerfCategory,
   Scenario,
 } from "@/lib/simulator/types";
-import {
-  ProjectStateProvider,
-  useProjectState,
-} from "@/lib/simulator/project-state";
+import { useProjectState } from "@/lib/simulator/project-state";
+import { KNOWLEDGE_AREAS } from "@/lib/simulator/performance";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -38,16 +37,8 @@ export const Route = createFileRoute("/_authenticated/play")({
       },
     ],
   }),
-  component: SimulatorPage,
+  component: Simulator,
 });
-
-function SimulatorPage() {
-  return (
-    <ProjectStateProvider>
-      <Simulator />
-    </ProjectStateProvider>
-  );
-}
 
 type LevelInfo = { name: string; min: number; next: number | null };
 function getLevel(xp: number): LevelInfo {
