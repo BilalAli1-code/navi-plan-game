@@ -1,9 +1,11 @@
 import type { Achievement, ExamReport, Gamification } from "./types";
 import { CAREER_LEVELS } from "./types";
 
+type Level = (typeof CAREER_LEVELS)[number];
+
 export function getLevel(xp: number) {
-  let current = CAREER_LEVELS[0];
-  let next: (typeof CAREER_LEVELS)[number] | null = null;
+  let current: Level = CAREER_LEVELS[0];
+  let next: Level | null = null;
   for (let i = 0; i < CAREER_LEVELS.length; i++) {
     if (xp >= CAREER_LEVELS[i].minXp) {
       current = CAREER_LEVELS[i];
