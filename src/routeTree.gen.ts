@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
+import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const PricingRoute = PricingRouteImport.update({
@@ -52,6 +53,12 @@ const AuthenticatedPlayRoute = AuthenticatedPlayRouteImport.update({
   path: '/play',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPerformanceRoute =
+  AuthenticatedPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -72,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -83,6 +92,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
+  '/_authenticated/performance': typeof AuthenticatedPerformanceRoute
   '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pricing'
+    | '/performance'
     | '/play'
     | '/api/coach'
     | '/checkout/return'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pricing'
+    | '/performance'
     | '/play'
     | '/api/coach'
     | '/checkout/return'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/pricing'
+    | '/_authenticated/performance'
     | '/_authenticated/play'
     | '/api/coach'
     | '/checkout/return'
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/performance': {
+      id: '/_authenticated/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof AuthenticatedPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -191,10 +211,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPerformanceRoute: typeof AuthenticatedPerformanceRoute
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPerformanceRoute: AuthenticatedPerformanceRoute,
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
 }
 
