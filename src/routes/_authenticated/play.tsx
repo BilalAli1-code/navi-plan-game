@@ -239,14 +239,14 @@ function ExamFocusBanner() {
   const { latest, weakestKAs, passProbability } = useExamWeaknesses(3);
   if (!latest || weakestKAs.length === 0) return null;
   return (
-    <div className="border-b border-cyan-400/20 bg-cyan-400/5">
+    <div className="border-b border-primary/20 bg-primary/5">
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs">
         <div className="text-foreground/80">
-          <span className="mr-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-cyan-200">
+          <span className="mr-2 rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] uppercase tracking-widest text-primary">
             Exam-tuned
           </span>
           Focusing scenarios on your weakest areas:{" "}
-          <span className="font-medium text-cyan-200">
+          <span className="font-medium text-primary">
             {weakestKAs.join(" · ")}
           </span>
           {passProbability !== null && (
@@ -255,7 +255,7 @@ function ExamFocusBanner() {
             </span>
           )}
         </div>
-        <Link to="/exam" className="text-cyan-200 hover:underline">
+        <Link to="/exam" className="text-primary hover:underline">
           Take another exam →
         </Link>
       </div>
@@ -358,7 +358,7 @@ function PhaseRail({ phaseIdx, finished }: { phaseIdx: number; finished: boolean
                 key={p}
                 className={cn(
                   "flex items-start gap-3 rounded-xl px-3 py-2.5 transition",
-                  active && "bg-indigo-500/15 ring-1 ring-indigo-400/30",
+                  active && "bg-primary/15 ring-1 ring-primary/30",
                   !active && "hover:bg-surface/60",
                 )}
               >
@@ -366,7 +366,7 @@ function PhaseRail({ phaseIdx, finished }: { phaseIdx: number; finished: boolean
                   className={cn(
                     "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
                     done && "bg-emerald-500/90 text-primary-foreground",
-                    active && "bg-indigo-400 text-primary-foreground",
+                    active && "bg-primary text-primary-foreground",
                     !done && !active && "bg-surface-strong text-foreground/80",
                   )}
                 >
@@ -473,7 +473,7 @@ function ScenarioCard({
                 "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
                 isEvent
                   ? "bg-amber-400/20 text-amber-200"
-                  : "bg-indigo-400/15 text-indigo-200",
+                  : "bg-primary-soft text-primary",
               )}
             >
               {isEvent ? "Random Event" : PHASE_META[scenario.phase].label}
@@ -519,9 +519,9 @@ function ScenarioCard({
                   onClick={() => onChoose(c)}
                   className={cn(
                     "group flex items-start gap-3 rounded-xl border p-4 text-left transition",
-                    "border-border bg-surface/60 hover:border-indigo-400/40 hover:bg-indigo-500/10",
+                    "border-border bg-surface/60 hover:border-primary/40 hover:bg-primary/10",
                     isChosen &&
-                      "border-indigo-400/60 bg-indigo-500/15 ring-2 ring-indigo-400/40",
+                      "border-primary/60 bg-primary/15 ring-2 ring-primary/40",
                     pendingChoice && isCorrect && !isChosen &&
                       "border-emerald-400/40 bg-emerald-500/10",
                     dimmed && "opacity-60",
@@ -532,8 +532,8 @@ function ScenarioCard({
                     className={cn(
                       "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
                       isChosen
-                        ? "bg-indigo-400 text-primary-foreground"
-                        : "bg-surface-strong text-foreground group-hover:bg-indigo-400 group-hover:text-primary-foreground",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-surface-strong text-foreground group-hover:bg-primary group-hover:text-primary-foreground",
                     )}
                   >
                     {c.id.toUpperCase()}
@@ -549,7 +549,7 @@ function ScenarioCard({
                     </div>
                     {isChosen && (
                       <>
-                        <div className="mt-2 text-xs text-indigo-200/80">{c.rationale}</div>
+                        <div className="mt-2 text-xs text-primary/80">{c.rationale}</div>
                         <ImpactChips impact={c.impact} />
                       </>
                     )}
@@ -605,7 +605,7 @@ function LearningReview({
     <div className="space-y-4 rounded-2xl border border-border bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5">
       {/* Header + verdict */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
+        <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
           Learning Review
         </span>
         {wasCorrect ? (
@@ -732,14 +732,14 @@ function ReviewSection({
   children: React.ReactNode;
 }) {
   const toneMap = {
-    indigo: "border-indigo-400/20 bg-indigo-400/[0.04]",
-    cyan: "border-cyan-400/20 bg-cyan-400/[0.05]",
+    indigo: "border-primary/20 bg-primary/[0.04]",
+    cyan: "border-primary/20 bg-cyan-400/[0.05]",
     amber: "border-amber-400/20 bg-amber-400/[0.05]",
     slate: "border-border bg-surface/60",
   } as const;
   const labelTone = {
-    indigo: "text-indigo-200",
-    cyan: "text-cyan-200",
+    indigo: "text-primary",
+    cyan: "text-primary",
     amber: "text-amber-200",
     slate: "text-foreground/80",
   } as const;
@@ -762,7 +762,7 @@ function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
           className={cn(
             "rounded-full border px-2.5 py-0.5 text-[11px] transition",
             ka === active
-              ? "border-cyan-400/60 bg-cyan-400/20 font-semibold text-cyan-100"
+              ? "border-cyan-400/60 bg-primary/20 font-semibold text-cyan-100"
               : "border-border bg-surface/40 text-muted-foreground",
           )}
         >
@@ -783,7 +783,7 @@ function CoachMarkdown({ text }: { text: string }) {
           <p key={i}>
             {parts.map((p, j) =>
               p.startsWith("**") && p.endsWith("**") ? (
-                <strong key={j} className="text-cyan-200">
+                <strong key={j} className="text-primary">
                   {p.slice(2, -2)}
                 </strong>
               ) : (

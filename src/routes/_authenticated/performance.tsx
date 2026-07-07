@@ -176,8 +176,8 @@ function PerformancePage() {
             </ol>
           </div>
 
-          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.05] p-5">
-            <div className="mb-2 text-[11px] uppercase tracking-widest text-cyan-200">
+          <div className="rounded-2xl border border-primary/20 bg-cyan-400/[0.05] p-5">
+            <div className="mb-2 text-[11px] uppercase tracking-widest text-primary">
               How this works
             </div>
             <p className="text-xs leading-relaxed text-foreground/80">
