@@ -182,6 +182,9 @@ function ReportView() {
           </div>
         </section>
 
+        <AiCoachPanel report={report} />
+
+
         <div className="mt-10 flex flex-wrap justify-end gap-2">
           <Link to="/analytics">
             <Button variant="outline">
