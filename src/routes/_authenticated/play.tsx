@@ -605,7 +605,7 @@ function LearningReview({
     <div className="space-y-4 rounded-2xl border border-border bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5">
       {/* Header + verdict */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
+        <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
           Learning Review
         </span>
         {wasCorrect ? (
@@ -633,7 +633,7 @@ function LearningReview({
       {/* PMI Mindset */}
       <ReviewSection label="PMI Mindset" tone="indigo">
         <p className="text-sm leading-relaxed text-foreground">{meta.explanation}</p>
-        <p className="mt-2 text-sm italic leading-relaxed text-indigo-100">
+        <p className="mt-2 text-sm italic leading-relaxed text-foreground/90">
           {meta.pmMindset}
         </p>
       </ReviewSection>
@@ -653,7 +653,7 @@ function LearningReview({
                       ? "bg-rose-500/70 text-primary-foreground"
                       : c.quality === "risky"
                       ? "bg-amber-400 text-primary-foreground"
-                      : "bg-cyan-400 text-primary-foreground",
+                      : "bg-primary text-primary-foreground",
                   )}
                 >
                   {c.id.toUpperCase()}
@@ -683,7 +683,7 @@ function LearningReview({
       {/* AI coach narrative (kept as optional deeper coaching) */}
       <ReviewSection label="Senior PM Coach" tone="cyan">
         {coachLoading && !coachText ? (
-          <div className="animate-pulse text-sm text-cyan-100/70">
+          <div className="animate-pulse text-sm text-primary/70">
             Analyzing your decision against PMBOK principles…
           </div>
         ) : coachText ? (
@@ -733,7 +733,7 @@ function ReviewSection({
 }) {
   const toneMap = {
     indigo: "border-primary/20 bg-primary/[0.04]",
-    cyan: "border-primary/20 bg-cyan-400/[0.05]",
+    cyan: "border-primary/20 bg-primary/5",
     amber: "border-amber-400/20 bg-amber-400/[0.05]",
     slate: "border-border bg-surface/60",
   } as const;
@@ -762,7 +762,7 @@ function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
           className={cn(
             "rounded-full border px-2.5 py-0.5 text-[11px] transition",
             ka === active
-              ? "border-cyan-400/60 bg-primary/20 font-semibold text-cyan-100"
+              ? "border-primary/60 bg-primary/20 font-semibold text-primary"
               : "border-border bg-surface/40 text-muted-foreground",
           )}
         >
@@ -902,7 +902,7 @@ function DecisionLog({ decisions }: { decisions: Decision[] }) {
               className={cn(
                 "mt-0.5 h-2 w-2 shrink-0 rounded-full",
                 d.quality === "excellent" && "bg-emerald-400",
-                d.quality === "good" && "bg-cyan-400",
+                d.quality === "good" && "bg-primary",
                 d.quality === "risky" && "bg-amber-400",
                 d.quality === "poor" && "bg-rose-500",
               )}
@@ -978,7 +978,7 @@ function FinalReport({
       className="overflow-hidden rounded-2xl border border-border bg-surface/60 p-8"
     >
       <div className="text-center">
-        <div className="text-[11px] uppercase tracking-[0.3em] text-cyan-300">
+        <div className="text-[11px] uppercase tracking-[0.3em] text-primary">
           Certification of Simulation
         </div>
         <h2 className="mt-2 text-3xl font-black tracking-tight">Project Simulation Complete</h2>

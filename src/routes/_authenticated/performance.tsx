@@ -176,7 +176,7 @@ function PerformancePage() {
             </ol>
           </div>
 
-          <div className="rounded-2xl border border-primary/20 bg-cyan-400/[0.05] p-5">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
             <div className="mb-2 text-[11px] uppercase tracking-widest text-primary">
               How this works
             </div>
