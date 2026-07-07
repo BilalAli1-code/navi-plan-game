@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
 import { useExamState, formatDuration } from "@/lib/exam/exam-state";
-import { getQuestionById } from "@/lib/exam/question-service";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingDown, TrendingUp, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, Sparkles, TrendingDown, TrendingUp, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/_authenticated/exam/report/$reportId")({
   head: () => ({
