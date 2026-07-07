@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useExamState, formatDuration } from "@/lib/exam/exam-state";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +20,15 @@ export const Route = createFileRoute("/_authenticated/exam/report/$reportId")({
 
 function ReportView() {
   const { reportId } = useParams({ from: "/_authenticated/exam/report/$reportId" });
-  const { history } = useExamState();
+  const { history, session, abandonExam } = useExamState();
   const report = history.find((r) => r.id === reportId);
+
+  // Once we've landed on the report, discard any lingering submitted session
+  // so returning to /exam/session shows the menu instead of a stale state.
+  useEffect(() => {
+    if (session && session.status === "submitted") abandonExam();
+  }, [session, abandonExam]);
+
 
   if (!report) {
     return (
