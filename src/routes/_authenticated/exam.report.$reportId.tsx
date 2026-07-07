@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Sparkles, TrendingDown, TrendingUp, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/exam/report/$reportId")({
   head: () => ({
