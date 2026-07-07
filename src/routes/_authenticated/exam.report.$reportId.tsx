@@ -25,14 +25,16 @@ function ReportView() {
 
   if (!report) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Report not found.</p>
-          <Link to="/exam" className="mt-3 inline-block text-primary hover:underline">
-            Back to exam menu
-          </Link>
+      <AppShell variant="app">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">Report not found.</p>
+            <Link to="/exam" className="mt-3 inline-block text-primary hover:underline">
+              Back to exam menu
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
