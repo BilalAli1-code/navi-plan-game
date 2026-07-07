@@ -1,0 +1,1 @@
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS welcome_bonus_granted boolean NOT NULL DEFAULT false;

@@ -69,7 +69,12 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
         return_url: data.returnUrl,
         customer: customerId,
         metadata: { userId },
-        ...(isRecurring && { subscription_data: { metadata: { userId } } }),
+        ...(isRecurring && {
+          subscription_data: {
+            metadata: { userId },
+            trial_period_days: 7,
+          },
+        }),
         managed_payments: { enabled: true },
       } as any);
 
