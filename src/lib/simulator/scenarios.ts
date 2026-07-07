@@ -356,6 +356,7 @@ const SCENARIO_META_OVERRIDES: Record<
       "Business cases are validated against benefits realization (NPV, strategic fit) before charter. Phased funding controls downside risk when markets shift.",
     pmMindset:
       "A PM protects value delivery — never rubber-stamp, never over-reject. Use real options to keep decisions reversible.",
+    examTip: "The PMP expects PMs to validate benefits and use phased delivery under uncertainty, not to rubber-stamp or reject outright.",
   },
   "init-1": {
     knowledgeArea: "Integration",
@@ -419,6 +420,7 @@ const SCENARIO_META_OVERRIDES: Record<
     explanation:
       "Confront-problem-solve conflict style with structured criteria and a timeboxed decision preserves ownership and morale.",
     pmMindset: "Facilitate the decision; don't own the answer. Servant leadership beats forcing.",
+    examTip: "The PMP usually favors collaboration and problem-solving before escalation or forcing a decision.",
   },
   "mon-1": {
     knowledgeArea: "Integration",
@@ -502,15 +504,35 @@ const PROCESS_GROUP_BY_PHASE: Record<Scenario["phase"], ProcessGroup> = {
   closing: "Closing",
 };
 
+const KA_DEFAULT_EXAM_TIP: Record<KnowledgeArea, string> = {
+  Integration: "Integrated Change Control governs every meaningful change — no shortcuts, no email approvals.",
+  Scope: "The PMP favors preventing scope creep through the CCB over saying 'yes' or 'no' outright.",
+  Schedule: "Prefer realistic estimating with reserves over crashing or fast-tracking without analysis.",
+  Cost: "Ranges and reserves beat point estimates. Re-baseline via change control, never silently.",
+  Quality: "Prevention over inspection. Fix majors, disclose minors, and root-cause the defect trend.",
+  Resource: "Servant leadership and team empowerment beat command-and-control on the PMP.",
+  Communications: "Tailor communication to each stakeholder group — one-size-fits-all is never the answer.",
+  Risk: "Identify, analyze, respond, monitor — and always update the register with owners.",
+  Procurement: "Follow contract terms. Formal closure and performance scorecards protect the org.",
+  Stakeholder: "Engage, don't just inform. Analyze power/interest before choosing a strategy.",
+};
+
 export function getScenarioMeta(scenario: Scenario): ScenarioMeta {
-  const override = SCENARIO_META_OVERRIDES[scenario.id];
-  // Derive correct choice as the highest-xp "excellent" choice (fallback: max xp).
+  const override = SCENARIO_META_OVERRIDES[scenario.id] as
+    | (Partial<ScenarioMeta> & {
+        knowledgeArea: KnowledgeArea;
+        difficulty: Difficulty;
+        explanation: string;
+        pmMindset: string;
+      })
+    | undefined;
   const excellent = scenario.choices.filter((c) => c.quality === "excellent");
   const pool = excellent.length ? excellent : scenario.choices;
   const correct = pool.reduce((best, c) => (c.xp > best.xp ? c : best), pool[0]);
+  const ka = override?.knowledgeArea ?? "Integration";
   return {
     processGroup: override?.processGroup ?? PROCESS_GROUP_BY_PHASE[scenario.phase],
-    knowledgeArea: override?.knowledgeArea ?? "Integration",
+    knowledgeArea: ka,
     difficulty: override?.difficulty ?? "medium",
     explanation:
       override?.explanation ??
@@ -518,6 +540,7 @@ export function getScenarioMeta(scenario: Scenario): ScenarioMeta {
     pmMindset:
       override?.pmMindset ??
       "Think in trade-offs across scope, schedule, cost, quality, risk, and value.",
+    examTip: override?.examTip ?? KA_DEFAULT_EXAM_TIP[ka],
     correctChoiceId: override?.correctChoiceId ?? correct.id,
   };
 }
