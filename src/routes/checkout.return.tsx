@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/app-shell';
+import { Check } from 'lucide-react';
 
 export const Route = createFileRoute('/checkout/return')({
   validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
@@ -12,26 +14,28 @@ export const Route = createFileRoute('/checkout/return')({
 function CheckoutReturn() {
   const { session_id } = Route.useSearch();
   return (
-    <div className="min-h-screen bg-[#0b1020] text-slate-100">
-      <main className="mx-auto max-w-xl px-4 py-24 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/20 text-3xl">✓</div>
-        <h1 className="mt-6 text-3xl font-black">
+    <AppShell variant="marketing" hideFooter>
+      <div className="mx-auto max-w-xl px-6 py-24 text-center">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
+          <Check className="h-7 w-7" />
+        </div>
+        <h1 className="mt-6 font-display text-4xl tracking-tight">
           {session_id ? "You're on ProjectSim Pro" : 'No session information found'}
         </h1>
-        <p className="mt-3 text-slate-400">
+        <p className="mt-4 text-muted-foreground">
           {session_id
             ? 'Your subscription is active. Time to run some projects.'
             : 'If you completed a payment, it may take a moment to reflect.'}
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <Button asChild className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90">
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Link to="/play">Open simulator</Link>
           </Button>
-          <Button asChild variant="outline" className="border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
+          <Button asChild variant="outline" className="border-border bg-surface/60 hover:bg-surface">
             <Link to="/pricing">Manage billing</Link>
           </Button>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
