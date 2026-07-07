@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
 import { useExamState, formatDuration } from "@/lib/exam/exam-state";
-import { getQuestionById } from "@/lib/exam/question-service";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingDown, TrendingUp, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, Sparkles, TrendingDown, TrendingUp, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/_authenticated/exam/report/$reportId")({
   head: () => ({
@@ -180,6 +182,9 @@ function ReportView() {
           </div>
         </section>
 
+        <AiCoachPanel report={report} />
+
+
         <div className="mt-10 flex flex-wrap justify-end gap-2">
           <Link to="/analytics">
             <Button variant="outline">
@@ -214,5 +219,106 @@ function Metric({
       <div className="mt-1 text-2xl font-semibold">{value}</div>
       {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
     </Card>
+  );
+}
+
+type ReportForCoach = import("@/lib/exam/types").ExamReport;
+
+const COACH_SUGGESTIONS = [
+  "Build me a 2-week study plan for my weakest topics.",
+  "Which PMBOK 7 principles should I focus on next?",
+  "How do I improve my timing per question?",
+  "Give me 5 practice question themes for my weakest area.",
+];
+
+function AiCoachPanel({ report }: { report: ReportForCoach }) {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function ask(q: string) {
+    if (!q.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    setAnswer(null);
+    try {
+      const res = await fetch("/api/exam-coach", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          question: q.trim(),
+          report: {
+            overallPercent: report.overallPercent,
+            passProbability: report.passProbability,
+            readiness: report.readiness,
+            weakestTopics: report.weakestTopics,
+            strongestTopics: report.strongestTopics,
+            domainScores: report.domainScores.map((d) => ({
+              domain: d.domain,
+              percent: d.percent,
+            })),
+            avgTimePerQuestionMs: report.avgTimePerQuestionMs,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { text: string };
+      setAnswer(data.text);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Coach unavailable");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="mt-10">
+      <Card className="border-primary/40 bg-primary/5 p-5">
+        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+          <Sparkles className="h-4 w-4" /> AI PMP Coach
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Ask a follow-up question about this exam. The coach uses your
+          weakest topics, timing, and domain scores as context.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {COACH_SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              disabled={loading}
+              onClick={() => {
+                setQuestion(s);
+                void ask(s);
+              }}
+              className="rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/60 hover:text-foreground disabled:opacity-50"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <Textarea
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="e.g. How should I approach change requests differently?"
+          className="mt-3 min-h-[80px] bg-background/40"
+        />
+        <div className="mt-3 flex justify-end">
+          <Button onClick={() => ask(question)} disabled={loading || !question.trim()}>
+            {loading ? "Coach is thinking…" : "Ask the coach"}
+          </Button>
+        </div>
+        {error && (
+          <div className="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+            {error}
+          </div>
+        )}
+        {answer && (
+          <div className="prose prose-sm prose-invert mt-4 max-w-none rounded-md border border-border/60 bg-background/40 p-4">
+            <ReactMarkdown>{answer}</ReactMarkdown>
+          </div>
+        )}
+      </Card>
+    </section>
   );
 }

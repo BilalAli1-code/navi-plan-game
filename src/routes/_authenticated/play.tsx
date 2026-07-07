@@ -13,6 +13,7 @@ import type {
 } from "@/lib/simulator/types";
 import { useProjectState } from "@/lib/simulator/project-state";
 import { KNOWLEDGE_AREAS } from "@/lib/simulator/performance";
+import { useExamWeaknesses } from "@/lib/exam/use-exam-weaknesses";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -193,6 +194,8 @@ function Simulator() {
     <div className="min-h-screen bg-[#0b1020] text-slate-100">
       <Header xp={xp} level={level} streak={streak} userEmail={userEmail} onSignOut={signOut} />
 
+      <ExamFocusBanner />
+
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
         <PhaseRail phaseIdx={phaseIdx} finished={finished} />
 
@@ -228,6 +231,34 @@ function Simulator() {
           <DecisionLog decisions={decisions} />
         </aside>
       </main>
+    </div>
+  );
+}
+
+function ExamFocusBanner() {
+  const { latest, weakestKAs, passProbability } = useExamWeaknesses(3);
+  if (!latest || weakestKAs.length === 0) return null;
+  return (
+    <div className="border-b border-cyan-400/20 bg-cyan-400/5">
+      <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs">
+        <div className="text-slate-300">
+          <span className="mr-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-cyan-200">
+            Exam-tuned
+          </span>
+          Focusing scenarios on your weakest areas:{" "}
+          <span className="font-medium text-cyan-200">
+            {weakestKAs.join(" · ")}
+          </span>
+          {passProbability !== null && (
+            <span className="ml-2 text-slate-400">
+              (last exam pass probability {passProbability}%)
+            </span>
+          )}
+        </div>
+        <Link to="/exam" className="text-cyan-200 hover:underline">
+          Take another exam →
+        </Link>
+      </div>
     </div>
   );
 }

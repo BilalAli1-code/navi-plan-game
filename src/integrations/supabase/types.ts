@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      exam_reports: {
+        Row: {
+          avg_confidence: number
+          avg_time_per_question_ms: number
+          completed_at: string
+          correct_count: number
+          created_at: string
+          difficulty_breakdown: Json
+          domain_scores: Json
+          duration_taken_ms: number
+          id: string
+          knowledge_area_scores: Json
+          mode: string
+          overall_percent: number
+          pass_probability: number
+          readiness: string
+          session_id: string | null
+          strongest_topics: Json
+          too_fast_count: number
+          too_slow_count: number
+          total_questions: number
+          updated_at: string
+          user_id: string
+          weakest_topics: Json
+        }
+        Insert: {
+          avg_confidence?: number
+          avg_time_per_question_ms?: number
+          completed_at?: string
+          correct_count?: number
+          created_at?: string
+          difficulty_breakdown?: Json
+          domain_scores?: Json
+          duration_taken_ms?: number
+          id?: string
+          knowledge_area_scores?: Json
+          mode?: string
+          overall_percent?: number
+          pass_probability?: number
+          readiness?: string
+          session_id?: string | null
+          strongest_topics?: Json
+          too_fast_count?: number
+          too_slow_count?: number
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+          weakest_topics?: Json
+        }
+        Update: {
+          avg_confidence?: number
+          avg_time_per_question_ms?: number
+          completed_at?: string
+          correct_count?: number
+          created_at?: string
+          difficulty_breakdown?: Json
+          domain_scores?: Json
+          duration_taken_ms?: number
+          id?: string
+          knowledge_area_scores?: Json
+          mode?: string
+          overall_percent?: number
+          pass_probability?: number
+          readiness?: string
+          session_id?: string | null
+          strongest_topics?: Json
+          too_fast_count?: number
+          too_slow_count?: number
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+          weakest_topics?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

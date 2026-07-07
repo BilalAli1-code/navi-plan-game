@@ -17,6 +17,7 @@ import type {
 import { composeExam, type ExamComposition } from "./question-service";
 import { buildReport } from "./scoring";
 import { evaluateAchievements, updateStreak, xpForReport } from "./gamification";
+import { saveExamReport } from "./exam.functions";
 
 const SESSION_KEY = "pmp_exam_session_v1";
 const HISTORY_KEY = "pmp_exam_history_v1";
@@ -226,28 +227,29 @@ export function ExamStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const submitExam = useCallback<ExamContextValue["submitExam"]>(() => {
-    let report: ExamReport | null = null;
+    let captured: ExamReport | null = null;
     setSession((prev) => {
       if (!prev) return prev;
-      report = buildReport({ ...prev, status: "submitted" });
+      captured = buildReport({ ...prev, status: "submitted" });
       return null;
     });
-    if (report) {
-      const finalized = report;
-      setHistory((prev) => [finalized, ...prev].slice(0, 50));
-      setGamification((prev) => {
-        const withStreak = updateStreak(prev);
-        const newlyEarned = evaluateAchievements(
-          finalized,
-          withStreak.achievements,
-        );
-        return {
-          ...withStreak,
-          xp: withStreak.xp + xpForReport(finalized),
-          achievements: [...withStreak.achievements, ...newlyEarned],
-        };
-      });
-    }
+    const report = captured as ExamReport | null;
+    if (!report) return null;
+    setHistory((prev) => [report, ...prev.filter((r) => r.id !== report.id)].slice(0, 50));
+    setGamification((prev) => {
+      const withStreak = updateStreak(prev);
+      const newlyEarned = evaluateAchievements(report, withStreak.achievements);
+      return {
+        ...withStreak,
+        xp: withStreak.xp + xpForReport(report),
+        achievements: [...withStreak.achievements, ...newlyEarned],
+      };
+    });
+    // Fire-and-forget cloud persistence. Local storage remains source of truth
+    // for offline-first UX; failures do not block navigation.
+    void saveExamReport({ data: { report } }).catch((err) => {
+      console.warn("saveExamReport failed", err);
+    });
     return report;
   }, []);
 
