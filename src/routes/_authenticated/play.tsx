@@ -1,20 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  PHASE_ORDER,
-  PHASE_META,
-  PHASE_SCENARIOS,
-  RANDOM_EVENTS,
-  BUSINESS_CASE,
-  QUESTIONS_PER_PHASE,
-} from "@/lib/simulator/scenarios";
+import { PHASE_ORDER, PHASE_META, getScenarioMeta } from "@/lib/simulator/scenarios";
 import type {
   Choice,
+  Decision,
+  Impact,
   Metrics,
   PhaseId,
   Scenario,
 } from "@/lib/simulator/types";
+import {
+  ProjectStateProvider,
+  useProjectState,
+} from "@/lib/simulator/project-state";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -39,28 +38,16 @@ export const Route = createFileRoute("/_authenticated/play")({
       },
     ],
   }),
-  component: Simulator,
+  component: SimulatorPage,
 });
 
-const INITIAL_METRICS: Metrics = {
-  budget: 100,
-  schedule: 0,
-  scope: 80,
-  risk: 20,
-  stakeholders: 70,
-  morale: 75,
-};
-
-type Decision = {
-  scenarioId: string;
-  scenarioTitle: string;
-  phase: PhaseId;
-  choiceId: string;
-  choiceLabel: string;
-  quality: Choice["quality"];
-  xp: number;
-  coachText: string | null;
-};
+function SimulatorPage() {
+  return (
+    <ProjectStateProvider>
+      <Simulator />
+    </ProjectStateProvider>
+  );
+}
 
 type LevelInfo = { name: string; min: number; next: number | null };
 function getLevel(xp: number): LevelInfo {
@@ -73,17 +60,6 @@ function getLevel(xp: number): LevelInfo {
 
 function clamp(n: number, lo = 0, hi = 100) {
   return Math.max(lo, Math.min(hi, n));
-}
-
-function applyImpact(m: Metrics, impact: Partial<Metrics>): Metrics {
-  return {
-    budget: clamp((m.budget ?? 0) + (impact.budget ?? 0)),
-    schedule: clamp((m.schedule ?? 0) + (impact.schedule ?? 0), -100, 100),
-    scope: clamp((m.scope ?? 0) + (impact.scope ?? 0)),
-    risk: clamp((m.risk ?? 0) + (impact.risk ?? 0)),
-    stakeholders: clamp((m.stakeholders ?? 0) + (impact.stakeholders ?? 0)),
-    morale: clamp((m.morale ?? 0) + (impact.morale ?? 0)),
-  };
 }
 
 function scheduleLabel(v: number) {
@@ -108,32 +84,30 @@ function progressTone(v: number, invert = false) {
   return "bg-amber-400";
 }
 
-function scenariosForPhase(p: PhaseId): Scenario[] {
-  return PHASE_SCENARIOS.filter((s) => s.phase === p).slice(0, QUESTIONS_PER_PHASE);
-}
-
 function Simulator() {
   const navigate = useNavigate();
-  const [metrics, setMetrics] = useState<Metrics>(INITIAL_METRICS);
-  const [phaseIdx, setPhaseIdx] = useState(0);
-  const [phaseStep, setPhaseStep] = useState(0); // 0..QUESTIONS_PER_PHASE-1
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [xp, setXp] = useState(0);
-  const [streak, setStreak] = useState(0);
-  // Simulation begins with the business case, before Initiation questions.
-  const [current, setCurrent] = useState<Scenario>(() => BUSINESS_CASE);
-  const [businessCaseDone, setBusinessCaseDone] = useState(false);
-  const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
-  const [coachText, setCoachText] = useState<string | null>(null);
-  const [coachLoading, setCoachLoading] = useState(false);
-  const [finished, setFinished] = useState(false);
+  const {
+    metrics,
+    decisions,
+    xp,
+    streak,
+    phaseIdx,
+    current,
+    finished,
+    pendingChoice,
+    coachText,
+    coachLoading,
+    consequenceNote,
+    choose,
+    advance,
+    restart,
+  } = useProjectState();
+
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const eventsFired = useRef<Set<string>>(new Set());
 
-  const phase: PhaseId = PHASE_ORDER[phaseIdx];
   const level = getLevel(xp);
-  const badges = useMemo(() => computeBadges(decisions), [decisions]);
+  const badges = useMemo(() => computeBadges(decisions, metrics), [decisions, metrics]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
@@ -144,143 +118,40 @@ function Simulator() {
     navigate({ to: "/" });
   }
 
-  async function chooseOption(choice: Choice) {
-    if (pendingChoice) return;
-    setPendingChoice(choice);
-    setCoachText(null);
-    setCoachLoading(true);
-
-    const nextMetrics = applyImpact(metrics, choice.impact);
-    setMetrics(nextMetrics);
-    setXp((x) => x + choice.xp);
-    setStreak((s) =>
-      choice.quality === "excellent" || choice.quality === "good" ? s + 1 : 0,
-    );
-
-    let text = "Coach is offline. Reflect on how this choice affects budget, schedule, scope, risk, stakeholders and team morale.";
-    try {
-      const res = await fetch("/api/coach", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          phase: PHASE_META[current.phase].label,
-          scenario: `${current.title}. ${current.body}`,
-          choiceLabel: choice.label,
-          choiceRationale: choice.rationale,
-          metrics: {
-            budget: nextMetrics.budget,
-            schedule: scheduleLabel(nextMetrics.schedule),
-            scope: nextMetrics.scope,
-            risk: nextMetrics.risk,
-            stakeholders: nextMetrics.stakeholders,
-            morale: nextMetrics.morale,
-          },
-        }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { text: string };
-        text = data.text;
+  async function handleChoose(choice: Choice) {
+    await choose(choice, async () => {
+      try {
+        const res = await fetch("/api/coach", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            phase: PHASE_META[current.phase].label,
+            scenario: `${current.title}. ${current.body}`,
+            choiceLabel: choice.label,
+            choiceRationale: choice.rationale,
+            metrics: {
+              budget: metrics.budget,
+              schedule: scheduleLabel(metrics.schedule),
+              scope: metrics.scope,
+              risk: metrics.risk,
+              stakeholders: metrics.stakeholders,
+              morale: metrics.morale,
+              quality: metrics.quality,
+              businessValue: metrics.businessValue,
+            },
+          }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { text: string };
+          return data.text;
+        }
+      } catch {
+        // fall through
       }
-    } catch {
-      // keep fallback text
-    }
-    setCoachText(text);
-    setCoachLoading(false);
-
-    setDecisions((prev) => [
-      ...prev,
-      {
-        scenarioId: current.id,
-        scenarioTitle: current.title,
-        phase: current.phase,
-        choiceId: choice.id,
-        choiceLabel: choice.label,
-        quality: choice.quality,
-        xp: choice.xp,
-        coachText: text,
-      },
-    ]);
+      return "Coach is offline. Reflect on how this choice affects budget, schedule, scope, risk, stakeholders, team morale, quality, and business value.";
+    });
   }
 
-  function advance() {
-    setPendingChoice(null);
-    setCoachText(null);
-
-    // Business case → first initiation question.
-    if (!businessCaseDone) {
-      setBusinessCaseDone(true);
-      setCurrent(scenariosForPhase("initiation")[0]);
-      setPhaseIdx(0);
-      setPhaseStep(0);
-      return;
-    }
-
-    // If the just-answered scenario was a random event, resume the same phase step.
-    if (current.kind === "event") {
-      const list = scenariosForPhase(phase);
-      const next = list[phaseStep];
-      if (next) {
-        setCurrent(next);
-        return;
-      }
-    }
-
-    // Random event chance (execution/monitoring only) between phase questions.
-    const eligible = RANDOM_EVENTS.filter(
-      (e) =>
-        !eventsFired.current.has(e.id) &&
-        (e.phase === phase || (phase === "execution" && e.phase === "monitoring")),
-    );
-    if (
-      (phase === "execution" || phase === "monitoring") &&
-      eligible.length > 0 &&
-      Math.random() < 0.5 &&
-      current.kind !== "event" &&
-      phaseStep < QUESTIONS_PER_PHASE // still questions left in this phase
-    ) {
-      const ev = eligible[Math.floor(Math.random() * eligible.length)];
-      eventsFired.current.add(ev.id);
-      setCurrent(ev);
-      return;
-    }
-
-    // Next scenario within the phase.
-    const nextStep = phaseStep + 1;
-    if (nextStep < QUESTIONS_PER_PHASE) {
-      const list = scenariosForPhase(phase);
-      setPhaseStep(nextStep);
-      setCurrent(list[nextStep]);
-      return;
-    }
-
-    // Advance to next phase, reset step.
-    if (phaseIdx + 1 >= PHASE_ORDER.length) {
-      setFinished(true);
-      return;
-    }
-    const nextIdx = phaseIdx + 1;
-    setPhaseIdx(nextIdx);
-    setPhaseStep(0);
-    setCurrent(scenariosForPhase(PHASE_ORDER[nextIdx])[0]);
-  }
-
-  function restart() {
-    setMetrics(INITIAL_METRICS);
-    setPhaseIdx(0);
-    setPhaseStep(0);
-    setDecisions([]);
-    setXp(0);
-    setStreak(0);
-    setCurrent(BUSINESS_CASE);
-    setBusinessCaseDone(false);
-    setPendingChoice(null);
-    setCoachText(null);
-    setFinished(false);
-    setSaved(false);
-    eventsFired.current = new Set();
-  }
-
-  // Save run once when we finish.
   useEffect(() => {
     if (!finished || saved) return;
     (async () => {
@@ -288,12 +159,14 @@ function Simulator() {
       const user = userData.user;
       if (!user) return;
       const score = Math.round(
-        metrics.budget * 0.2 +
-          (50 + metrics.schedule / 2) * 0.15 +
-          metrics.scope * 0.15 +
-          (100 - metrics.risk) * 0.15 +
-          metrics.stakeholders * 0.2 +
-          metrics.morale * 0.15,
+        metrics.budget * 0.15 +
+          (50 + metrics.schedule / 2) * 0.1 +
+          metrics.scope * 0.1 +
+          (100 - metrics.risk) * 0.1 +
+          metrics.stakeholders * 0.15 +
+          metrics.morale * 0.1 +
+          metrics.quality * 0.15 +
+          metrics.businessValue * 0.15,
       );
       const { error: runErr } = await supabase.from("simulation_runs").insert({
         user_id: user.id,
@@ -307,7 +180,6 @@ function Simulator() {
         toast.error("Couldn't save your run");
         return;
       }
-      // Bump profile totals (best-effort).
       const { data: prof } = await supabase
         .from("profiles")
         .select("total_xp, runs_completed")
@@ -328,14 +200,7 @@ function Simulator() {
 
   return (
     <div className="min-h-screen bg-[#0b1020] text-slate-100">
-      <Header
-        xp={xp}
-        level={level}
-        streak={streak}
-        userEmail={userEmail}
-        onSignOut={signOut}
-      />
-
+      <Header xp={xp} level={level} streak={streak} userEmail={userEmail} onSignOut={signOut} />
 
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
         <PhaseRail phaseIdx={phaseIdx} finished={finished} />
@@ -347,7 +212,10 @@ function Simulator() {
               decisions={decisions}
               xp={xp}
               badges={badges}
-              onRestart={restart}
+              onRestart={() => {
+                restart();
+                setSaved(false);
+              }}
             />
           ) : (
             <ScenarioCard
@@ -355,11 +223,10 @@ function Simulator() {
               pendingChoice={pendingChoice}
               coachText={coachText}
               coachLoading={coachLoading}
-              onChoose={chooseOption}
+              consequenceNote={consequenceNote}
+              onChoose={handleChoose}
               onAdvance={advance}
-              isLast={
-                phaseIdx === PHASE_ORDER.length - 1 && current.kind === "phase"
-              }
+              isLast={phaseIdx === PHASE_ORDER.length - 1 && current.kind === "phase"}
             />
           )}
         </section>
@@ -409,9 +276,7 @@ function Header({
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="hidden text-right sm:block">
-            <div className="text-[11px] uppercase tracking-widest text-slate-400">
-              Level
-            </div>
+            <div className="text-[11px] uppercase tracking-widest text-slate-400">Level</div>
             <div className="text-sm font-semibold">{level.name}</div>
           </div>
           <div className="min-w-[120px]">
@@ -426,9 +291,6 @@ function Header({
               />
             </div>
           </div>
-          <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/10">
-            🔥 {streak}
-          </Badge>
           <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/10">
             🔥 {streak}
           </Badge>
@@ -452,13 +314,7 @@ function Header({
   );
 }
 
-function PhaseRail({
-  phaseIdx,
-  finished,
-}: {
-  phaseIdx: number;
-  finished: boolean;
-}) {
+function PhaseRail({ phaseIdx, finished }: { phaseIdx: number; finished: boolean }) {
   return (
     <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
       <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-3">
@@ -489,12 +345,7 @@ function PhaseRail({
                   {done ? "✓" : i + 1}
                 </div>
                 <div className="min-w-0">
-                  <div
-                    className={cn(
-                      "text-sm font-medium",
-                      active ? "text-white" : "text-slate-200",
-                    )}
-                  >
+                  <div className={cn("text-sm font-medium", active ? "text-white" : "text-slate-200")}>
                     {PHASE_META[p].label}
                   </div>
                   <div className="truncate text-xs text-slate-400">
@@ -510,11 +361,53 @@ function PhaseRail({
   );
 }
 
+const IMPACT_LABEL: Record<keyof Metrics, string> = {
+  budget: "Budget",
+  schedule: "Schedule",
+  scope: "Scope",
+  risk: "Risk",
+  stakeholders: "Stakeholders",
+  morale: "Morale",
+  quality: "Quality",
+  businessValue: "Value",
+};
+
+function ImpactChips({ impact }: { impact: Impact }) {
+  const entries = Object.entries(impact).filter(([, v]) => v !== undefined && v !== 0) as [
+    keyof Metrics,
+    number,
+  ][];
+  if (entries.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {entries.map(([k, v]) => {
+        // For "risk", negative is good.
+        const good = k === "risk" ? v < 0 : v > 0;
+        return (
+          <span
+            key={k}
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+              good
+                ? "bg-emerald-400/15 text-emerald-200"
+                : "bg-rose-400/15 text-rose-200",
+            )}
+          >
+            {v > 0 ? "+" : ""}
+            {v} {IMPACT_LABEL[k]}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function ScenarioCard({
   scenario,
   pendingChoice,
   coachText,
   coachLoading,
+  consequenceNote,
   onChoose,
   onAdvance,
   isLast,
@@ -523,11 +416,14 @@ function ScenarioCard({
   pendingChoice: Choice | null;
   coachText: string | null;
   coachLoading: boolean;
+  consequenceNote: string | null;
   onChoose: (c: Choice) => void;
   onAdvance: () => void;
   isLast: boolean;
 }) {
   const isEvent = scenario.kind === "event";
+  const meta = getScenarioMeta(scenario);
+  const correctChoice = scenario.choices.find((c) => c.id === meta.correctChoiceId);
   return (
     <div className="space-y-4">
       <AnimatePresence mode="wait">
@@ -555,19 +451,40 @@ function ScenarioCard({
             >
               {isEvent ? "Random Event" : PHASE_META[scenario.phase].label}
             </span>
-            <span className="text-xs text-slate-400">
-              Decision required
+            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+              {meta.processGroup}
+            </span>
+            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+              {meta.knowledgeArea}
+            </span>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                meta.difficulty === "easy" && "bg-emerald-400/15 text-emerald-200",
+                meta.difficulty === "medium" && "bg-amber-400/15 text-amber-200",
+                meta.difficulty === "hard" && "bg-rose-400/15 text-rose-200",
+              )}
+            >
+              {meta.difficulty.toUpperCase()}
             </span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {scenario.title}
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight">{scenario.title}</h2>
           <p className="mt-2 text-slate-300">{scenario.body}</p>
+
+          {consequenceNote && (
+            <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
+              <span className="mr-1 font-semibold uppercase tracking-wider text-amber-200">
+                Project memory:
+              </span>
+              {consequenceNote}
+            </div>
+          )}
 
           <div className="mt-5 grid gap-3">
             {scenario.choices.map((c) => {
               const isChosen = pendingChoice?.id === c.id;
               const dimmed = pendingChoice && !isChosen;
+              const isCorrect = c.id === meta.correctChoiceId;
               return (
                 <button
                   key={c.id}
@@ -578,7 +495,9 @@ function ScenarioCard({
                     "border-white/10 bg-white/[0.03] hover:border-indigo-400/40 hover:bg-indigo-500/10",
                     isChosen &&
                       "border-indigo-400/60 bg-indigo-500/15 ring-2 ring-indigo-400/40",
-                    dimmed && "opacity-40",
+                    pendingChoice && isCorrect && !isChosen &&
+                      "border-emerald-400/40 bg-emerald-500/10",
+                    dimmed && "opacity-60",
                     !pendingChoice && "cursor-pointer",
                   )}
                 >
@@ -593,11 +512,19 @@ function ScenarioCard({
                     {c.id.toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-slate-100">{c.label}</div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-medium text-slate-100">{c.label}</div>
+                      {pendingChoice && isCorrect && (
+                        <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
+                          CORRECT
+                        </span>
+                      )}
+                    </div>
                     {isChosen && (
-                      <div className="mt-2 text-xs text-indigo-200/80">
-                        {c.rationale}
-                      </div>
+                      <>
+                        <div className="mt-2 text-xs text-indigo-200/80">{c.rationale}</div>
+                        <ImpactChips impact={c.impact} />
+                      </>
                     )}
                   </div>
                 </button>
@@ -612,36 +539,59 @@ function ScenarioCard({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-5"
+            className="space-y-3"
           >
-            <div className="mb-2 flex items-center gap-2">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-cyan-400 text-xs font-black text-slate-950">
-                AI
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-100">
+                <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] uppercase tracking-wider text-emerald-200">
+                  Explanation
+                </span>
+                {pendingChoice.id === meta.correctChoiceId ? (
+                  <span className="text-xs text-emerald-300">You picked the correct answer</span>
+                ) : (
+                  <span className="text-xs text-amber-300">
+                    Best answer was {meta.correctChoiceId.toUpperCase()}
+                    {correctChoice ? ` — ${correctChoice.label}` : ""}
+                  </span>
+                )}
               </div>
-              <div className="text-sm font-semibold text-cyan-100">
-                Coach — Senior PM
+              <p className="text-sm leading-relaxed text-slate-200">{meta.explanation}</p>
+              <div className="mt-3 rounded-lg border border-indigo-400/20 bg-indigo-400/[0.06] p-3 text-xs text-indigo-100">
+                <span className="mr-1 font-semibold uppercase tracking-wider text-indigo-200">
+                  PM mindset:
+                </span>
+                {meta.pmMindset}
               </div>
-              <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-300">
-                +{pendingChoice.xp} XP
-              </span>
             </div>
-            {coachLoading && !coachText ? (
-              <div className="animate-pulse text-sm text-cyan-100/70">
-                Analyzing your decision against PMBOK principles…
+
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-5">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="grid h-7 w-7 place-items-center rounded-full bg-cyan-400 text-xs font-black text-slate-950">
+                  AI
+                </div>
+                <div className="text-sm font-semibold text-cyan-100">Coach — Senior PM</div>
+                <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-300">
+                  +{pendingChoice.xp} XP
+                </span>
               </div>
-            ) : (
-              <CoachMarkdown text={coachText ?? ""} />
-            )}
-            {!coachLoading && (
-              <div className="mt-4 flex justify-end">
-                <Button
-                  onClick={onAdvance}
-                  className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90"
-                >
-                  {isLast ? "Close project →" : "Continue →"}
-                </Button>
-              </div>
-            )}
+              {coachLoading && !coachText ? (
+                <div className="animate-pulse text-sm text-cyan-100/70">
+                  Analyzing your decision against PMBOK principles…
+                </div>
+              ) : (
+                <CoachMarkdown text={coachText ?? ""} />
+              )}
+              {!coachLoading && (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={onAdvance}
+                    className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90"
+                  >
+                    {isLast ? "Close project →" : "Continue →"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -650,7 +600,6 @@ function ScenarioCard({
 }
 
 function CoachMarkdown({ text }: { text: string }) {
-  // Minimal renderer: split on double newlines, bold **label** at start of line.
   const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   return (
     <div className="space-y-2 text-sm leading-relaxed text-slate-100">
@@ -675,22 +624,15 @@ function CoachMarkdown({ text }: { text: string }) {
 }
 
 function MetricsPanel({ metrics }: { metrics: Metrics }) {
-  const items: {
-    label: string;
-    value: number;
-    display: string;
-    invert?: boolean;
-  }[] = [
+  const items: { label: string; value: number; display: string; invert?: boolean }[] = [
     { label: "Budget remaining", value: metrics.budget, display: `${Math.round(metrics.budget)}%` },
-    {
-      label: "Schedule",
-      value: 50 + metrics.schedule / 2,
-      display: scheduleLabel(metrics.schedule),
-    },
+    { label: "Schedule", value: 50 + metrics.schedule / 2, display: scheduleLabel(metrics.schedule) },
     { label: "Scope stability", value: metrics.scope, display: `${Math.round(metrics.scope)}%` },
     { label: "Risk level", value: metrics.risk, display: `${Math.round(metrics.risk)}%`, invert: true },
     { label: "Stakeholders", value: metrics.stakeholders, display: `${Math.round(metrics.stakeholders)}%` },
     { label: "Team morale", value: metrics.morale, display: `${Math.round(metrics.morale)}%` },
+    { label: "Quality", value: metrics.quality, display: `${Math.round(metrics.quality)}%` },
+    { label: "Business value", value: metrics.businessValue, display: `${Math.round(metrics.businessValue)}%` },
   ];
   return (
     <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
@@ -705,9 +647,7 @@ function MetricsPanel({ metrics }: { metrics: Metrics }) {
           <div key={m.label}>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-300">{m.label}</span>
-              <span className={cn("font-semibold", toneFor(m.value, m.invert))}>
-                {m.display}
-              </span>
+              <span className={cn("font-semibold", toneFor(m.value, m.invert))}>{m.display}</span>
             </div>
             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
               <motion.div
@@ -730,12 +670,20 @@ const BADGE_META: Record<string, { label: string; emoji: string; desc: string }>
   "stakeholder-expert": { label: "Stakeholder Expert", emoji: "🤝", desc: "Kept sponsors happy" },
   "budget-hawk": { label: "Budget Hawk", emoji: "💰", desc: "Protected the budget" },
   "delivery-star": { label: "Delivery Star", emoji: "⭐", desc: "Multiple excellent calls" },
+  "quality-champion": { label: "Quality Champion", emoji: "✨", desc: "Held the quality line" },
+  "value-driver": { label: "Value Driver", emoji: "🚀", desc: "Protected business value" },
 };
 
-function computeBadges(decisions: Decision[]): string[] {
+function computeBadges(decisions: Decision[], metrics: Metrics): string[] {
   const badges: string[] = [];
   const excellent = decisions.filter((d) => d.quality === "excellent").length;
   if (excellent >= 3) badges.push("delivery-star");
+  if (metrics.risk <= 30) badges.push("risk-manager");
+  if (metrics.scope >= 75) badges.push("scope-controller");
+  if (metrics.stakeholders >= 80) badges.push("stakeholder-expert");
+  if (metrics.budget >= 75) badges.push("budget-hawk");
+  if (metrics.quality >= 80) badges.push("quality-champion");
+  if (metrics.businessValue >= 80) badges.push("value-driver");
   return badges;
 }
 
@@ -743,10 +691,8 @@ function BadgesPanel({ badges }: { badges: string[] }) {
   const all = Object.keys(BADGE_META);
   return (
     <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">
-        Badges
-      </div>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">Badges</div>
+      <div className="grid grid-cols-4 gap-2">
         {all.map((b) => {
           const earned = badges.includes(b);
           const meta = BADGE_META[b];
@@ -774,9 +720,7 @@ function DecisionLog({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) return null;
   return (
     <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">
-        Decision Log
-      </div>
+      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">Decision Log</div>
       <ol className="space-y-2">
         {decisions.slice(-6).reverse().map((d, i) => (
           <li key={`${d.scenarioId}-${i}`} className="flex items-start gap-2 text-xs">
@@ -790,7 +734,14 @@ function DecisionLog({ decisions }: { decisions: Decision[] }) {
               )}
             />
             <div className="min-w-0">
-              <div className="truncate text-slate-200">{d.scenarioTitle}</div>
+              <div className="flex items-center gap-1.5">
+                <span className="truncate text-slate-200">{d.scenarioTitle}</span>
+                {d.correct && (
+                  <span className="rounded bg-emerald-400/15 px-1 text-[9px] font-semibold text-emerald-200">
+                    ✓
+                  </span>
+                )}
+              </div>
               <div className="truncate text-slate-500">{d.choiceLabel}</div>
             </div>
           </li>
@@ -815,16 +766,18 @@ function FinalReport({
 }) {
   const excellent = decisions.filter((d) => d.quality === "excellent").length;
   const poor = decisions.filter((d) => d.quality === "poor").length;
+  const correct = decisions.filter((d) => d.correct).length;
   const score = Math.round(
-    (metrics.budget * 0.2 +
-      (50 + metrics.schedule / 2) * 0.15 +
-      metrics.scope * 0.15 +
-      (100 - metrics.risk) * 0.15 +
-      metrics.stakeholders * 0.2 +
-      metrics.morale * 0.15),
+    metrics.budget * 0.15 +
+      (50 + metrics.schedule / 2) * 0.1 +
+      metrics.scope * 0.1 +
+      (100 - metrics.risk) * 0.1 +
+      metrics.stakeholders * 0.15 +
+      metrics.morale * 0.1 +
+      metrics.quality * 0.15 +
+      metrics.businessValue * 0.15,
   );
-  const level =
-    score >= 85 ? "Advanced" : score >= 65 ? "Intermediate" : "Beginner";
+  const level = score >= 85 ? "Advanced" : score >= 65 ? "Intermediate" : "Beginner";
   const went_well: string[] = [];
   const went_wrong: string[] = [];
   if (metrics.stakeholders >= 70) went_well.push("Maintained strong stakeholder trust");
@@ -832,11 +785,15 @@ function FinalReport({
   if (metrics.scope >= 70) went_well.push("Held the line on scope through change control");
   if (metrics.budget >= 70) went_well.push("Kept spending under baseline + reserves");
   if (metrics.morale >= 70) went_well.push("Preserved team morale and psychological safety");
+  if (metrics.quality >= 70) went_well.push("Sustained delivery quality");
+  if (metrics.businessValue >= 70) went_well.push("Protected business value / benefits realization");
   if (metrics.stakeholders < 50) went_wrong.push("Stakeholder engagement suffered");
   if (metrics.risk > 60) went_wrong.push("Risk exposure grew unchecked");
   if (metrics.scope < 55) went_wrong.push("Scope drifted — change control was bypassed");
   if (metrics.budget < 50) went_wrong.push("Budget overrun");
   if (metrics.morale < 50) went_wrong.push("Team morale dropped");
+  if (metrics.quality < 55) went_wrong.push("Quality standards slipped");
+  if (metrics.businessValue < 55) went_wrong.push("Business value drifted from the sponsor's intent");
   if (went_well.length === 0) went_well.push("You completed a full project lifecycle");
   if (went_wrong.length === 0) went_wrong.push("No major process failures");
 
@@ -850,10 +807,10 @@ function FinalReport({
         <div className="text-[11px] uppercase tracking-[0.3em] text-cyan-300">
           Certification of Simulation
         </div>
-        <h2 className="mt-2 text-3xl font-black tracking-tight">
-          Project Simulation Complete
-        </h2>
-        <p className="mt-1 text-slate-300">Level achieved: <strong className="text-white">{level}</strong></p>
+        <h2 className="mt-2 text-3xl font-black tracking-tight">Project Simulation Complete</h2>
+        <p className="mt-1 text-slate-300">
+          Level achieved: <strong className="text-white">{level}</strong>
+        </p>
         <div className="mx-auto mt-6 grid h-40 w-40 place-items-center rounded-full border-4 border-cyan-400/40 bg-gradient-to-br from-indigo-500/30 to-cyan-400/20">
           <div>
             <div className="text-5xl font-black text-white">{score}</div>
@@ -870,13 +827,16 @@ function FinalReport({
           <ReportRow k="Risk level" v={`${Math.round(metrics.risk)}%`} />
           <ReportRow k="Stakeholder satisfaction" v={`${Math.round(metrics.stakeholders)}%`} />
           <ReportRow k="Team morale" v={`${Math.round(metrics.morale)}%`} />
+          <ReportRow k="Quality" v={`${Math.round(metrics.quality)}%`} />
+          <ReportRow k="Business value" v={`${Math.round(metrics.businessValue)}%`} />
         </ReportBox>
         <ReportBox title="Learning Summary">
           <ReportRow k="Decisions made" v={String(decisions.length)} />
+          <ReportRow k="Correct answers" v={`${correct} / ${decisions.length}`} />
           <ReportRow k="Excellent calls" v={String(excellent)} />
           <ReportRow k="Poor calls" v={String(poor)} />
           <ReportRow k="XP earned" v={`${xp}`} />
-          <ReportRow k="Badges" v={badges.length ? badges.map(b => BADGE_META[b].emoji).join(" ") : "—"} />
+          <ReportRow k="Badges" v={badges.length ? badges.map((b) => BADGE_META[b].emoji).join(" ") : "—"} />
         </ReportBox>
       </div>
 
@@ -884,13 +844,17 @@ function FinalReport({
         <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] p-4">
           <div className="mb-2 text-sm font-semibold text-emerald-200">What went well</div>
           <ul className="space-y-1 text-sm text-slate-200">
-            {went_well.map((w) => <li key={w}>✓ {w}</li>)}
+            {went_well.map((w) => (
+              <li key={w}>✓ {w}</li>
+            ))}
           </ul>
         </div>
         <div className="rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-4">
           <div className="mb-2 text-sm font-semibold text-rose-200">Areas for improvement</div>
           <ul className="space-y-1 text-sm text-slate-200">
-            {went_wrong.map((w) => <li key={w}>• {w}</li>)}
+            {went_wrong.map((w) => (
+              <li key={w}>• {w}</li>
+            ))}
           </ul>
         </div>
       </div>
@@ -927,3 +891,4 @@ function ReportRow({ k, v }: { k: string; v: string }) {
 
 // Silence unused import warnings when the tree-shaker is aggressive.
 void Progress;
+void Link;
