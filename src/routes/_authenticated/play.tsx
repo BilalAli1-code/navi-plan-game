@@ -194,6 +194,8 @@ function Simulator() {
     <div className="min-h-screen bg-[#0b1020] text-slate-100">
       <Header xp={xp} level={level} streak={streak} userEmail={userEmail} onSignOut={signOut} />
 
+      <ExamFocusBanner />
+
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
         <PhaseRail phaseIdx={phaseIdx} finished={finished} />
 
