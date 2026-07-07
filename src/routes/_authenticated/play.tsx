@@ -282,6 +282,12 @@ function Header({
               />
             </div>
           </div>
+          <Link
+            to="/performance"
+            className="hidden rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-slate-100 transition hover:bg-white/[0.08] sm:inline-block"
+          >
+            Performance →
+          </Link>
           <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/10">
             🔥 {streak}
           </Badge>
