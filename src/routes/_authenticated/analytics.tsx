@@ -287,7 +287,7 @@ function AnalyticsView() {
           )}
         </Card>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
