@@ -530,62 +530,209 @@ function ScenarioCard({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-3"
           >
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-100">
-                <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] uppercase tracking-wider text-emerald-200">
-                  Explanation
-                </span>
-                {pendingChoice.id === meta.correctChoiceId ? (
-                  <span className="text-xs text-emerald-300">You picked the correct answer</span>
-                ) : (
-                  <span className="text-xs text-amber-300">
-                    Best answer was {meta.correctChoiceId.toUpperCase()}
-                    {correctChoice ? ` — ${correctChoice.label}` : ""}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm leading-relaxed text-slate-200">{meta.explanation}</p>
-              <div className="mt-3 rounded-lg border border-indigo-400/20 bg-indigo-400/[0.06] p-3 text-xs text-indigo-100">
-                <span className="mr-1 font-semibold uppercase tracking-wider text-indigo-200">
-                  PM mindset:
-                </span>
-                {meta.pmMindset}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-5">
-              <div className="mb-2 flex items-center gap-2">
-                <div className="grid h-7 w-7 place-items-center rounded-full bg-cyan-400 text-xs font-black text-slate-950">
-                  AI
-                </div>
-                <div className="text-sm font-semibold text-cyan-100">Coach — Senior PM</div>
-                <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-300">
-                  +{pendingChoice.xp} XP
-                </span>
-              </div>
-              {coachLoading && !coachText ? (
-                <div className="animate-pulse text-sm text-cyan-100/70">
-                  Analyzing your decision against PMBOK principles…
-                </div>
-              ) : (
-                <CoachMarkdown text={coachText ?? ""} />
-              )}
-              {!coachLoading && (
-                <div className="mt-4 flex justify-end">
-                  <Button
-                    onClick={onAdvance}
-                    className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90"
-                  >
-                    {isLast ? "Close project →" : "Continue →"}
-                  </Button>
-                </div>
-              )}
-            </div>
+            <LearningReview
+              scenario={scenario}
+              chosen={pendingChoice}
+              coachText={coachText}
+              coachLoading={coachLoading}
+              onAdvance={onAdvance}
+              isLast={isLast}
+            />
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function LearningReview({
+  scenario,
+  chosen,
+  coachText,
+  coachLoading,
+  onAdvance,
+  isLast,
+}: {
+  scenario: Scenario;
+  chosen: Choice;
+  coachText: string | null;
+  coachLoading: boolean;
+  onAdvance: () => void;
+  isLast: boolean;
+}) {
+  const meta = getScenarioMeta(scenario);
+  const correctChoice = scenario.choices.find((c) => c.id === meta.correctChoiceId)!;
+  const wasCorrect = chosen.id === meta.correctChoiceId;
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5">
+      {/* Header + verdict */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
+          Learning Review
+        </span>
+        {wasCorrect ? (
+          <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+            ✓ Correct — {chosen.id.toUpperCase()}
+          </span>
+        ) : (
+          <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold text-amber-200">
+            Best answer was {meta.correctChoiceId.toUpperCase()}
+          </span>
+        )}
+        <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-300">
+          +{chosen.xp} XP
+        </span>
+      </div>
+
+      {/* Correct answer highlight */}
+      <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] p-4">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-emerald-200">
+          ✅ Correct Answer — Option {meta.correctChoiceId.toUpperCase()}
+        </div>
+        <div className="text-sm font-medium text-slate-100">{correctChoice.label}</div>
+      </div>
+
+      {/* PMI Mindset */}
+      <ReviewSection label="PMI Mindset" tone="indigo">
+        <p className="text-sm leading-relaxed text-slate-200">{meta.explanation}</p>
+        <p className="mt-2 text-sm italic leading-relaxed text-indigo-100">
+          {meta.pmMindset}
+        </p>
+      </ReviewSection>
+
+      {/* Decision Analysis */}
+      <ReviewSection label="Decision Analysis" tone="slate">
+        <ul className="space-y-2.5">
+          {scenario.choices.map((c) => (
+            <li key={c.id} className="text-sm">
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "grid h-5 w-5 place-items-center rounded text-[10px] font-bold",
+                    c.id === meta.correctChoiceId
+                      ? "bg-emerald-400 text-slate-950"
+                      : c.quality === "poor"
+                      ? "bg-rose-500/70 text-slate-950"
+                      : c.quality === "risky"
+                      ? "bg-amber-400 text-slate-950"
+                      : "bg-cyan-400 text-slate-950",
+                  )}
+                >
+                  {c.id.toUpperCase()}
+                </span>
+                <span className="font-medium text-slate-100">
+                  {analysisLead(c, c.id === meta.correctChoiceId)}
+                </span>
+              </div>
+              <p className="ml-7 mt-0.5 text-xs leading-relaxed text-slate-400">
+                {c.rationale}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </ReviewSection>
+
+      {/* Exam Tip */}
+      <ReviewSection label="Exam Tip" tone="amber">
+        <p className="text-sm leading-relaxed text-amber-100">💡 {meta.examTip}</p>
+      </ReviewSection>
+
+      {/* Knowledge Area strip */}
+      <ReviewSection label="Knowledge Area" tone="slate">
+        <KnowledgeAreaStrip active={meta.knowledgeArea} />
+      </ReviewSection>
+
+      {/* AI coach narrative (kept as optional deeper coaching) */}
+      <ReviewSection label="Senior PM Coach" tone="cyan">
+        {coachLoading && !coachText ? (
+          <div className="animate-pulse text-sm text-cyan-100/70">
+            Analyzing your decision against PMBOK principles…
+          </div>
+        ) : coachText ? (
+          <CoachMarkdown text={coachText} />
+        ) : (
+          <p className="text-sm text-slate-400">Coach is offline — review the analysis above.</p>
+        )}
+      </ReviewSection>
+
+      {!coachLoading && (
+        <div className="flex justify-end">
+          <Button
+            onClick={onAdvance}
+            className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90"
+          >
+            {isLast ? "Close project →" : "Continue →"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function analysisLead(c: Choice, isCorrect: boolean): string {
+  if (isCorrect) return "Best answer — strongest PMBOK alignment.";
+  switch (c.quality) {
+    case "excellent":
+      return "Also strong — a valid alternative in this situation.";
+    case "good":
+      return "Reasonable, but incomplete for the exam.";
+    case "risky":
+      return "Risky — trades a short-term win for downstream cost.";
+    case "poor":
+    default:
+      return "Incorrect — violates PMBOK process.";
+  }
+}
+
+function ReviewSection({
+  label,
+  tone,
+  children,
+}: {
+  label: string;
+  tone: "indigo" | "cyan" | "amber" | "slate";
+  children: React.ReactNode;
+}) {
+  const toneMap = {
+    indigo: "border-indigo-400/20 bg-indigo-400/[0.04]",
+    cyan: "border-cyan-400/20 bg-cyan-400/[0.05]",
+    amber: "border-amber-400/20 bg-amber-400/[0.05]",
+    slate: "border-white/10 bg-white/[0.03]",
+  } as const;
+  const labelTone = {
+    indigo: "text-indigo-200",
+    cyan: "text-cyan-200",
+    amber: "text-amber-200",
+    slate: "text-slate-300",
+  } as const;
+  return (
+    <div className={cn("rounded-xl border p-4", toneMap[tone])}>
+      <div className={cn("mb-2 text-[11px] font-semibold uppercase tracking-widest", labelTone[tone])}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {KNOWLEDGE_AREAS.map((ka) => (
+        <span
+          key={ka}
+          className={cn(
+            "rounded-full border px-2.5 py-0.5 text-[11px] transition",
+            ka === active
+              ? "border-cyan-400/60 bg-cyan-400/20 font-semibold text-cyan-100"
+              : "border-white/10 bg-white/[0.02] text-slate-500",
+          )}
+        >
+          {ka}
+        </span>
+      ))}
     </div>
   );
 }
