@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Flame, GraduationCap, Play, RotateCw, Trophy } from "lucide-react";
 import { ALL_ACHIEVEMENT_RULES } from "@/lib/exam/gamification";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/exam/")({
   head: () => ({
