@@ -1,4 +1,10 @@
-import type { Scenario } from "./types";
+import type {
+  Difficulty,
+  KnowledgeArea,
+  ProcessGroup,
+  Scenario,
+  ScenarioMeta,
+} from "./types";
 
 export const PHASE_ORDER = [
   "initiation",
