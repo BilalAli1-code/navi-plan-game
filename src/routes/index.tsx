@@ -77,6 +77,9 @@ function Landing() {
               {signedIn ? "Continue simulation →" : "Start free simulation →"}
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
+              <Link to="/exam">Try the PMP Exam Simulator</Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost" className="text-slate-300 hover:bg-white/[0.05]">
               <Link to="/pricing">See Pro — $19/mo</Link>
             </Button>
           </div>

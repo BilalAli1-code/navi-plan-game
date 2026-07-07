@@ -1,0 +1,366 @@
+[
+  {
+    "id": "q001",
+    "domain": "People",
+    "knowledgeArea": "Stakeholder Engagement",
+    "difficulty": "Easy",
+    "question": "A key stakeholder has stopped attending status meetings and is not responding to emails. What should the project manager do FIRST?",
+    "options": [
+      { "id": "A", "text": "Escalate to the sponsor immediately.", "rationale": "Escalation without understanding the root cause damages the relationship." },
+      { "id": "B", "text": "Meet with the stakeholder one-on-one to understand their concerns.", "rationale": "Servant leadership starts with listening. Understanding the concern comes before action." },
+      { "id": "C", "text": "Remove the stakeholder from the register.", "rationale": "You cannot remove a legitimate stakeholder because they are disengaged." },
+      { "id": "D", "text": "Send a formal letter documenting non-participation.", "rationale": "Formal documentation is premature and adversarial." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "PMs proactively engage stakeholders and seek to understand before acting.",
+    "examStrategy": "When PMI offers a 'talk to them' option before escalation, it is usually correct."
+  },
+  {
+    "id": "q002",
+    "domain": "Process",
+    "knowledgeArea": "Risk Management",
+    "difficulty": "Medium",
+    "question": "During execution, a new regulatory risk is identified that could impact scope. What should the project manager do NEXT?",
+    "options": [
+      { "id": "A", "text": "Add the risk to the risk register and analyze it.", "rationale": "Correct — identified risks are logged and analyzed before response planning." },
+      { "id": "B", "text": "Immediately submit a change request.", "rationale": "A change request comes after analysis reveals scope impact." },
+      { "id": "C", "text": "Wait until the next risk review meeting.", "rationale": "Waiting delays response and violates proactive risk management." },
+      { "id": "D", "text": "Assign a risk owner and mitigate.", "rationale": "You cannot mitigate before qualitative/quantitative analysis." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Risk management is iterative — identify, analyze, plan response, monitor.",
+    "examStrategy": "Follow the risk process order; never skip analysis."
+  },
+  {
+    "id": "q003",
+    "domain": "Business Environment",
+    "knowledgeArea": "Business Value",
+    "difficulty": "Medium",
+    "question": "Midway through a project, the business case assumptions are found to be invalid. What should the project manager do?",
+    "options": [
+      { "id": "A", "text": "Continue as planned to preserve momentum.", "rationale": "Continuing an invalid business case wastes investment." },
+      { "id": "B", "text": "Recommend the sponsor reassess whether the project should continue.", "rationale": "Correct — projects that no longer deliver value should be reevaluated." },
+      { "id": "C", "text": "Cancel the project immediately.", "rationale": "The PM does not unilaterally cancel; the sponsor decides." },
+      { "id": "D", "text": "Reduce scope by 50%.", "rationale": "Arbitrary scope cuts do not address the invalid business case." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "The PM protects business value and enables informed governance decisions.",
+    "examStrategy": "PMI expects value-driven decisions, not schedule-driven ones."
+  },
+  {
+    "id": "q004",
+    "domain": "People",
+    "knowledgeArea": "Team Performance",
+    "difficulty": "Easy",
+    "question": "Two team members are in open conflict about a technical approach. What should the project manager do FIRST?",
+    "options": [
+      { "id": "A", "text": "Choose the approach yourself and move on.", "rationale": "Forcing shuts down collaboration." },
+      { "id": "B", "text": "Bring them together to collaborate on the decision.", "rationale": "Correct — collaborate/problem solve is the preferred conflict style." },
+      { "id": "C", "text": "Escalate to their functional managers.", "rationale": "Escalation is a last resort." },
+      { "id": "D", "text": "Avoid the situation until it resolves itself.", "rationale": "Avoidance does not resolve conflict." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "PMI favors collaborating/problem solving as the highest conflict resolution style."
+  },
+  {
+    "id": "q005",
+    "domain": "Process",
+    "knowledgeArea": "Scope Management",
+    "difficulty": "Hard",
+    "question": "A senior executive requests a 'small enhancement' directly to a developer, who begins work. The PM discovers this two weeks later. What should the PM do?",
+    "options": [
+      { "id": "A", "text": "Allow the work to continue since it is nearly done.", "rationale": "Accepting gold plating rewards unauthorized change." },
+      { "id": "B", "text": "Reverse the work and reprimand the developer.", "rationale": "Punitive action ignores the process failure." },
+      { "id": "C", "text": "Stop the work, submit a change request, and reinforce the change process.", "rationale": "Correct — protect scope and educate stakeholders on integrated change control." },
+      { "id": "D", "text": "Update the scope baseline silently.", "rationale": "Undocumented baseline changes violate configuration management." }
+    ],
+    "correctOptionId": "C",
+    "mindset": "Every scope change flows through integrated change control — no exceptions.",
+    "examStrategy": "Watch for 'small' or 'quick' change wording — PMI still requires the process."
+  },
+  {
+    "id": "q006",
+    "domain": "People",
+    "knowledgeArea": "Leadership",
+    "difficulty": "Medium",
+    "question": "You are leading a newly formed agile team. Velocity is unstable and morale is low. What should you do?",
+    "options": [
+      { "id": "A", "text": "Assign work individually and enforce deadlines.", "rationale": "Command-and-control damages self-organizing teams." },
+      { "id": "B", "text": "Facilitate a retrospective to surface impediments and coach the team.", "rationale": "Correct — servant leadership removes impediments and grows the team." },
+      { "id": "C", "text": "Replace underperforming members.", "rationale": "Premature — the team is in the forming/storming phase." },
+      { "id": "D", "text": "Ask the sponsor for a deadline extension.", "rationale": "Does not address the underlying team dynamics." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Servant leaders remove impediments, coach, and enable the team."
+  },
+  {
+    "id": "q007",
+    "domain": "Process",
+    "knowledgeArea": "Schedule Management",
+    "difficulty": "Hard",
+    "question": "The critical path shows a 3-week slip after a vendor delay. Fast-tracking is not feasible. What is the BEST next step?",
+    "options": [
+      { "id": "A", "text": "Crash the schedule by adding resources to critical tasks.", "rationale": "Correct — crashing trades cost for time on the critical path when fast-tracking is not viable." },
+      { "id": "B", "text": "Reduce quality to save time.", "rationale": "Reducing quality is not an acceptable trade-off." },
+      { "id": "C", "text": "Ignore the slip and hope to recover.", "rationale": "Ignoring is not project management." },
+      { "id": "D", "text": "Cut scope without stakeholder approval.", "rationale": "Scope reduction requires change control." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Schedule compression: fast-track first (parallelism), then crash (cost)."
+  },
+  {
+    "id": "q008",
+    "domain": "Business Environment",
+    "knowledgeArea": "Compliance",
+    "difficulty": "Expert",
+    "question": "A new data privacy regulation takes effect mid-project. Compliance will delay delivery by six weeks. What should the PM do?",
+    "options": [
+      { "id": "A", "text": "Deliver on time and add compliance in a follow-on project.", "rationale": "Shipping non-compliant product creates legal and business risk." },
+      { "id": "B", "text": "Perform impact analysis, submit a change request, and update the plan.", "rationale": "Correct — external compliance is a legitimate enterprise environmental factor requiring integrated change control." },
+      { "id": "C", "text": "Absorb the delay silently.", "rationale": "Undocumented plan changes destroy baseline integrity." },
+      { "id": "D", "text": "Escalate to legal to challenge the regulation.", "rationale": "Not the PM's role and delays action." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Compliance is non-negotiable and always flows through change control."
+  },
+  {
+    "id": "q009",
+    "domain": "People",
+    "knowledgeArea": "Stakeholder Engagement",
+    "difficulty": "Medium",
+    "question": "A stakeholder classified as 'Neutral' on the engagement matrix should be moved to 'Supportive'. What should you do?",
+    "options": [
+      { "id": "A", "text": "Update the stakeholder engagement plan and tailor communications.", "rationale": "Correct — the plan drives targeted engagement to move the stakeholder." },
+      { "id": "B", "text": "Increase the frequency of all-hands emails.", "rationale": "Broadcasts are not tailored engagement." },
+      { "id": "C", "text": "Assign the stakeholder a work package.", "rationale": "Work assignment is not engagement management." },
+      { "id": "D", "text": "Escalate to the sponsor.", "rationale": "Escalation is not the first move." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Engagement is planned, tailored, and continuously monitored."
+  },
+  {
+    "id": "q010",
+    "domain": "Process",
+    "knowledgeArea": "Quality Management",
+    "difficulty": "Medium",
+    "question": "During QA, defects are trending upward. The team blames unclear requirements. What is the BEST response?",
+    "options": [
+      { "id": "A", "text": "Add more testers.", "rationale": "Testing detects defects but does not prevent them." },
+      { "id": "B", "text": "Perform root cause analysis and improve the requirements process.", "rationale": "Correct — quality is planned in, not inspected in." },
+      { "id": "C", "text": "Reduce the acceptance criteria.", "rationale": "Lowering quality standards is not acceptable." },
+      { "id": "D", "text": "Blame the business analyst.", "rationale": "Blame is not corrective action." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Prevention over inspection — address process causes."
+  },
+  {
+    "id": "q011",
+    "domain": "People",
+    "knowledgeArea": "Team Performance",
+    "difficulty": "Easy",
+    "question": "A remote team member consistently misses stand-ups due to time zone conflicts. What should you do?",
+    "options": [
+      { "id": "A", "text": "Adjust the stand-up cadence or format to include them.", "rationale": "Correct — inclusive team practices enable participation." },
+      { "id": "B", "text": "Remove them from the team.", "rationale": "Punitive and premature." },
+      { "id": "C", "text": "Require them to attend regardless of time zone.", "rationale": "Not sustainable or inclusive." },
+      { "id": "D", "text": "Stop holding stand-ups.", "rationale": "Overreacts and eliminates a useful practice." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Adapt team practices to enable every member to contribute."
+  },
+  {
+    "id": "q012",
+    "domain": "Process",
+    "knowledgeArea": "Communications",
+    "difficulty": "Easy",
+    "question": "You are managing a 15-person project. How many communication channels exist?",
+    "options": [
+      { "id": "A", "text": "105", "rationale": "Correct — n(n-1)/2 = 15*14/2 = 105." },
+      { "id": "B", "text": "120", "rationale": "Incorrect calculation." },
+      { "id": "C", "text": "15", "rationale": "This is the number of people, not channels." },
+      { "id": "D", "text": "210", "rationale": "This doubles the correct value." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Know n(n-1)/2 by heart for communication channel questions."
+  },
+  {
+    "id": "q013",
+    "domain": "Business Environment",
+    "knowledgeArea": "Benefits Realization",
+    "difficulty": "Hard",
+    "question": "The project delivered on scope, time, and budget, but the business benefits were not realized. What most likely went wrong?",
+    "options": [
+      { "id": "A", "text": "The PM failed to align deliverables to expected benefits.", "rationale": "Correct — the benefits realization plan connects deliverables to value." },
+      { "id": "B", "text": "The team lacked skills.", "rationale": "Would show as scope/quality issues, not benefits shortfall." },
+      { "id": "C", "text": "The sponsor was unavailable.", "rationale": "Possible but not the primary root cause." },
+      { "id": "D", "text": "The estimate was wrong.", "rationale": "Estimation issues would show in cost/schedule variance." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Success is measured in realized benefits, not just delivery."
+  },
+  {
+    "id": "q014",
+    "domain": "Process",
+    "knowledgeArea": "Cost Management",
+    "difficulty": "Hard",
+    "question": "EV = 400, PV = 500, AC = 450. Which statement is TRUE?",
+    "options": [
+      { "id": "A", "text": "The project is behind schedule and over budget.", "rationale": "Correct — SV = -100 (behind), CV = -50 (over budget)." },
+      { "id": "B", "text": "The project is ahead of schedule and under budget.", "rationale": "Wrong signs." },
+      { "id": "C", "text": "The project is on schedule and on budget.", "rationale": "Values differ; not on plan." },
+      { "id": "D", "text": "Cannot be determined.", "rationale": "EVM formulas are deterministic." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "EVM: SV = EV-PV, CV = EV-AC. Negative = behind/over."
+  },
+  {
+    "id": "q015",
+    "domain": "People",
+    "knowledgeArea": "Leadership",
+    "difficulty": "Expert",
+    "question": "You have inherited a team that has been micromanaged for months. Trust is low. Deliverables are stalling. What is your FIRST action?",
+    "options": [
+      { "id": "A", "text": "Rebuild trust through transparency, listening, and small wins.", "rationale": "Correct — servant leadership rebuilds trust before performance can improve." },
+      { "id": "B", "text": "Set aggressive weekly commitments.", "rationale": "Reinforces micromanagement." },
+      { "id": "C", "text": "Reorganize the team structure.", "rationale": "Change without trust worsens morale." },
+      { "id": "D", "text": "Replace the team lead.", "rationale": "Punitive and premature." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Trust is a leadership prerequisite for performance."
+  },
+  {
+    "id": "q016",
+    "domain": "Process",
+    "knowledgeArea": "Procurement",
+    "difficulty": "Medium",
+    "question": "A vendor is repeatedly missing deliverables. The contract is fixed-price. What should the PM do?",
+    "options": [
+      { "id": "A", "text": "Renegotiate to time-and-materials.", "rationale": "Rewards non-performance." },
+      { "id": "B", "text": "Enforce the contract, document non-conformance, and work with procurement.", "rationale": "Correct — administer per contract terms with procurement." },
+      { "id": "C", "text": "Terminate immediately.", "rationale": "Termination is a last resort after cure notices." },
+      { "id": "D", "text": "Absorb the work internally.", "rationale": "Ignores contractual remedies." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Administer contracts through documented, contract-compliant remedies."
+  },
+  {
+    "id": "q017",
+    "domain": "People",
+    "knowledgeArea": "Stakeholder Engagement",
+    "difficulty": "Hard",
+    "question": "During Planning, you identify that a powerful stakeholder disagrees with the delivery approach. What should you do?",
+    "options": [
+      { "id": "A", "text": "Ignore them; the sponsor already approved the approach.", "rationale": "Ignoring a powerful, influential stakeholder is high risk." },
+      { "id": "B", "text": "Engage the stakeholder early to understand and address concerns.", "rationale": "Correct — proactive engagement prevents downstream escalation." },
+      { "id": "C", "text": "Escalate to the sponsor.", "rationale": "Not the first move; try to engage first." },
+      { "id": "D", "text": "Change the approach unilaterally.", "rationale": "Ignores prior governance decisions." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "High-power stakeholders are engaged early and often."
+  },
+  {
+    "id": "q018",
+    "domain": "Business Environment",
+    "knowledgeArea": "Organizational Change",
+    "difficulty": "Medium",
+    "question": "End users are resisting the new system that the project is deploying. What should you do?",
+    "options": [
+      { "id": "A", "text": "Escalate to the sponsor to mandate adoption.", "rationale": "Mandates without engagement rarely achieve adoption." },
+      { "id": "B", "text": "Partner with change management to address readiness and training.", "rationale": "Correct — adoption requires change management, not force." },
+      { "id": "C", "text": "Delay the deployment indefinitely.", "rationale": "Indefinite delay abandons benefits." },
+      { "id": "D", "text": "Reduce functionality to what they will accept.", "rationale": "Sacrifices benefits without addressing the real issue." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Delivery includes adoption — engage change management partners."
+  },
+  {
+    "id": "q019",
+    "domain": "Process",
+    "knowledgeArea": "Risk Management",
+    "difficulty": "Expert",
+    "question": "A high-impact, low-probability risk becomes imminent and no response was planned. What should you do?",
+    "options": [
+      { "id": "A", "text": "Implement a workaround and update the risk register.", "rationale": "Correct — unplanned risks trigger workarounds and register updates." },
+      { "id": "B", "text": "Ignore it since no response was planned.", "rationale": "Ignoring imminent risk is negligent." },
+      { "id": "C", "text": "Escalate to the sponsor for a decision.", "rationale": "May be needed later but the immediate action is a workaround." },
+      { "id": "D", "text": "Trigger the contingency reserve.", "rationale": "Contingency is for identified risks, not unplanned ones." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Unknown risks trigger workarounds; known risks use contingency."
+  },
+  {
+    "id": "q020",
+    "domain": "People",
+    "knowledgeArea": "Team Performance",
+    "difficulty": "Medium",
+    "question": "A team member proposes a new estimation technique that could improve accuracy. How should the PM respond?",
+    "options": [
+      { "id": "A", "text": "Empower the team to trial it and inspect results.", "rationale": "Correct — empower the team and inspect/adapt." },
+      { "id": "B", "text": "Reject it to maintain consistency.", "rationale": "Suppresses learning." },
+      { "id": "C", "text": "Escalate to the sponsor.", "rationale": "Unnecessary escalation." },
+      { "id": "D", "text": "Implement it across all projects immediately.", "rationale": "Skips validation." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Enable team learning; inspect and adapt."
+  },
+  {
+    "id": "q021",
+    "domain": "Process",
+    "knowledgeArea": "Integration",
+    "difficulty": "Easy",
+    "question": "Which document authorizes the existence of the project and gives the PM authority?",
+    "options": [
+      { "id": "A", "text": "Project Charter", "rationale": "Correct — the charter formally authorizes the project." },
+      { "id": "B", "text": "Project Management Plan", "rationale": "Details how to execute, not the authorization." },
+      { "id": "C", "text": "Scope Statement", "rationale": "Defines scope, not authorization." },
+      { "id": "D", "text": "Business Case", "rationale": "Justifies the project but does not authorize it." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Charter = authorization + PM authority."
+  },
+  {
+    "id": "q022",
+    "domain": "Business Environment",
+    "knowledgeArea": "Business Value",
+    "difficulty": "Easy",
+    "question": "Which is the BEST measure of project success in PMBOK 7?",
+    "options": [
+      { "id": "A", "text": "On time, on budget delivery.", "rationale": "Traditional but insufficient." },
+      { "id": "B", "text": "Realized value and stakeholder outcomes.", "rationale": "Correct — outcomes and value are the primary measure." },
+      { "id": "C", "text": "Number of deliverables completed.", "rationale": "Output, not outcome." },
+      { "id": "D", "text": "Team utilization rate.", "rationale": "Resource metric, not success." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "Value delivery > pure iron-triangle metrics."
+  },
+  {
+    "id": "q023",
+    "domain": "Process",
+    "knowledgeArea": "Change Control",
+    "difficulty": "Medium",
+    "question": "A change request is approved by the CCB. What must the PM do?",
+    "options": [
+      { "id": "A", "text": "Update the affected baselines and communicate the change.", "rationale": "Correct — approved changes update baselines and are communicated." },
+      { "id": "B", "text": "Implement the change without updating documentation.", "rationale": "Breaks configuration management." },
+      { "id": "C", "text": "Wait until phase-end to apply the change.", "rationale": "Delay causes downstream issues." },
+      { "id": "D", "text": "Reopen the change with the sponsor.", "rationale": "Change is already approved." }
+    ],
+    "correctOptionId": "A",
+    "mindset": "Approved change → baseline update → communication → implementation."
+  },
+  {
+    "id": "q024",
+    "domain": "People",
+    "knowledgeArea": "Leadership",
+    "difficulty": "Hard",
+    "question": "A senior stakeholder tries to influence you to hide bad news from the sponsor. What should you do?",
+    "options": [
+      { "id": "A", "text": "Comply to preserve the relationship.", "rationale": "Violates PMI Code of Ethics — honesty and responsibility." },
+      { "id": "B", "text": "Refuse and report accurate status to the sponsor.", "rationale": "Correct — honesty is non-negotiable per the PMI Code of Ethics." },
+      { "id": "C", "text": "Soften the message but include the facts.", "rationale": "Softening is acceptable only if it does not distort truth; refusing to hide is the core answer." },
+      { "id": "D", "text": "Escalate anonymously.", "rationale": "Direct, professional reporting is expected." }
+    ],
+    "correctOptionId": "B",
+    "mindset": "PMI Code of Ethics: responsibility, respect, fairness, honesty."
+  }
+]
