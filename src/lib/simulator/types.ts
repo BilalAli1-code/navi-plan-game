@@ -63,8 +63,21 @@ export type ScenarioMeta = {
   difficulty: Difficulty;
   explanation: string; // why the correct answer is correct
   pmMindset: string; // one-line mindset takeaway
+  examTip: string; // concise PMP exam strategy tip
   correctChoiceId: string; // derived from scenario if not set
 };
+
+export type PerfCategory =
+  | "Leadership"
+  | "Risk Management"
+  | "Stakeholder Engagement"
+  | "Communication"
+  | "Business Value"
+  | "Agile Mindset"
+  | "Predictive Mindset"
+  | "Integration Thinking";
+
+export type PerfScores = Record<PerfCategory, number>;
 
 export type BadgeId =
   | "risk-manager"
