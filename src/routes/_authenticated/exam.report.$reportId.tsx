@@ -172,23 +172,11 @@ function ReportView() {
         </section>
 
         <section className="mt-10">
-          <h2 className="mb-3 text-lg font-semibold">Question review</h2>
-          <div className="space-y-2">
-            {(() => {
-              const answerEntries = Object.values({} as never);
-              void answerEntries;
-              const items: JSX.Element[] = [];
-              const answers = report; // just for closure clarity
-              void answers;
-              // We iterate the session snapshot via history: report holds no
-              // per-question answer data, so we surface totals only.
-              return items;
-            })()}
-            <div className="text-sm text-muted-foreground">
-              Overall: {report.correctCount}/{report.totalQuestions} correct.
-              Confidence average:{" "}
-              {report.avgConfidence ? report.avgConfidence.toFixed(1) : "n/a"}.
-            </div>
+          <h2 className="mb-3 text-lg font-semibold">Summary</h2>
+          <div className="text-sm text-muted-foreground">
+            Overall: {report.correctCount}/{report.totalQuestions} correct.
+            Confidence average:{" "}
+            {report.avgConfidence ? report.avgConfidence.toFixed(1) : "n/a"}.
           </div>
         </section>
 
