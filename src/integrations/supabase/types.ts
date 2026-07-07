@@ -89,6 +89,7 @@ export type Database = {
           stripe_subscription_id: string
           updated_at: string | null
           user_id: string
+          welcome_bonus_granted: boolean
         }
         Insert: {
           cancel_at_period_end?: boolean | null
@@ -104,6 +105,7 @@ export type Database = {
           stripe_subscription_id: string
           updated_at?: string | null
           user_id: string
+          welcome_bonus_granted?: boolean
         }
         Update: {
           cancel_at_period_end?: boolean | null
@@ -119,6 +121,7 @@ export type Database = {
           stripe_subscription_id?: string
           updated_at?: string | null
           user_id?: string
+          welcome_bonus_granted?: boolean
         }
         Relationships: []
       }
