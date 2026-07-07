@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Sparkles, TrendingDown, TrendingUp, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/exam/report/$reportId")({
   head: () => ({
@@ -24,20 +25,23 @@ function ReportView() {
 
   if (!report) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Report not found.</p>
-          <Link to="/exam" className="mt-3 inline-block text-primary hover:underline">
-            Back to exam menu
-          </Link>
+      <AppShell variant="app">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">Report not found.</p>
+            <Link to="/exam" className="mt-3 inline-block text-primary hover:underline">
+              Back to exam menu
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <AppShell variant="app">
       <div className="mx-auto max-w-5xl px-6 py-10">
+
         <header className="mb-8">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
             Exam Report · {new Date(report.completedAt).toLocaleString()}
@@ -198,7 +202,7 @@ function ReportView() {
           </Link>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -309,7 +313,7 @@ function AiCoachPanel({ report }: { report: ReportForCoach }) {
           </Button>
         </div>
         {error && (
-          <div className="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+          <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}

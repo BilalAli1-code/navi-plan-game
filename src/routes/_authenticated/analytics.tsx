@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLevel } from "@/lib/exam/gamification";
 import type { ExamReport } from "@/lib/exam/types";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
@@ -69,8 +70,9 @@ function AnalyticsView() {
   }, [history]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <AppShell variant="app">
       <div className="mx-auto max-w-6xl px-6 py-10">
+
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -285,7 +287,7 @@ function AnalyticsView() {
           )}
         </Card>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -389,7 +391,7 @@ function StreakGrid({ dates }: { dates: string[] }) {
           title={c.label}
           className={
             "h-6 rounded " +
-            (c.active ? "bg-emerald-500/70" : "bg-muted/40")
+            (c.active ? "bg-success/70" : "bg-muted/40")
           }
         />
       ))}

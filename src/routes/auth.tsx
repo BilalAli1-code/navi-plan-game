@@ -79,18 +79,18 @@ function AuthPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[#0b1020] px-4 text-slate-100">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl">
-        <Link to="/" className="mb-6 flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 font-black text-slate-950">
-            PS
-          </div>
-          <div className="text-sm font-semibold">ProjectSim</div>
+    <div className="grid min-h-screen place-items-center bg-background px-4 py-10 text-foreground">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-8 shadow-2xl">
+        <Link to="/" className="mb-6 flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-md border border-border bg-surface-strong font-display text-sm font-bold">
+            Ps
+          </span>
+          <span className="font-display text-base font-bold tracking-tight">ProjectSim</span>
         </Link>
-        <h1 className="text-xl font-bold">
+        <h1 className="font-display text-2xl tracking-tight">
           {mode === "signin" ? "Welcome back" : "Create your account"}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           {mode === "signin"
             ? "Sign in to continue your PMBOK simulation."
             : "Track your XP, badges and past runs across devices."}
@@ -101,31 +101,31 @@ function AuthPage() {
           onClick={signInGoogle}
           disabled={loading}
           variant="outline"
-          className="mt-5 w-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+          className="mt-6 w-full border-border bg-background/40 hover:bg-background"
         >
           Continue with Google
         </Button>
 
-        <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-widest text-slate-500">
-          <div className="h-px flex-1 bg-white/10" /> or <div className="h-px flex-1 bg-white/10" />
+        <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
         </div>
 
         <form onSubmit={submit} className="space-y-3">
           {mode === "signup" && (
             <div>
-              <Label htmlFor="name" className="text-slate-300">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="mt-1 border-white/10 bg-white/[0.04]" />
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="mt-1 bg-background/40" />
             </div>
           )}
           <div>
-            <Label htmlFor="email" className="text-slate-300">Email</Label>
-            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 border-white/10 bg-white/[0.04]" />
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-background/40" />
           </div>
           <div>
-            <Label htmlFor="password" className="text-slate-300">Password</Label>
-            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 border-white/10 bg-white/[0.04]" />
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-background/40" />
           </div>
-          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90">
+          <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
             {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </Button>
         </form>
@@ -133,7 +133,7 @@ function AuthPage() {
         <button
           type="button"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-4 w-full text-center text-sm text-slate-400 hover:text-slate-200"
+          className="mt-5 w-full text-center text-sm text-muted-foreground transition hover:text-foreground"
         >
           {mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
         </button>

@@ -47,23 +47,23 @@ function PerformancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b1020] text-slate-100">
-      <header className="border-b border-white/5 bg-[#0b1020]/80 backdrop-blur">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 font-black text-slate-950">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary font-black text-primary-foreground">
               PS
             </div>
             <div>
               <h1 className="text-base font-semibold sm:text-lg">Performance</h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Hidden scoring across the 8 PMP performance categories
               </p>
             </div>
           </div>
           <Link
             to="/play"
-            className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-slate-100 transition hover:bg-white/[0.08]"
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-strong"
           >
             ← Back to simulator
           </Link>
@@ -72,24 +72,24 @@ function PerformancePage() {
 
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-border/60 bg-surface/60 p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-slate-400">
+                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
                   Overall accuracy
                 </div>
                 <div className="mt-1 text-3xl font-black text-white">{pct}%</div>
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-muted-foreground">
                   {correct} correct of {total} decisions
                 </div>
               </div>
               {weak.length > 0 && (
                 <div className="max-w-[260px] text-right">
-                  <div className="text-[11px] uppercase tracking-widest text-slate-400">
+                  <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
                     Adaptive focus
                   </div>
                   <div className="mt-1 text-sm text-amber-200">{weak.join(" · ")}</div>
-                  <div className="mt-0.5 text-[11px] text-slate-500">
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
                     Future scenarios will lean into these areas.
                   </div>
                 </div>
@@ -103,13 +103,13 @@ function PerformancePage() {
                 return (
                   <div
                     key={c}
-                    className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
+                    className="rounded-xl border border-border/60 bg-surface/40 p-3"
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-200">{c}</span>
+                      <span className="font-medium text-foreground">{c}</span>
                       <span className={cn("font-semibold", t.text)}>{Math.round(v)}</span>
                     </div>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-strong">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.max(0, Math.min(100, v))}%` }}
@@ -123,8 +123,8 @@ function PerformancePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
-            <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">
+          <div className="rounded-2xl border border-border/60 bg-surface/60 p-5">
+            <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">
               Knowledge Area coverage
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -135,11 +135,11 @@ function PerformancePage() {
                 return (
                   <div
                     key={ka}
-                    className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-border/60 bg-surface/40 px-3 py-2 text-xs"
                   >
-                    <span className="font-medium text-slate-200">{ka}</span>
+                    <span className="font-medium text-foreground">{ka}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {stats.correct}/{stats.total || 0}
                       </span>
                       <span className={cn("w-8 text-right font-semibold", t.text)}>
@@ -154,8 +154,8 @@ function PerformancePage() {
         </section>
 
         <aside className="space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
-            <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">
+          <div className="rounded-2xl border border-border/60 bg-surface/60 p-5">
+            <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">
               Coaching recommendations
             </div>
             <ol className="space-y-3">
@@ -164,23 +164,23 @@ function PerformancePage() {
                 return (
                   <li key={r.category}>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-slate-100">{r.category}</span>
+                      <span className="font-semibold text-foreground">{r.category}</span>
                       <span className={cn("text-xs font-semibold", t.text)}>
                         {Math.round(r.score)}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-400">{r.tip}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{r.tip}</p>
                   </li>
                 );
               })}
             </ol>
           </div>
 
-          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.05] p-5">
-            <div className="mb-2 text-[11px] uppercase tracking-widest text-cyan-200">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+            <div className="mb-2 text-[11px] uppercase tracking-widest text-primary">
               How this works
             </div>
-            <p className="text-xs leading-relaxed text-slate-300">
+            <p className="text-xs leading-relaxed text-foreground/80">
               Every decision privately adjusts these 8 categories based on its knowledge
               area, quality, and the mindset (agile vs predictive) it reveals. The
               simulator uses your weakest categories to reorder upcoming phase

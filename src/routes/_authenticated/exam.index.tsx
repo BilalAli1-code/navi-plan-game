@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Flame, GraduationCap, Play, RotateCw, Trophy } from "lucide-react";
 import { ALL_ACHIEVEMENT_RULES } from "@/lib/exam/gamification";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/exam/")({
   head: () => ({
@@ -39,9 +40,9 @@ function ExamLanding() {
   const goToSession = () => navigate({ to: "/exam/session" });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <TopBar />
+    <AppShell variant="app">
       <div className="mx-auto max-w-6xl px-6 py-10">
+
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -261,7 +262,7 @@ function ExamLanding() {
           )}
         </section>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -291,31 +292,5 @@ function ExamOption({
         <Play className="mr-2 h-4 w-4" /> {cta}
       </Button>
     </Card>
-  );
-}
-
-function TopBar() {
-  return (
-    <div className="border-b border-border/60 bg-card/50">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <Link to="/" className="text-sm font-semibold tracking-tight">
-          ProjectSim
-        </Link>
-        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-          <Link to="/play" className="hover:text-foreground">
-            Simulator
-          </Link>
-          <Link to="/exam" className="text-foreground">
-            Exam
-          </Link>
-          <Link to="/analytics" className="hover:text-foreground">
-            Analytics
-          </Link>
-          <Link to="/performance" className="hover:text-foreground">
-            Performance
-          </Link>
-        </nav>
-      </div>
-    </div>
   );
 }
