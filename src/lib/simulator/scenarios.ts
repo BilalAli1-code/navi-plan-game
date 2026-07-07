@@ -420,6 +420,7 @@ const SCENARIO_META_OVERRIDES: Record<
     explanation:
       "Confront-problem-solve conflict style with structured criteria and a timeboxed decision preserves ownership and morale.",
     pmMindset: "Facilitate the decision; don't own the answer. Servant leadership beats forcing.",
+    examTip: "The PMP usually favors collaboration and problem-solving before escalation or forcing a decision.",
   },
   "mon-1": {
     knowledgeArea: "Integration",
