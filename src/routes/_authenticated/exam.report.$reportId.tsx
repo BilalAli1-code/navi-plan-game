@@ -202,7 +202,7 @@ function ReportView() {
           </Link>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
