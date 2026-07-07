@@ -76,6 +76,9 @@ function Landing() {
             >
               {signedIn ? "Continue simulation →" : "Start free simulation →"}
             </Button>
+            <Button asChild size="lg" variant="outline" className="border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
+              <Link to="/pricing">See Pro — $19/mo</Link>
+            </Button>
           </div>
           <p className="mt-3 text-xs text-slate-500">
             Installable on any phone — add ProjectSim to your home screen.
