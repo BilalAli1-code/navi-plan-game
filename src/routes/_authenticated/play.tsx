@@ -414,7 +414,6 @@ function ScenarioCard({
 }) {
   const isEvent = scenario.kind === "event";
   const meta = getScenarioMeta(scenario);
-  const correctChoice = scenario.choices.find((c) => c.id === meta.correctChoiceId);
   return (
     <div className="space-y-4">
       <AnimatePresence mode="wait">
