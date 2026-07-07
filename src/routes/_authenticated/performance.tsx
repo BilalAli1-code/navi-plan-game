@@ -103,7 +103,7 @@ function PerformancePage() {
                 return (
                   <div
                     key={c}
-                    className="rounded-xl border border-border/60 bg-white/[0.02] p-3"
+                    className="rounded-xl border border-border/60 bg-surface/40 p-3"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-foreground">{c}</span>
@@ -135,7 +135,7 @@ function PerformancePage() {
                 return (
                   <div
                     key={ka}
-                    className="flex items-center justify-between rounded-lg border border-border/60 bg-white/[0.02] px-3 py-2 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-border/60 bg-surface/40 px-3 py-2 text-xs"
                   >
                     <span className="font-medium text-foreground">{ka}</span>
                     <div className="flex items-center gap-3">

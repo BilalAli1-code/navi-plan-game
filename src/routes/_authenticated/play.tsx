@@ -763,7 +763,7 @@ function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
             "rounded-full border px-2.5 py-0.5 text-[11px] transition",
             ka === active
               ? "border-cyan-400/60 bg-cyan-400/20 font-semibold text-cyan-100"
-              : "border-border bg-white/[0.02] text-muted-foreground",
+              : "border-border bg-surface/40 text-muted-foreground",
           )}
         >
           {ka}
@@ -878,7 +878,7 @@ function BadgesPanel({ badges }: { badges: string[] }) {
                 "grid aspect-square place-items-center rounded-xl border text-lg transition",
                 earned
                   ? "border-amber-300/40 bg-amber-300/10 text-amber-200"
-                  : "border-border/60 bg-white/[0.02] text-slate-600 grayscale",
+                  : "border-border/60 bg-surface/40 text-muted-foreground/70 grayscale",
               )}
             >
               {meta.emoji}
@@ -975,7 +975,7 @@ function FinalReport({
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-indigo-500/10 via-white/[0.03] to-cyan-400/10 p-8"
+      className="overflow-hidden rounded-2xl border border-border bg-surface/60 p-8"
     >
       <div className="text-center">
         <div className="text-[11px] uppercase tracking-[0.3em] text-cyan-300">
@@ -985,7 +985,7 @@ function FinalReport({
         <p className="mt-1 text-foreground/80">
           Level achieved: <strong className="text-white">{level}</strong>
         </p>
-        <div className="mx-auto mt-6 grid h-40 w-40 place-items-center rounded-full border-4 border-cyan-400/40 bg-gradient-to-br from-indigo-500/30 to-cyan-400/20">
+        <div className="mx-auto mt-6 grid h-40 w-40 place-items-center rounded-full border-4 border-primary/40 bg-primary-soft">
           <div>
             <div className="text-5xl font-black text-white">{score}</div>
             <div className="text-xs text-foreground/80">out of 100</div>
