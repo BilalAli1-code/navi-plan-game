@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLevel } from "@/lib/exam/gamification";
 import type { ExamReport } from "@/lib/exam/types";
+import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
