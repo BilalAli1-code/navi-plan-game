@@ -13,6 +13,7 @@ import type {
 } from "@/lib/simulator/types";
 import { useProjectState } from "@/lib/simulator/project-state";
 import { KNOWLEDGE_AREAS } from "@/lib/simulator/performance";
+import { useExamWeaknesses } from "@/lib/exam/use-exam-weaknesses";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
