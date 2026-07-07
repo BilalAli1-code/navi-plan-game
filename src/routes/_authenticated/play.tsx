@@ -191,7 +191,7 @@ function Simulator() {
   }, [finished, saved, metrics, xp, badges, decisions]);
 
   return (
-    <div className="min-h-screen bg-[#0b1020] text-slate-100">
+    <div className="min-h-screen bg-background text-foreground">
       <Header xp={xp} level={level} streak={streak} userEmail={userEmail} onSignOut={signOut} />
 
       <ExamFocusBanner />
@@ -241,7 +241,7 @@ function ExamFocusBanner() {
   return (
     <div className="border-b border-cyan-400/20 bg-cyan-400/5">
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs">
-        <div className="text-slate-300">
+        <div className="text-foreground/80">
           <span className="mr-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-cyan-200">
             Exam-tuned
           </span>
@@ -250,7 +250,7 @@ function ExamFocusBanner() {
             {weakestKAs.join(" · ")}
           </span>
           {passProbability !== null && (
-            <span className="ml-2 text-slate-400">
+            <span className="ml-2 text-muted-foreground">
               (last exam pass probability {passProbability}%)
             </span>
           )}
@@ -281,41 +281,41 @@ function Header({
       ? 100
       : Math.round(((xp - level.min) / (level.next - level.min)) * 100);
   return (
-    <header className="border-b border-white/5 bg-[#0b1020]/80 backdrop-blur">
+    <header className="border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto grid max-w-[1400px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-4 sm:flex sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 font-black text-slate-950">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary font-black text-primary-foreground">
             PS
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
               ProjectSim
             </h1>
-            <p className="truncate text-xs text-slate-400">
+            <p className="truncate text-xs text-muted-foreground">
               PMBOK Project Management Training Simulator
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="hidden text-right sm:block">
-            <div className="text-[11px] uppercase tracking-widest text-slate-400">Level</div>
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Level</div>
             <div className="text-sm font-semibold">{level.name}</div>
           </div>
           <div className="min-w-[120px]">
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
               <span>{xp} XP</span>
               <span>{level.next ? `${level.next} XP` : "MAX"}</span>
             </div>
-            <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-surface-strong">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-cyan-300"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${pct}%` }}
               />
             </div>
           </div>
           <Link
             to="/performance"
-            className="hidden rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-slate-100 transition hover:bg-white/[0.08] sm:inline-block"
+            className="hidden rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-strong sm:inline-block"
           >
             Performance →
           </Link>
@@ -324,15 +324,15 @@ function Header({
           </Badge>
           {userEmail && (
             <div className="hidden text-right md:block">
-              <div className="text-[11px] uppercase tracking-widest text-slate-400">Signed in</div>
-              <div className="max-w-[160px] truncate text-xs text-slate-200">{userEmail}</div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Signed in</div>
+              <div className="max-w-[160px] truncate text-xs text-foreground">{userEmail}</div>
             </div>
           )}
           <Button
             size="sm"
             variant="outline"
             onClick={onSignOut}
-            className="border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+            className="border-border bg-surface text-foreground hover:bg-surface-strong"
           >
             Sign out
           </Button>
@@ -345,8 +345,8 @@ function Header({
 function PhaseRail({ phaseIdx, finished }: { phaseIdx: number; finished: boolean }) {
   return (
     <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-3">
-        <div className="mb-2 px-2 text-[11px] uppercase tracking-widest text-slate-400">
+      <div className="rounded-2xl border border-border/60 bg-surface/60 p-3">
+        <div className="mb-2 px-2 text-[11px] uppercase tracking-widest text-muted-foreground">
           Project Lifecycle
         </div>
         <ol className="space-y-1">
@@ -359,24 +359,24 @@ function PhaseRail({ phaseIdx, finished }: { phaseIdx: number; finished: boolean
                 className={cn(
                   "flex items-start gap-3 rounded-xl px-3 py-2.5 transition",
                   active && "bg-indigo-500/15 ring-1 ring-indigo-400/30",
-                  !active && "hover:bg-white/[0.03]",
+                  !active && "hover:bg-surface/60",
                 )}
               >
                 <div
                   className={cn(
                     "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
-                    done && "bg-emerald-500/90 text-slate-950",
-                    active && "bg-indigo-400 text-slate-950",
-                    !done && !active && "bg-white/10 text-slate-300",
+                    done && "bg-emerald-500/90 text-primary-foreground",
+                    active && "bg-indigo-400 text-primary-foreground",
+                    !done && !active && "bg-surface-strong text-foreground/80",
                   )}
                 >
                   {done ? "✓" : i + 1}
                 </div>
                 <div className="min-w-0">
-                  <div className={cn("text-sm font-medium", active ? "text-white" : "text-slate-200")}>
+                  <div className={cn("text-sm font-medium", active ? "text-white" : "text-foreground")}>
                     {PHASE_META[p].label}
                   </div>
-                  <div className="truncate text-xs text-slate-400">
+                  <div className="truncate text-xs text-muted-foreground">
                     {PHASE_META[p].blurb}
                   </div>
                 </div>
@@ -464,7 +464,7 @@ function ScenarioCard({
             "overflow-hidden rounded-2xl border bg-gradient-to-br p-6",
             isEvent
               ? "border-amber-400/30 from-amber-500/10 to-rose-500/5"
-              : "border-white/5 from-white/[0.05] to-white/[0.02]",
+              : "border-border/60 from-white/[0.05] to-white/[0.02]",
           )}
         >
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -478,10 +478,10 @@ function ScenarioCard({
             >
               {isEvent ? "Random Event" : PHASE_META[scenario.phase].label}
             </span>
-            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
               {meta.processGroup}
             </span>
-            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
               {meta.knowledgeArea}
             </span>
             <span
@@ -496,7 +496,7 @@ function ScenarioCard({
             </span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight">{scenario.title}</h2>
-          <p className="mt-2 text-slate-300">{scenario.body}</p>
+          <p className="mt-2 text-foreground/80">{scenario.body}</p>
 
           {consequenceNote && (
             <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
@@ -519,7 +519,7 @@ function ScenarioCard({
                   onClick={() => onChoose(c)}
                   className={cn(
                     "group flex items-start gap-3 rounded-xl border p-4 text-left transition",
-                    "border-white/10 bg-white/[0.03] hover:border-indigo-400/40 hover:bg-indigo-500/10",
+                    "border-border bg-surface/60 hover:border-indigo-400/40 hover:bg-indigo-500/10",
                     isChosen &&
                       "border-indigo-400/60 bg-indigo-500/15 ring-2 ring-indigo-400/40",
                     pendingChoice && isCorrect && !isChosen &&
@@ -532,15 +532,15 @@ function ScenarioCard({
                     className={cn(
                       "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
                       isChosen
-                        ? "bg-indigo-400 text-slate-950"
-                        : "bg-white/10 text-slate-200 group-hover:bg-indigo-400 group-hover:text-slate-950",
+                        ? "bg-indigo-400 text-primary-foreground"
+                        : "bg-surface-strong text-foreground group-hover:bg-indigo-400 group-hover:text-primary-foreground",
                     )}
                   >
                     {c.id.toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-slate-100">{c.label}</div>
+                      <div className="font-medium text-foreground">{c.label}</div>
                       {pendingChoice && isCorrect && (
                         <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
                           CORRECT
@@ -602,7 +602,7 @@ function LearningReview({
   const wasCorrect = chosen.id === meta.correctChoiceId;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5">
       {/* Header + verdict */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
@@ -617,7 +617,7 @@ function LearningReview({
             Best answer was {meta.correctChoiceId.toUpperCase()}
           </span>
         )}
-        <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-slate-300">
+        <span className="ml-auto rounded-full bg-surface-strong px-2 py-0.5 text-[11px] text-foreground/80">
           +{chosen.xp} XP
         </span>
       </div>
@@ -627,12 +627,12 @@ function LearningReview({
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-emerald-200">
           ✅ Correct Answer — Option {meta.correctChoiceId.toUpperCase()}
         </div>
-        <div className="text-sm font-medium text-slate-100">{correctChoice.label}</div>
+        <div className="text-sm font-medium text-foreground">{correctChoice.label}</div>
       </div>
 
       {/* PMI Mindset */}
       <ReviewSection label="PMI Mindset" tone="indigo">
-        <p className="text-sm leading-relaxed text-slate-200">{meta.explanation}</p>
+        <p className="text-sm leading-relaxed text-foreground">{meta.explanation}</p>
         <p className="mt-2 text-sm italic leading-relaxed text-indigo-100">
           {meta.pmMindset}
         </p>
@@ -648,21 +648,21 @@ function LearningReview({
                   className={cn(
                     "grid h-5 w-5 place-items-center rounded text-[10px] font-bold",
                     c.id === meta.correctChoiceId
-                      ? "bg-emerald-400 text-slate-950"
+                      ? "bg-emerald-400 text-primary-foreground"
                       : c.quality === "poor"
-                      ? "bg-rose-500/70 text-slate-950"
+                      ? "bg-rose-500/70 text-primary-foreground"
                       : c.quality === "risky"
-                      ? "bg-amber-400 text-slate-950"
-                      : "bg-cyan-400 text-slate-950",
+                      ? "bg-amber-400 text-primary-foreground"
+                      : "bg-cyan-400 text-primary-foreground",
                   )}
                 >
                   {c.id.toUpperCase()}
                 </span>
-                <span className="font-medium text-slate-100">
+                <span className="font-medium text-foreground">
                   {analysisLead(c, c.id === meta.correctChoiceId)}
                 </span>
               </div>
-              <p className="ml-7 mt-0.5 text-xs leading-relaxed text-slate-400">
+              <p className="ml-7 mt-0.5 text-xs leading-relaxed text-muted-foreground">
                 {c.rationale}
               </p>
             </li>
@@ -689,7 +689,7 @@ function LearningReview({
         ) : coachText ? (
           <CoachMarkdown text={coachText} />
         ) : (
-          <p className="text-sm text-slate-400">Coach is offline — review the analysis above.</p>
+          <p className="text-sm text-muted-foreground">Coach is offline — review the analysis above.</p>
         )}
       </ReviewSection>
 
@@ -697,7 +697,7 @@ function LearningReview({
         <div className="flex justify-end">
           <Button
             onClick={onAdvance}
-            className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90"
+            className="bg-primary text-primary-foreground hover:opacity-90"
           >
             {isLast ? "Close project →" : "Continue →"}
           </Button>
@@ -735,13 +735,13 @@ function ReviewSection({
     indigo: "border-indigo-400/20 bg-indigo-400/[0.04]",
     cyan: "border-cyan-400/20 bg-cyan-400/[0.05]",
     amber: "border-amber-400/20 bg-amber-400/[0.05]",
-    slate: "border-white/10 bg-white/[0.03]",
+    slate: "border-border bg-surface/60",
   } as const;
   const labelTone = {
     indigo: "text-indigo-200",
     cyan: "text-cyan-200",
     amber: "text-amber-200",
-    slate: "text-slate-300",
+    slate: "text-foreground/80",
   } as const;
   return (
     <div className={cn("rounded-xl border p-4", toneMap[tone])}>
@@ -763,7 +763,7 @@ function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
             "rounded-full border px-2.5 py-0.5 text-[11px] transition",
             ka === active
               ? "border-cyan-400/60 bg-cyan-400/20 font-semibold text-cyan-100"
-              : "border-white/10 bg-white/[0.02] text-slate-500",
+              : "border-border bg-white/[0.02] text-muted-foreground",
           )}
         >
           {ka}
@@ -776,7 +776,7 @@ function KnowledgeAreaStrip({ active }: { active: KnowledgeArea }) {
 function CoachMarkdown({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   return (
-    <div className="space-y-2 text-sm leading-relaxed text-slate-100">
+    <div className="space-y-2 text-sm leading-relaxed text-foreground">
       {blocks.map((b, i) => {
         const parts = b.split(/(\*\*[^*]+\*\*)/g);
         return (
@@ -809,9 +809,9 @@ function MetricsPanel({ metrics }: { metrics: Metrics }) {
     { label: "Business value", value: metrics.businessValue, display: `${Math.round(metrics.businessValue)}%` },
   ];
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-[11px] uppercase tracking-widest text-slate-400">
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
           Live Project Dashboard
         </div>
         <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -820,10 +820,10 @@ function MetricsPanel({ metrics }: { metrics: Metrics }) {
         {items.map((m) => (
           <div key={m.label}>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-300">{m.label}</span>
+              <span className="text-foreground/80">{m.label}</span>
               <span className={cn("font-semibold", toneFor(m.value, m.invert))}>{m.display}</span>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-strong">
               <motion.div
                 initial={false}
                 animate={{ width: `${clamp(m.value)}%` }}
@@ -864,8 +864,8 @@ function computeBadges(decisions: Decision[], metrics: Metrics): string[] {
 function BadgesPanel({ badges }: { badges: string[] }) {
   const all = Object.keys(BADGE_META);
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">Badges</div>
+    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
+      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Badges</div>
       <div className="grid grid-cols-4 gap-2">
         {all.map((b) => {
           const earned = badges.includes(b);
@@ -878,7 +878,7 @@ function BadgesPanel({ badges }: { badges: string[] }) {
                 "grid aspect-square place-items-center rounded-xl border text-lg transition",
                 earned
                   ? "border-amber-300/40 bg-amber-300/10 text-amber-200"
-                  : "border-white/5 bg-white/[0.02] text-slate-600 grayscale",
+                  : "border-border/60 bg-white/[0.02] text-slate-600 grayscale",
               )}
             >
               {meta.emoji}
@@ -893,8 +893,8 @@ function BadgesPanel({ badges }: { badges: string[] }) {
 function DecisionLog({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">Decision Log</div>
+    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
+      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Decision Log</div>
       <ol className="space-y-2">
         {decisions.slice(-6).reverse().map((d, i) => (
           <li key={`${d.scenarioId}-${i}`} className="flex items-start gap-2 text-xs">
@@ -909,14 +909,14 @@ function DecisionLog({ decisions }: { decisions: Decision[] }) {
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="truncate text-slate-200">{d.scenarioTitle}</span>
+                <span className="truncate text-foreground">{d.scenarioTitle}</span>
                 {d.correct && (
                   <span className="rounded bg-emerald-400/15 px-1 text-[9px] font-semibold text-emerald-200">
                     ✓
                   </span>
                 )}
               </div>
-              <div className="truncate text-slate-500">{d.choiceLabel}</div>
+              <div className="truncate text-muted-foreground">{d.choiceLabel}</div>
             </div>
           </li>
         ))}
@@ -975,20 +975,20 @@ function FinalReport({
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-white/[0.03] to-cyan-400/10 p-8"
+      className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-indigo-500/10 via-white/[0.03] to-cyan-400/10 p-8"
     >
       <div className="text-center">
         <div className="text-[11px] uppercase tracking-[0.3em] text-cyan-300">
           Certification of Simulation
         </div>
         <h2 className="mt-2 text-3xl font-black tracking-tight">Project Simulation Complete</h2>
-        <p className="mt-1 text-slate-300">
+        <p className="mt-1 text-foreground/80">
           Level achieved: <strong className="text-white">{level}</strong>
         </p>
         <div className="mx-auto mt-6 grid h-40 w-40 place-items-center rounded-full border-4 border-cyan-400/40 bg-gradient-to-br from-indigo-500/30 to-cyan-400/20">
           <div>
             <div className="text-5xl font-black text-white">{score}</div>
-            <div className="text-xs text-slate-300">out of 100</div>
+            <div className="text-xs text-foreground/80">out of 100</div>
           </div>
         </div>
       </div>
@@ -1017,7 +1017,7 @@ function FinalReport({
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] p-4">
           <div className="mb-2 text-sm font-semibold text-emerald-200">What went well</div>
-          <ul className="space-y-1 text-sm text-slate-200">
+          <ul className="space-y-1 text-sm text-foreground">
             {went_well.map((w) => (
               <li key={w}>✓ {w}</li>
             ))}
@@ -1025,7 +1025,7 @@ function FinalReport({
         </div>
         <div className="rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-4">
           <div className="mb-2 text-sm font-semibold text-rose-200">Areas for improvement</div>
-          <ul className="space-y-1 text-sm text-slate-200">
+          <ul className="space-y-1 text-sm text-foreground">
             {went_wrong.map((w) => (
               <li key={w}>• {w}</li>
             ))}
@@ -1036,7 +1036,7 @@ function FinalReport({
       <div className="mt-8 flex justify-center">
         <Button
           onClick={onRestart}
-          className="bg-gradient-to-r from-indigo-500 to-cyan-400 px-6 text-slate-950 hover:opacity-90"
+          className="bg-primary px-6 text-primary-foreground hover:opacity-90"
         >
           Run another project →
         </Button>
@@ -1047,8 +1047,8 @@ function FinalReport({
 
 function ReportBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-slate-400">{title}</div>
+    <div className="rounded-xl border border-border bg-surface p-4">
+      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">{title}</div>
       <div className="space-y-1.5">{children}</div>
     </div>
   );
@@ -1057,7 +1057,7 @@ function ReportBox({ title, children }: { title: string; children: React.ReactNo
 function ReportRow({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-300">{k}</span>
+      <span className="text-foreground/80">{k}</span>
       <span className="font-semibold text-white">{v}</span>
     </div>
   );
