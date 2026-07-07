@@ -205,9 +205,14 @@ function ExamLanding() {
         <section className="mt-10">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Recent exam history</h2>
-            <Link to="/analytics" className="text-sm text-primary hover:underline">
-              Full analytics →
-            </Link>
+            <div className="flex items-center gap-4 text-sm">
+              <Link to="/exam/history" className="text-primary hover:underline">
+                Compare attempts →
+              </Link>
+              <Link to="/analytics" className="text-primary hover:underline">
+                Full analytics →
+              </Link>
+            </div>
           </div>
           {history.length === 0 ? (
             <Card className="border-dashed p-6 text-center text-sm text-muted-foreground">
