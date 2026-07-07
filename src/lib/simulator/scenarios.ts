@@ -341,3 +341,184 @@ export const RANDOM_EVENTS: Scenario[] = [
     ],
   },
 ];
+
+// ---------- Scenario metadata ----------
+// Per-scenario PMBOK metadata. Any scenario not listed falls back to a
+// phase-derived default via getScenarioMeta().
+const SCENARIO_META_OVERRIDES: Record<
+  string,
+  Partial<ScenarioMeta> & { knowledgeArea: KnowledgeArea; difficulty: Difficulty; explanation: string; pmMindset: string }
+> = {
+  "biz-case": {
+    knowledgeArea: "Integration",
+    difficulty: "medium",
+    explanation:
+      "Business cases are validated against benefits realization (NPV, strategic fit) before charter. Phased funding controls downside risk when markets shift.",
+    pmMindset:
+      "A PM protects value delivery — never rubber-stamp, never over-reject. Use real options to keep decisions reversible.",
+  },
+  "init-1": {
+    knowledgeArea: "Integration",
+    difficulty: "easy",
+    explanation:
+      "Develop Project Charter runs in parallel with Identify Stakeholders. Explicit assumptions/constraints reduce downstream risk.",
+    pmMindset: "Move fast, but never skip the artifacts that anchor scope and accountability.",
+  },
+  "init-2": {
+    knowledgeArea: "Stakeholder",
+    difficulty: "easy",
+    explanation:
+      "Power/interest and salience models classify engagement strategy — this is core PMBOK Identify Stakeholders.",
+    pmMindset: "Not everyone deserves the same cadence. Tailor engagement to influence and interest.",
+  },
+  "init-3": {
+    knowledgeArea: "Scope",
+    difficulty: "easy",
+    explanation:
+      "MoSCoW + measurable acceptance criteria + explicit out-of-scope list create a shared definition of done.",
+    pmMindset: "Ambiguity in scope becomes conflict in execution. Publish 'not doing' as loudly as 'doing'.",
+  },
+  "plan-1": {
+    knowledgeArea: "Schedule",
+    difficulty: "medium",
+    explanation:
+      "Realistic estimating + reserve analysis + risk register is the PMBOK way to reconcile a target date with true effort.",
+    pmMindset: "Never lie with the plan. Negotiate scope or reserves; hiding gaps guarantees failure.",
+  },
+  "plan-2": {
+    knowledgeArea: "Cost",
+    difficulty: "medium",
+    explanation:
+      "Bottom-up estimating with contingency and management reserve, communicated as a range, is Determine Budget done right.",
+    pmMindset: "Point estimates are political theatre. Ranges + reserves are how PMs tell the truth.",
+  },
+  "plan-3": {
+    knowledgeArea: "Communications",
+    difficulty: "medium",
+    explanation:
+      "Plan Communications Management pairs a stakeholder-tailored matrix with RACI and escalation paths.",
+    pmMindset: "One-size-fits-all comms is nobody's comms. Tailor to power and interest.",
+  },
+  "exec-1": {
+    knowledgeArea: "Resource",
+    difficulty: "medium",
+    explanation:
+      "Working agreements, definition of done, and comms cadence are hybrid best practice for kicking off execution.",
+    pmMindset: "Team norms before velocity. Skipping this is 'fast' in week one and slow every week after.",
+  },
+  "exec-2": {
+    knowledgeArea: "Quality",
+    difficulty: "medium",
+    explanation:
+      "Manage Quality: fix majors, disclose minors with a remediation plan, and preserve trust with transparent handover.",
+    pmMindset: "Ship truthfully. Undisclosed defects are trust debt at compound interest.",
+  },
+  "exec-3": {
+    knowledgeArea: "Resource",
+    difficulty: "hard",
+    explanation:
+      "Confront-problem-solve conflict style with structured criteria and a timeboxed decision preserves ownership and morale.",
+    pmMindset: "Facilitate the decision; don't own the answer. Servant leadership beats forcing.",
+  },
+  "mon-1": {
+    knowledgeArea: "Integration",
+    difficulty: "hard",
+    explanation:
+      "CPI/SPI variance requires transparent reporting AND a corrective action plan — Perform Integrated Change Control.",
+    pmMindset: "Green-washing is career-ending. Own the variance and bring the fix.",
+  },
+  "mon-2": {
+    knowledgeArea: "Scope",
+    difficulty: "medium",
+    explanation:
+      "Change requests are logged, impact-analysed, and routed through the CCB — never accepted via email.",
+    pmMindset: "Every 'small' change is an uncontrolled cost until analysed. Trust the process.",
+  },
+  "mon-3": {
+    knowledgeArea: "Risk",
+    difficulty: "medium",
+    explanation:
+      "Monitor Risks treats the register as a living document — regular reviews with owners and responses.",
+    pmMindset: "A stale risk register is worse than none — it manufactures false confidence.",
+  },
+  "close-1": {
+    knowledgeArea: "Integration",
+    difficulty: "easy",
+    explanation:
+      "Close Project or Phase: formal acceptance, lessons learned, resource release, archive.",
+    pmMindset: "Closure is not paperwork — it's how the org gets smarter.",
+  },
+  "close-2": {
+    knowledgeArea: "Procurement",
+    difficulty: "medium",
+    explanation:
+      "Close Procurements formally with performance scorecards to future-proof the vendor pool.",
+    pmMindset: "Contracts end cleanly or expensively. Pick clean.",
+  },
+  "close-3": {
+    knowledgeArea: "Integration",
+    difficulty: "hard",
+    explanation:
+      "PMBOK 7 value delivery: benefits realization plan with KPIs, owner, and review cadence links output to outcome.",
+    pmMindset: "The project's job isn't 'delivered'. It's 'value realized'.",
+  },
+  "ev-scope": {
+    knowledgeArea: "Scope",
+    difficulty: "medium",
+    explanation: "Perform Integrated Change Control is the answer to any 'small' scope request.",
+    pmMindset: "Kindness to the client is honest impact analysis, not silent capitulation.",
+  },
+  "ev-vendor": {
+    knowledgeArea: "Procurement",
+    difficulty: "hard",
+    explanation: "Trigger the risk response, invoke the contract clause, re-plan the critical path.",
+    pmMindset: "Contracts exist for exactly this moment — use them.",
+  },
+  "ev-resign": {
+    knowledgeArea: "Resource",
+    difficulty: "hard",
+    explanation: "Knowledge transfer + pair programming + updated risk register mitigates single-point-of-failure.",
+    pmMindset: "Every resignation is a risk event. Extract knowledge before it walks.",
+  },
+  "ev-budget": {
+    knowledgeArea: "Cost",
+    difficulty: "hard",
+    explanation: "Re-baseline via change control — renegotiate scope with the sponsor and update plans.",
+    pmMindset: "Budget cuts are scope conversations in disguise.",
+  },
+  "ev-reg": {
+    knowledgeArea: "Risk",
+    difficulty: "medium",
+    explanation: "Integrated Change Control + Stakeholder Engagement handles new compliance realities.",
+    pmMindset: "Compliance is scope, not friction.",
+  },
+};
+
+const PROCESS_GROUP_BY_PHASE: Record<Scenario["phase"], ProcessGroup> = {
+  initiation: "Initiating",
+  planning: "Planning",
+  execution: "Executing",
+  monitoring: "Monitoring & Controlling",
+  closing: "Closing",
+};
+
+export function getScenarioMeta(scenario: Scenario): ScenarioMeta {
+  const override = SCENARIO_META_OVERRIDES[scenario.id];
+  // Derive correct choice as the highest-xp "excellent" choice (fallback: max xp).
+  const excellent = scenario.choices.filter((c) => c.quality === "excellent");
+  const pool = excellent.length ? excellent : scenario.choices;
+  const correct = pool.reduce((best, c) => (c.xp > best.xp ? c : best), pool[0]);
+  return {
+    processGroup: override?.processGroup ?? PROCESS_GROUP_BY_PHASE[scenario.phase],
+    knowledgeArea: override?.knowledgeArea ?? "Integration",
+    difficulty: override?.difficulty ?? "medium",
+    explanation:
+      override?.explanation ??
+      "The correct answer follows PMBOK process — engage stakeholders, protect scope, and route changes formally.",
+    pmMindset:
+      override?.pmMindset ??
+      "Think in trade-offs across scope, schedule, cost, quality, risk, and value.",
+    correctChoiceId: override?.correctChoiceId ?? correct.id,
+  };
+}
+
