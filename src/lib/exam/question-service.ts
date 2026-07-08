@@ -34,6 +34,22 @@ export const MINI_MIX: ExamComposition = {
   difficultyProgression: true,
 };
 
+export const PRACTICE_MIX: ExamComposition = {
+  total: 60,
+  peopleRatio: 0.42,
+  processRatio: 0.5,
+  businessRatio: 0.08,
+  difficultyProgression: true,
+};
+
+export const PRO_MIX: ExamComposition = {
+  total: 120,
+  peopleRatio: 0.42,
+  processRatio: 0.5,
+  businessRatio: 0.08,
+  difficultyProgression: true,
+};
+
 const DIFFICULTY_RANK: Record<Difficulty, number> = {
   Easy: 1,
   Medium: 2,
