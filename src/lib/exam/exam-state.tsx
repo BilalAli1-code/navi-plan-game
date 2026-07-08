@@ -113,7 +113,16 @@ export function ExamStateProvider({ children }: { children: ReactNode }) {
   const startExam = useCallback(
     (composition: ExamComposition, mode: ExamSession["mode"] = "full") => {
       const questions = composeExam(composition);
-      const minutes = mode === "full" ? 230 : mode === "mini" ? 30 : 60;
+      const minutes =
+        mode === "full"
+          ? 230
+          : mode === "pro"
+            ? 155
+            : mode === "practice"
+              ? 75
+              : mode === "mini"
+                ? 30
+                : 60;
       const now = Date.now();
       const newSession: ExamSession = {
         id: crypto.randomUUID(),
