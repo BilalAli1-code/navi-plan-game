@@ -83,7 +83,14 @@ function ExamLanding() {
                   Exam in progress
                 </div>
                 <div className="mt-1 text-lg font-medium">
-                  {session.mode === "full" ? "Full PMP exam" : "Mini exam"} —{" "}
+                  {session.mode === "full"
+                    ? "Full PMP exam"
+                    : session.mode === "pro"
+                      ? "Pro exam"
+                      : session.mode === "practice"
+                        ? "Practice exam"
+                        : "Mini exam"}{" "}
+                  —{" "}
                   {Object.values(session.answers).filter((a) => a.selectedOptionId).length}
                   /{session.questionIds.length} answered
                 </div>
