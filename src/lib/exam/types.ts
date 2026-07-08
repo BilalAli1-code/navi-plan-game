@@ -42,7 +42,7 @@ export interface ExamSession {
   breakCount: number;
   totalBreakMs: number;
   lastTickAt: number; // used to compute elapsed since last tick
-  mode: "full" | "mini" | "custom";
+  mode: "full" | "mini" | "practice" | "pro" | "custom";
 }
 
 export interface DomainScore {
