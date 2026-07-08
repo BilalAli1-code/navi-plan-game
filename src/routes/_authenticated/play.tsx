@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getScenarioNarrative } from "@/lib/simulator/narrative";
+import { WorkplaceNarrative } from "@/components/simulator/workplace-narrative";
+import { MayaPanel } from "@/components/simulator/maya-panel";
 
 export const Route = createFileRoute("/_authenticated/play")({
   head: () => ({
@@ -90,6 +93,7 @@ function Simulator() {
     coachText,
     coachLoading,
     consequenceNote,
+    perfScores,
     choose,
     advance,
     restart,
@@ -226,6 +230,15 @@ function Simulator() {
         </section>
 
         <aside className="space-y-4">
+          {!finished && (
+            <MayaPanel
+              scenario={current}
+              chosen={pendingChoice}
+              coachText={coachText}
+              coachLoading={coachLoading}
+              perfScores={perfScores}
+            />
+          )}
           <MetricsPanel metrics={metrics} />
           <BadgesPanel badges={badges} />
           <DecisionLog decisions={decisions} />
@@ -495,8 +508,8 @@ function ScenarioCard({
               {meta.difficulty.toUpperCase()}
             </span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">{scenario.title}</h2>
-          <p className="mt-2 text-foreground/80">{scenario.body}</p>
+          <h2 className="sr-only">{scenario.title}</h2>
+          <WorkplaceNarrative narrative={getScenarioNarrative(scenario)} />
 
           {consequenceNote && (
             <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
