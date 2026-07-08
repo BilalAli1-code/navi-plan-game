@@ -642,6 +642,16 @@ function ImpactChips({ impact }: { impact: Impact }) {
   );
 }
 
+const CHOICE_ICONS: {
+  Icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+}[] = [
+  { Icon: Users2, tone: "bg-[color:var(--color-success)]/12 text-[color:var(--color-success)]" },
+  { Icon: FileSearch, tone: "bg-accent/12 text-accent" },
+  { Icon: FilePlus2, tone: "bg-[color:var(--color-primary)]/10 text-[color:var(--color-primary)]" },
+  { Icon: MessageCircle, tone: "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]" },
+];
+
 function ScenarioCard({
   scenario,
   pendingChoice,
@@ -663,8 +673,20 @@ function ScenarioCard({
 }) {
   const isEvent = scenario.kind === "event";
   const meta = getScenarioMeta(scenario);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Reset staged selection when scenario changes or a choice is committed
+  useEffect(() => {
+    setSelectedId(null);
+  }, [scenario.id, pendingChoice?.id]);
+
+  const submit = () => {
+    const c = scenario.choices.find((x) => x.id === selectedId);
+    if (c) onChoose(c);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AnimatePresence mode="wait">
         <motion.article
           key={scenario.id}
@@ -672,36 +694,31 @@ function ScenarioCard({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
-          className={cn(
-            "overflow-hidden rounded-2xl border bg-gradient-to-br p-6",
-            isEvent
-              ? "border-amber-400/30 from-amber-500/10 to-rose-500/5"
-              : "border-border/60 from-white/[0.05] to-white/[0.02]",
-          )}
+          className="play-card overflow-hidden p-6"
         >
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <span
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
                 isEvent
-                  ? "bg-amber-400/20 text-amber-200"
-                  : "bg-primary-soft text-primary",
+                  ? "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]"
+                  : "bg-accent/10 text-accent",
               )}
             >
               {isEvent ? "Random Event" : PHASE_META[scenario.phase].label}
             </span>
-            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
+            <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-foreground/70">
               {meta.processGroup}
             </span>
-            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
+            <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-foreground/70">
               {meta.knowledgeArea}
             </span>
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                meta.difficulty === "easy" && "bg-emerald-400/15 text-emerald-200",
-                meta.difficulty === "medium" && "bg-amber-400/15 text-amber-200",
-                meta.difficulty === "hard" && "bg-rose-400/15 text-rose-200",
+                meta.difficulty === "easy" && "bg-[color:var(--color-success)]/15 text-[color:var(--color-success)]",
+                meta.difficulty === "medium" && "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]",
+                meta.difficulty === "hard" && "bg-[color:var(--color-destructive)]/15 text-[color:var(--color-destructive)]",
               )}
             >
               {meta.difficulty.toUpperCase()}
@@ -711,65 +728,100 @@ function ScenarioCard({
           <WorkplaceNarrative narrative={getScenarioNarrative(scenario)} />
 
           {consequenceNote && (
-            <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
-              <span className="mr-1 font-semibold uppercase tracking-wider text-amber-200">
+            <div className="mt-4 rounded-2xl border border-[color:var(--color-warning)]/25 bg-[color:var(--color-warning)]/8 p-3 text-[13px] text-foreground/85">
+              <span className="mr-1 font-semibold uppercase tracking-wider text-[color:var(--color-warning)]">
                 Project memory:
               </span>
               {consequenceNote}
             </div>
           )}
 
-          <div className="mt-5 grid gap-3">
-            {scenario.choices.map((c) => {
-              const isChosen = pendingChoice?.id === c.id;
-              const dimmed = pendingChoice && !isChosen;
+          <h3 className="mt-6 text-[18px] font-semibold text-foreground">
+            What would you like to do first?
+          </h3>
+
+          <div className="mt-4 grid gap-3">
+            {scenario.choices.map((c, i) => {
+              const committed = pendingChoice?.id === c.id;
+              const staged = !pendingChoice && selectedId === c.id;
               const isCorrect = c.id === meta.correctChoiceId;
+              const dimmed = pendingChoice && !committed;
+              const iconMeta = CHOICE_ICONS[i % CHOICE_ICONS.length];
+              const active = committed || staged;
               return (
-                <button
+                <motion.button
                   key={c.id}
+                  whileHover={!pendingChoice ? { y: -2 } : undefined}
                   disabled={!!pendingChoice}
-                  onClick={() => onChoose(c)}
+                  onClick={() => setSelectedId(c.id)}
                   className={cn(
-                    "group flex items-start gap-3 rounded-xl border p-4 text-left transition",
-                    "border-border bg-surface/60 hover:border-primary/40 hover:bg-primary/10",
-                    isChosen &&
-                      "border-primary/60 bg-primary/15 ring-2 ring-primary/40",
-                    pendingChoice && isCorrect && !isChosen &&
-                      "border-emerald-400/40 bg-emerald-500/10",
+                    "group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition",
+                    active
+                      ? "border-accent bg-accent/[0.08] shadow-[0_6px_20px_rgba(108,99,255,0.12)]"
+                      : "border-black/[0.06] bg-white hover:border-accent/50 hover:bg-accent/[0.03]",
+                    pendingChoice && isCorrect && !committed &&
+                      "border-[color:var(--color-success)]/50 bg-[color:var(--color-success)]/8",
                     dimmed && "opacity-60",
                     !pendingChoice && "cursor-pointer",
                   )}
                 >
                   <div
                     className={cn(
-                      "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
-                      isChosen
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface-strong text-foreground group-hover:bg-primary group-hover:text-primary-foreground",
+                      "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition",
+                      active
+                        ? "border-accent bg-accent"
+                        : "border-black/20 bg-white",
                     )}
                   >
-                    {c.id.toUpperCase()}
+                    {active && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div
+                    className={cn(
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                      iconMeta.tone,
+                    )}
+                  >
+                    <iconMeta.Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-foreground">{c.label}</div>
+                      <div className="text-[15px] font-semibold text-foreground">
+                        {c.label}
+                      </div>
                       {pendingChoice && isCorrect && (
-                        <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
+                        <span className="rounded-full bg-[color:var(--color-success)]/15 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--color-success)]">
                           CORRECT
                         </span>
                       )}
                     </div>
-                    {isChosen && (
-                      <>
-                        <div className="mt-2 text-xs text-primary/80">{c.rationale}</div>
-                        <ImpactChips impact={c.impact} />
-                      </>
-                    )}
+                    <div className="mt-1 text-[13px] text-muted-foreground">
+                      {c.rationale}
+                    </div>
+                    {committed && <ImpactChips impact={c.impact} />}
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
+
+          {!pendingChoice && (
+            <div className="mt-6 flex justify-center">
+              <motion.button
+                whileHover={selectedId ? { scale: 1.02 } : undefined}
+                whileTap={selectedId ? { scale: 0.98 } : undefined}
+                onClick={submit}
+                disabled={!selectedId}
+                className={cn(
+                  "rounded-full px-8 py-3 text-[15px] font-semibold transition",
+                  selectedId
+                    ? "bg-accent text-accent-foreground shadow-[0_10px_25px_rgba(108,99,255,0.35)] hover:opacity-95"
+                    : "cursor-not-allowed bg-accent/25 text-accent-foreground/70",
+                )}
+              >
+                Submit Decision
+              </motion.button>
+            </div>
+          )}
         </motion.article>
       </AnimatePresence>
 
