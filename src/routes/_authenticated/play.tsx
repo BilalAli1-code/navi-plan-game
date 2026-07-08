@@ -196,57 +196,221 @@ function Simulator() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header xp={xp} level={level} streak={streak} userEmail={userEmail} onSignOut={signOut} />
+      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+        <SideNav userEmail={userEmail} level={level} xp={xp} onSignOut={signOut} />
 
-      <ExamFocusBanner />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar
+            phaseIdx={phaseIdx}
+            finished={finished}
+            currentTitle={finished ? "Project Closeout" : current.title}
+            metrics={metrics}
+            streak={streak}
+          />
+          <ExamFocusBanner />
 
-      <main className="mx-auto grid max-w-[1400px] gap-4 px-4 pb-16 pt-6 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
-        <PhaseRail phaseIdx={phaseIdx} finished={finished} />
+          <main className="grid min-w-0 flex-1 gap-4 px-4 pb-16 pt-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <section className="min-w-0 space-y-4">
+              {finished ? (
+                <FinalReport
+                  metrics={metrics}
+                  decisions={decisions}
+                  xp={xp}
+                  badges={badges}
+                  onRestart={() => {
+                    restart();
+                    setSaved(false);
+                  }}
+                />
+              ) : (
+                <ScenarioCard
+                  scenario={current}
+                  pendingChoice={pendingChoice}
+                  coachText={coachText}
+                  coachLoading={coachLoading}
+                  consequenceNote={consequenceNote}
+                  onChoose={handleChoose}
+                  onAdvance={advance}
+                  isLast={phaseIdx === PHASE_ORDER.length - 1 && current.kind === "phase"}
+                />
+              )}
+              <MetricsPanel metrics={metrics} />
+            </section>
 
-        <section className="min-w-0">
-          {finished ? (
-            <FinalReport
-              metrics={metrics}
-              decisions={decisions}
-              xp={xp}
-              badges={badges}
-              onRestart={() => {
-                restart();
-                setSaved(false);
-              }}
-            />
-          ) : (
-            <ScenarioCard
-              scenario={current}
-              pendingChoice={pendingChoice}
-              coachText={coachText}
-              coachLoading={coachLoading}
-              consequenceNote={consequenceNote}
-              onChoose={handleChoose}
-              onAdvance={advance}
-              isLast={phaseIdx === PHASE_ORDER.length - 1 && current.kind === "phase"}
-            />
-          )}
-        </section>
-
-        <aside className="space-y-4">
-          {!finished && (
-            <MayaPanel
-              scenario={current}
-              chosen={pendingChoice}
-              coachText={coachText}
-              coachLoading={coachLoading}
-              perfScores={perfScores}
-            />
-          )}
-          <MetricsPanel metrics={metrics} />
-          <BadgesPanel badges={badges} />
-          <DecisionLog decisions={decisions} />
-        </aside>
-      </main>
+            <aside className="space-y-4">
+              {!finished && (
+                <MayaPanel
+                  scenario={current}
+                  chosen={pendingChoice}
+                  coachText={coachText}
+                  coachLoading={coachLoading}
+                  perfScores={perfScores}
+                />
+              )}
+              <BadgesPanel badges={badges} />
+              <DecisionLog decisions={decisions} />
+            </aside>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
+
+function SideNav({
+  userEmail,
+  level,
+  xp,
+  onSignOut,
+}: {
+  userEmail: string | null;
+  level: LevelInfo;
+  xp: number;
+  onSignOut: () => void;
+}) {
+  const items: { to: string; label: string; icon: string }[] = [
+    { to: "/play", label: "Simulator", icon: "▶" },
+    { to: "/exam", label: "Exam", icon: "◉" },
+    { to: "/exam/history", label: "History", icon: "⌛" },
+    { to: "/analytics", label: "Analytics", icon: "▨" },
+    { to: "/performance", label: "Performance", icon: "▲" },
+    { to: "/pricing", label: "Pricing", icon: "$" },
+  ];
+  const pct =
+    level.next === null
+      ? 100
+      : Math.round(((xp - level.min) / (level.next - level.min)) * 100);
+  return (
+    <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-border/60 bg-[hsl(222_47%_11%)] text-foreground/90 lg:flex">
+      <div className="flex items-center gap-3 px-5 py-5">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary font-black text-primary-foreground">
+          PS
+        </div>
+        <div className="min-w-0">
+          <div className="font-display text-base font-bold text-white">ProjectSim</div>
+          <div className="truncate text-[11px] text-white/60">Customer Portal · PMP Prep</div>
+        </div>
+      </div>
+
+      <nav className="mt-2 flex-1 space-y-0.5 px-3">
+        {items.map((it) => (
+          <Link
+            key={it.to}
+            to={it.to}
+            activeOptions={{ exact: it.to === "/play" }}
+            className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 transition hover:bg-white/5 hover:text-white [&.active]:bg-primary [&.active]:text-primary-foreground"
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-md bg-white/5 text-xs group-hover:bg-white/10 [.active_&]:bg-white/15">
+              {it.icon}
+            </span>
+            <span className="truncate">{it.label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <div className="border-t border-white/10 p-4">
+        <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-widest text-white/50">
+          <span>{level.name}</span>
+          <span>{xp} XP</span>
+        </div>
+        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/30 text-xs font-bold text-white">
+            {(userEmail?.[0] ?? "P").toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-medium text-white">
+              {userEmail ?? "Player"}
+            </div>
+            <button
+              onClick={onSignOut}
+              className="text-[10px] text-white/50 transition hover:text-white"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function TopBar({
+  phaseIdx,
+  finished,
+  currentTitle,
+  metrics,
+  streak,
+}: {
+  phaseIdx: number;
+  finished: boolean;
+  currentTitle: string;
+  metrics: Metrics;
+  streak: number;
+}) {
+  const phaseLabel = finished
+    ? "Closeout"
+    : PHASE_META[PHASE_ORDER[phaseIdx]].label;
+  const health = Math.round(
+    (metrics.budget +
+      (50 + metrics.schedule / 2) +
+      metrics.scope +
+      (100 - metrics.risk) +
+      metrics.stakeholders +
+      metrics.quality) /
+      6,
+  );
+  const healthTone =
+    health >= 70
+      ? "bg-emerald-400/15 text-emerald-300"
+      : health >= 50
+      ? "bg-amber-400/15 text-amber-200"
+      : "bg-rose-400/15 text-rose-200";
+  return (
+    <header className="sticky top-0 z-10 border-b border-border/60 bg-background/85 px-5 py-4 backdrop-blur">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Phase {phaseIdx + 1} · {phaseLabel}
+          </div>
+          <h1 className="truncate font-display text-lg font-semibold text-foreground">
+            📅 {currentTitle}
+          </h1>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hidden text-[11px] uppercase tracking-widest text-muted-foreground sm:inline">
+            Project Health
+          </span>
+          <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", healthTone)}>
+            ● {health >= 70 ? "Good" : health >= 50 ? "Watch" : "At Risk"} · {health}%
+          </span>
+          <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
+            🔥 {streak}
+          </span>
+        </div>
+      </div>
+      <div className="mt-3 flex gap-1">
+        {PHASE_ORDER.map((p, i) => (
+          <div
+            key={p}
+            title={PHASE_META[p].label}
+            className={cn(
+              "h-1 flex-1 rounded-full transition",
+              finished || i < phaseIdx
+                ? "bg-emerald-500/80"
+                : i === phaseIdx
+                ? "bg-primary"
+                : "bg-surface-strong",
+            )}
+          />
+        ))}
+      </div>
+    </header>
+  );
+}
+
 
 function ExamFocusBanner() {
   const { latest, weakestKAs, passProbability } = useExamWeaknesses(3);
