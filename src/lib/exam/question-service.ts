@@ -69,12 +69,12 @@ function shuffle<T>(arr: T[]): T[] {
 function pickFromDomain(domain: ExamDomain, count: number): ExamQuestion[] {
   const pool = QUESTION_BANK.filter((q) => q.domain === domain);
   if (pool.length === 0) return [];
-  const picked: ExamQuestion[] = [];
-  // Cycle through pool if we need more than available (bank still small).
   const shuffled = shuffle(pool);
-  for (let i = 0; i < count; i++) {
-    picked.push(shuffled[i % shuffled.length]);
-  }
+  // No repeats when pool is large enough; fall back to cycling only if the
+  // request exceeds the pool.
+  if (count <= shuffled.length) return shuffled.slice(0, count);
+  const picked: ExamQuestion[] = [];
+  for (let i = 0; i < count; i++) picked.push(shuffled[i % shuffled.length]);
   return picked;
 }
 
