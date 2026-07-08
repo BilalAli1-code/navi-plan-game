@@ -1162,8 +1162,8 @@ function computeBadges(decisions: Decision[], metrics: Metrics): string[] {
 function BadgesPanel({ badges }: { badges: string[] }) {
   const all = Object.keys(BADGE_META);
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Badges</div>
+    <div className="play-card p-6">
+      <div className="mb-4 text-[15px] font-semibold text-foreground">Achievements</div>
       <div className="grid grid-cols-4 gap-2">
         {all.map((b) => {
           const earned = badges.includes(b);
