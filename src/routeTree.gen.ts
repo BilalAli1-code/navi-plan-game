@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiMayaAskRouteImport } from './routes/api/maya-ask'
 import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMayaAskRoute = ApiMayaAskRouteImport.update({
+  id: '/api/maya-ask',
+  path: '/api/maya-ask',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiExamCoachRoute = ApiExamCoachRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
+  '/api/maya-ask': typeof ApiMayaAskRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
+  '/api/maya-ask': typeof ApiMayaAskRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
+  '/api/maya-ask': typeof ApiMayaAskRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/play'
     | '/api/coach'
     | '/api/exam-coach'
+    | '/api/maya-ask'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/play'
     | '/api/coach'
     | '/api/exam-coach'
+    | '/api/maya-ask'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/play'
     | '/api/coach'
     | '/api/exam-coach'
+    | '/api/maya-ask'
     | '/checkout/return'
     | '/_authenticated/exam/history'
     | '/_authenticated/exam/session'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   ApiCoachRoute: typeof ApiCoachRoute
   ApiExamCoachRoute: typeof ApiExamCoachRoute
+  ApiMayaAskRoute: typeof ApiMayaAskRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/maya-ask': {
+      id: '/api/maya-ask'
+      path: '/api/maya-ask'
+      fullPath: '/api/maya-ask'
+      preLoaderRoute: typeof ApiMayaAskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/exam-coach': {
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   ApiCoachRoute: ApiCoachRoute,
   ApiExamCoachRoute: ApiExamCoachRoute,
+  ApiMayaAskRoute: ApiMayaAskRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
