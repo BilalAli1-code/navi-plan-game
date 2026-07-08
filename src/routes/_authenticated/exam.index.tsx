@@ -121,11 +121,44 @@ function ExamLanding() {
           </Card>
         )}
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <ExamOption
+            title="Mini Exam"
+            subtitle="20 questions · 30 min"
+            description="Quick daily reps with the full PMP domain mix. Great for streak-keeping."
+            cta="Start mini"
+            disabled={!!session}
+            onClick={() => {
+              startExam(MINI_MIX, "mini");
+              goToSession();
+            }}
+          />
+          <ExamOption
+            title="Practice Exam"
+            subtitle="60 questions · 75 min"
+            description="A focused block to sharpen weak knowledge areas without a full-day commitment."
+            cta="Start practice"
+            disabled={!!session}
+            onClick={() => {
+              startExam(PRACTICE_MIX, "practice");
+              goToSession();
+            }}
+          />
+          <ExamOption
+            title="Pro Exam"
+            subtitle="120 questions · 155 min"
+            description="Two-thirds length simulation with authentic difficulty ramp and pacing pressure."
+            cta="Start pro"
+            disabled={!!session}
+            onClick={() => {
+              startExam(PRO_MIX, "pro");
+              goToSession();
+            }}
+          />
           <ExamOption
             title="Full PMP Exam"
             subtitle="180 questions · 230 min"
-            description="Complete PMP mix across People, Process, and Business. Includes optional breaks and mark-for-review."
+            description="Complete PMP simulation across People, Process, and Business — with breaks and mark-for-review."
             cta="Start full exam"
             disabled={!!session}
             onClick={() => {
@@ -133,37 +166,27 @@ function ExamLanding() {
               goToSession();
             }}
           />
-          <ExamOption
-            title="Mini Exam"
-            subtitle="20 questions · 30 min"
-            description="Quick daily reps with the same PMP domain mix. Great for maintaining your streak."
-            cta="Start mini exam"
-            disabled={!!session}
-            onClick={() => {
-              startExam(MINI_MIX, "mini");
-              goToSession();
-            }}
-          />
-          <Card className="border-border/60 bg-card p-5">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Trophy className="h-4 w-4 text-amber-400" /> Career progression
-            </div>
-            <div className="mt-3 text-2xl font-semibold">
-              {level.current.name}
-            </div>
-            {level.next && (
-              <>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {level.next.minXp - gamification.xp} XP to {level.next.name}
-                </div>
-                <Progress value={level.progressPct} className="mt-3" />
-              </>
-            )}
-            <div className="mt-4 text-xs text-muted-foreground">
-              Bank: {bankSize} questions loaded (JSON-driven — add more anytime).
-            </div>
-          </Card>
         </div>
+
+        <Card className="mt-5 border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Trophy className="h-4 w-4 text-amber-400" /> Career progression
+          </div>
+          <div className="mt-3 text-2xl font-semibold">
+            {level.current.name}
+          </div>
+          {level.next && (
+            <>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {level.next.minXp - gamification.xp} XP to {level.next.name}
+              </div>
+              <Progress value={level.progressPct} className="mt-3" />
+            </>
+          )}
+          <div className="mt-4 text-xs text-muted-foreground">
+            Bank: {bankSize} questions loaded (JSON-driven — add more anytime).
+          </div>
+        </Card>
 
         <section className="mt-10">
           <div className="mb-3 flex items-center justify-between">
