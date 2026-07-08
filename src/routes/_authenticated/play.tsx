@@ -93,6 +93,7 @@ function Simulator() {
     coachText,
     coachLoading,
     consequenceNote,
+    perfScores,
     choose,
     advance,
     restart,
