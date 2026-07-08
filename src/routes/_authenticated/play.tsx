@@ -508,8 +508,8 @@ function ScenarioCard({
               {meta.difficulty.toUpperCase()}
             </span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">{scenario.title}</h2>
-          <p className="mt-2 text-foreground/80">{scenario.body}</p>
+          <h2 className="sr-only">{scenario.title}</h2>
+          <WorkplaceNarrative narrative={getScenarioNarrative(scenario)} />
 
           {consequenceNote && (
             <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
