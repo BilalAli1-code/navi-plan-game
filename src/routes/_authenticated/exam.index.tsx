@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useExamState, formatDuration } from "@/lib/exam/exam-state";
-import { MINI_MIX, PMP_MIX, QUESTION_BANK } from "@/lib/exam/question-service";
+import { MINI_MIX, PMP_MIX, PRACTICE_MIX, PRO_MIX, QUESTION_BANK } from "@/lib/exam/question-service";
 import { getLevel } from "@/lib/exam/gamification";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
