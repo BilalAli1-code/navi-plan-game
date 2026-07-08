@@ -1,6 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  FileText,
+  Users,
+  AlertTriangle,
+  AlertOctagon,
+  UserCircle2,
+  BarChart3,
+  Trophy,
+  Settings,
+  Send,
+  Users2,
+  FileSearch,
+  FilePlus2,
+  MessageCircle,
+} from "lucide-react";
 import { PHASE_ORDER, PHASE_META, getScenarioMeta } from "@/lib/simulator/scenarios";
 import type {
   Choice,
@@ -195,11 +212,11 @@ function Simulator() {
   }, [finished, saved, metrics, xp, badges, decisions]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+    <div className="play-theme min-h-screen bg-background font-sans text-foreground">
+      <div className="mx-auto flex min-h-screen max-w-[1440px] gap-6 p-6">
         <SideNav userEmail={userEmail} level={level} xp={xp} onSignOut={signOut} />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
           <TopBar
             phaseIdx={phaseIdx}
             finished={finished}
@@ -209,8 +226,8 @@ function Simulator() {
           />
           <ExamFocusBanner />
 
-          <main className="grid min-w-0 flex-1 gap-4 px-4 pb-16 pt-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <section className="min-w-0 space-y-4">
+          <main className="grid min-w-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="min-w-0 space-y-6">
               {finished ? (
                 <FinalReport
                   metrics={metrics}
@@ -235,9 +252,11 @@ function Simulator() {
                 />
               )}
               <MetricsPanel metrics={metrics} />
+              <BadgesPanel badges={badges} />
+              <DecisionLog decisions={decisions} />
             </section>
 
-            <aside className="space-y-4">
+            <aside className="space-y-6">
               {!finished && (
                 <MayaPanel
                   scenario={current}
@@ -247,8 +266,6 @@ function Simulator() {
                   perfScores={perfScores}
                 />
               )}
-              <BadgesPanel badges={badges} />
-              <DecisionLog decisions={decisions} />
             </aside>
           </main>
         </div>
@@ -268,69 +285,85 @@ function SideNav({
   xp: number;
   onSignOut: () => void;
 }) {
-  const items: { to: string; label: string; icon: string }[] = [
-    { to: "/play", label: "Simulator", icon: "▶" },
-    { to: "/exam", label: "Exam", icon: "◉" },
-    { to: "/exam/history", label: "History", icon: "⌛" },
-    { to: "/analytics", label: "Analytics", icon: "▨" },
-    { to: "/performance", label: "Performance", icon: "▲" },
-    { to: "/pricing", label: "Pricing", icon: "$" },
+  const items: {
+    to: string;
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { to: "/play", label: "Dashboard", Icon: LayoutDashboard },
+    { to: "/play", label: "Timeline", Icon: CalendarDays },
+    { to: "/exam", label: "Documents", Icon: FileText },
+    { to: "/performance", label: "Stakeholders", Icon: Users },
+    { to: "/analytics", label: "Risks", Icon: AlertTriangle },
+    { to: "/exam/history", label: "Issues", Icon: AlertOctagon },
+    { to: "/performance", label: "Team", Icon: UserCircle2 },
+    { to: "/analytics", label: "Reports", Icon: BarChart3 },
+    { to: "/performance", label: "Achievements", Icon: Trophy },
+    { to: "/pricing", label: "Settings", Icon: Settings },
   ];
   const pct =
     level.next === null
       ? 100
       : Math.round(((xp - level.min) / (level.next - level.min)) * 100);
   return (
-    <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-border/60 bg-[hsl(222_47%_11%)] text-foreground/90 lg:flex">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary font-black text-primary-foreground">
+    <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-[260px] shrink-0 flex-col overflow-hidden rounded-[18px] bg-sidebar text-sidebar-foreground shadow-[0_10px_30px_rgba(0,0,0,0.06)] lg:flex">
+      <div className="flex items-center gap-3 px-6 py-6">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent font-black text-accent-foreground">
           PS
         </div>
         <div className="min-w-0">
-          <div className="font-display text-base font-bold text-white">ProjectSim</div>
-          <div className="truncate text-[11px] text-white/60">Customer Portal · PMP Prep</div>
+          <div className="text-base font-semibold text-white">ProjectSim</div>
+          <div className="mt-0.5 truncate text-[11px] text-white/55">
+            Customer Portal Modernization
+          </div>
         </div>
       </div>
 
-      <nav className="mt-2 flex-1 space-y-0.5 px-3">
-        {items.map((it) => (
-          <Link
-            key={it.to}
-            to={it.to}
-            activeOptions={{ exact: it.to === "/play" }}
-            className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 transition hover:bg-white/5 hover:text-white [&.active]:bg-primary [&.active]:text-primary-foreground"
-          >
-            <span className="grid h-6 w-6 place-items-center rounded-md bg-white/5 text-xs group-hover:bg-white/10 [.active_&]:bg-white/15">
-              {it.icon}
-            </span>
-            <span className="truncate">{it.label}</span>
-          </Link>
-        ))}
+      <nav className="mt-1 flex-1 space-y-1 px-3">
+        {items.map((it, i) => {
+          const selected = it.label === "Timeline";
+          return (
+            <Link
+              key={i}
+              to={it.to}
+              className={cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition",
+                selected
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-white/70 hover:bg-white/5 hover:text-white",
+              )}
+            >
+              <it.Icon className="h-4 w-4" />
+              <span className="truncate">{it.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-widest text-white/50">
+        <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-widest text-white/50">
           <span>{level.name}</span>
           <span>{xp} XP</span>
         </div>
         <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/30 text-xs font-bold text-white">
-            {(userEmail?.[0] ?? "P").toUpperCase()}
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-full bg-accent/30 text-xs font-bold text-white">
+            {(userEmail?.[0] ?? "N").toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-white">
-              {userEmail ?? "Player"}
+            <div className="truncate text-[13px] font-medium text-white">
+              {userEmail ? userEmail.split("@")[0] : "NovaLink"}
             </div>
-            <button
-              onClick={onSignOut}
-              className="text-[10px] text-white/50 transition hover:text-white"
-            >
-              Sign out
-            </button>
+            <div className="text-[11px] text-white/50">{level.name}</div>
           </div>
+          <button
+            onClick={onSignOut}
+            className="rounded-md px-2 py-1 text-[10px] text-white/50 transition hover:text-white"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </aside>
@@ -362,36 +395,42 @@ function TopBar({
       metrics.quality) /
       6,
   );
+  const healthLabel = health >= 70 ? "Good" : health >= 50 ? "Watch" : "At Risk";
   const healthTone =
     health >= 70
-      ? "bg-emerald-400/15 text-emerald-300"
+      ? "bg-[color:var(--color-success)]/15 text-[color:var(--color-success)]"
       : health >= 50
-      ? "bg-amber-400/15 text-amber-200"
-      : "bg-rose-400/15 text-rose-200";
+      ? "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]"
+      : "bg-[color:var(--color-destructive)]/15 text-[color:var(--color-destructive)]";
   return (
-    <header className="sticky top-0 z-10 border-b border-border/60 bg-background/85 px-5 py-4 backdrop-blur">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-            Phase {phaseIdx + 1} · {phaseLabel}
-          </div>
-          <h1 className="truncate font-display text-lg font-semibold text-foreground">
-            📅 {currentTitle}
-          </h1>
+    <header className="flex flex-wrap items-center gap-4">
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] font-medium uppercase tracking-widest text-muted-foreground">
+          Phase {phaseIdx + 1} · {phaseLabel}
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden text-[11px] uppercase tracking-widest text-muted-foreground sm:inline">
-            Project Health
-          </span>
-          <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", healthTone)}>
-            ● {health >= 70 ? "Good" : health >= 50 ? "Watch" : "At Risk"} · {health}%
-          </span>
-          <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
-            🔥 {streak}
-          </span>
-        </div>
+        <h1 className="mt-1 flex items-center gap-2 truncate text-[30px] font-bold tracking-tight text-foreground">
+          <CalendarDays className="h-6 w-6 text-accent" />
+          {currentTitle}
+        </h1>
       </div>
-      <div className="mt-3 flex gap-1">
+      <div className="flex items-center gap-3">
+        <span className="text-[13px] font-medium text-muted-foreground">
+          Project Health
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold",
+            healthTone,
+          )}
+        >
+          <span className="h-2 w-2 rounded-full bg-current" />
+          {healthLabel} · {health}%
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-warning)]/15 px-3 py-1.5 text-[13px] font-semibold text-[color:var(--color-warning)]">
+          🔥 {streak}
+        </span>
+      </div>
+      <div className="flex w-full gap-1">
         {PHASE_ORDER.map((p, i) => (
           <div
             key={p}
@@ -399,10 +438,10 @@ function TopBar({
             className={cn(
               "h-1 flex-1 rounded-full transition",
               finished || i < phaseIdx
-                ? "bg-emerald-500/80"
+                ? "bg-[color:var(--color-success)]"
                 : i === phaseIdx
-                ? "bg-primary"
-                : "bg-surface-strong",
+                ? "bg-accent"
+                : "bg-black/[0.06]",
             )}
           />
         ))}
@@ -416,26 +455,22 @@ function ExamFocusBanner() {
   const { latest, weakestKAs, passProbability } = useExamWeaknesses(3);
   if (!latest || weakestKAs.length === 0) return null;
   return (
-    <div className="border-b border-primary/20 bg-primary/5">
-      <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs">
-        <div className="text-foreground/80">
-          <span className="mr-2 rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] uppercase tracking-widest text-primary">
-            Exam-tuned
+    <div className="play-card flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-[13px]">
+      <div className="text-foreground/80">
+        <span className="mr-2 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-accent">
+          Exam-tuned
+        </span>
+        Focusing scenarios on your weakest areas:{" "}
+        <span className="font-medium text-accent">{weakestKAs.join(" · ")}</span>
+        {passProbability !== null && (
+          <span className="ml-2 text-muted-foreground">
+            (last exam pass probability {passProbability}%)
           </span>
-          Focusing scenarios on your weakest areas:{" "}
-          <span className="font-medium text-primary">
-            {weakestKAs.join(" · ")}
-          </span>
-          {passProbability !== null && (
-            <span className="ml-2 text-muted-foreground">
-              (last exam pass probability {passProbability}%)
-            </span>
-          )}
-        </div>
-        <Link to="/exam" className="text-primary hover:underline">
-          Take another exam →
-        </Link>
+        )}
       </div>
+      <Link to="/exam" className="text-accent hover:underline">
+        Take another exam →
+      </Link>
     </div>
   );
 }
@@ -607,6 +642,16 @@ function ImpactChips({ impact }: { impact: Impact }) {
   );
 }
 
+const CHOICE_ICONS: {
+  Icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+}[] = [
+  { Icon: Users2, tone: "bg-[color:var(--color-success)]/12 text-[color:var(--color-success)]" },
+  { Icon: FileSearch, tone: "bg-accent/12 text-accent" },
+  { Icon: FilePlus2, tone: "bg-[color:var(--color-primary)]/10 text-[color:var(--color-primary)]" },
+  { Icon: MessageCircle, tone: "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]" },
+];
+
 function ScenarioCard({
   scenario,
   pendingChoice,
@@ -628,8 +673,20 @@ function ScenarioCard({
 }) {
   const isEvent = scenario.kind === "event";
   const meta = getScenarioMeta(scenario);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Reset staged selection when scenario changes or a choice is committed
+  useEffect(() => {
+    setSelectedId(null);
+  }, [scenario.id, pendingChoice?.id]);
+
+  const submit = () => {
+    const c = scenario.choices.find((x) => x.id === selectedId);
+    if (c) onChoose(c);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AnimatePresence mode="wait">
         <motion.article
           key={scenario.id}
@@ -637,36 +694,31 @@ function ScenarioCard({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
-          className={cn(
-            "overflow-hidden rounded-2xl border bg-gradient-to-br p-6",
-            isEvent
-              ? "border-amber-400/30 from-amber-500/10 to-rose-500/5"
-              : "border-border/60 from-white/[0.05] to-white/[0.02]",
-          )}
+          className="play-card overflow-hidden p-6"
         >
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <span
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
                 isEvent
-                  ? "bg-amber-400/20 text-amber-200"
-                  : "bg-primary-soft text-primary",
+                  ? "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]"
+                  : "bg-accent/10 text-accent",
               )}
             >
               {isEvent ? "Random Event" : PHASE_META[scenario.phase].label}
             </span>
-            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
+            <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-foreground/70">
               {meta.processGroup}
             </span>
-            <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-foreground/80">
+            <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-foreground/70">
               {meta.knowledgeArea}
             </span>
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                meta.difficulty === "easy" && "bg-emerald-400/15 text-emerald-200",
-                meta.difficulty === "medium" && "bg-amber-400/15 text-amber-200",
-                meta.difficulty === "hard" && "bg-rose-400/15 text-rose-200",
+                meta.difficulty === "easy" && "bg-[color:var(--color-success)]/15 text-[color:var(--color-success)]",
+                meta.difficulty === "medium" && "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]",
+                meta.difficulty === "hard" && "bg-[color:var(--color-destructive)]/15 text-[color:var(--color-destructive)]",
               )}
             >
               {meta.difficulty.toUpperCase()}
@@ -676,65 +728,100 @@ function ScenarioCard({
           <WorkplaceNarrative narrative={getScenarioNarrative(scenario)} />
 
           {consequenceNote && (
-            <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-100">
-              <span className="mr-1 font-semibold uppercase tracking-wider text-amber-200">
+            <div className="mt-4 rounded-2xl border border-[color:var(--color-warning)]/25 bg-[color:var(--color-warning)]/8 p-3 text-[13px] text-foreground/85">
+              <span className="mr-1 font-semibold uppercase tracking-wider text-[color:var(--color-warning)]">
                 Project memory:
               </span>
               {consequenceNote}
             </div>
           )}
 
-          <div className="mt-5 grid gap-3">
-            {scenario.choices.map((c) => {
-              const isChosen = pendingChoice?.id === c.id;
-              const dimmed = pendingChoice && !isChosen;
+          <h3 className="mt-6 text-[18px] font-semibold text-foreground">
+            What would you like to do first?
+          </h3>
+
+          <div className="mt-4 grid gap-3">
+            {scenario.choices.map((c, i) => {
+              const committed = pendingChoice?.id === c.id;
+              const staged = !pendingChoice && selectedId === c.id;
               const isCorrect = c.id === meta.correctChoiceId;
+              const dimmed = pendingChoice && !committed;
+              const iconMeta = CHOICE_ICONS[i % CHOICE_ICONS.length];
+              const active = committed || staged;
               return (
-                <button
+                <motion.button
                   key={c.id}
+                  whileHover={!pendingChoice ? { y: -2 } : undefined}
                   disabled={!!pendingChoice}
-                  onClick={() => onChoose(c)}
+                  onClick={() => setSelectedId(c.id)}
                   className={cn(
-                    "group flex items-start gap-3 rounded-xl border p-4 text-left transition",
-                    "border-border bg-surface/60 hover:border-primary/40 hover:bg-primary/10",
-                    isChosen &&
-                      "border-primary/60 bg-primary/15 ring-2 ring-primary/40",
-                    pendingChoice && isCorrect && !isChosen &&
-                      "border-emerald-400/40 bg-emerald-500/10",
+                    "group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition",
+                    active
+                      ? "border-accent bg-accent/[0.08] shadow-[0_6px_20px_rgba(108,99,255,0.12)]"
+                      : "border-black/[0.06] bg-white hover:border-accent/50 hover:bg-accent/[0.03]",
+                    pendingChoice && isCorrect && !committed &&
+                      "border-[color:var(--color-success)]/50 bg-[color:var(--color-success)]/8",
                     dimmed && "opacity-60",
                     !pendingChoice && "cursor-pointer",
                   )}
                 >
                   <div
                     className={cn(
-                      "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
-                      isChosen
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface-strong text-foreground group-hover:bg-primary group-hover:text-primary-foreground",
+                      "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition",
+                      active
+                        ? "border-accent bg-accent"
+                        : "border-black/20 bg-white",
                     )}
                   >
-                    {c.id.toUpperCase()}
+                    {active && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div
+                    className={cn(
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                      iconMeta.tone,
+                    )}
+                  >
+                    <iconMeta.Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-foreground">{c.label}</div>
+                      <div className="text-[15px] font-semibold text-foreground">
+                        {c.label}
+                      </div>
                       {pendingChoice && isCorrect && (
-                        <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
+                        <span className="rounded-full bg-[color:var(--color-success)]/15 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--color-success)]">
                           CORRECT
                         </span>
                       )}
                     </div>
-                    {isChosen && (
-                      <>
-                        <div className="mt-2 text-xs text-primary/80">{c.rationale}</div>
-                        <ImpactChips impact={c.impact} />
-                      </>
-                    )}
+                    <div className="mt-1 text-[13px] text-muted-foreground">
+                      {c.rationale}
+                    </div>
+                    {committed && <ImpactChips impact={c.impact} />}
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
+
+          {!pendingChoice && (
+            <div className="mt-6 flex justify-center">
+              <motion.button
+                whileHover={selectedId ? { scale: 1.02 } : undefined}
+                whileTap={selectedId ? { scale: 0.98 } : undefined}
+                onClick={submit}
+                disabled={!selectedId}
+                className={cn(
+                  "rounded-full px-8 py-3 text-[15px] font-semibold transition",
+                  selectedId
+                    ? "bg-accent text-accent-foreground shadow-[0_10px_25px_rgba(108,99,255,0.35)] hover:opacity-95"
+                    : "cursor-not-allowed bg-accent/25 text-accent-foreground/70",
+                )}
+              >
+                Submit Decision
+              </motion.button>
+            </div>
+          )}
         </motion.article>
       </AnimatePresence>
 
@@ -976,44 +1063,78 @@ function CoachMarkdown({ text }: { text: string }) {
 
 function MetricsPanel({ metrics }: { metrics: Metrics }) {
   const items: { label: string; value: number; display: string; invert?: boolean }[] = [
-    { label: "Budget remaining", value: metrics.budget, display: `${Math.round(metrics.budget)}%` },
-    { label: "Schedule", value: 50 + metrics.schedule / 2, display: scheduleLabel(metrics.schedule) },
-    { label: "Scope stability", value: metrics.scope, display: `${Math.round(metrics.scope)}%` },
-    { label: "Risk level", value: metrics.risk, display: `${Math.round(metrics.risk)}%`, invert: true },
-    { label: "Stakeholders", value: metrics.stakeholders, display: `${Math.round(metrics.stakeholders)}%` },
-    { label: "Team morale", value: metrics.morale, display: `${Math.round(metrics.morale)}%` },
+    { label: "Budget", value: metrics.budget, display: `${Math.round(metrics.budget)}%` },
+    {
+      label: "Schedule",
+      value: 50 + metrics.schedule / 2,
+      display: scheduleLabel(metrics.schedule),
+    },
+    { label: "Scope", value: metrics.scope, display: `${Math.round(metrics.scope)}%` },
+    {
+      label: "Risk",
+      value: metrics.risk,
+      display: `${Math.round(metrics.risk)}%`,
+      invert: true,
+    },
+    {
+      label: "Stakeholders",
+      value: metrics.stakeholders,
+      display: `${Math.round(metrics.stakeholders)}%`,
+    },
+    { label: "Team", value: metrics.morale, display: `${Math.round(metrics.morale)}%` },
     { label: "Quality", value: metrics.quality, display: `${Math.round(metrics.quality)}%` },
-    { label: "Business value", value: metrics.businessValue, display: `${Math.round(metrics.businessValue)}%` },
+    {
+      label: "Value",
+      value: metrics.businessValue,
+      display: `${Math.round(metrics.businessValue)}%`,
+    },
   ];
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-          Live Project Dashboard
+    <div className="play-card p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[15px] font-semibold text-[color:var(--color-success)]">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-success)]" />
+          Live Project Health
         </div>
-        <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
       </div>
-      <div className="space-y-3">
-        {items.map((m) => (
-          <div key={m.label}>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-foreground/80">{m.label}</span>
-              <span className={cn("font-semibold", toneFor(m.value, m.invert))}>{m.display}</span>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        {items.map((m) => {
+          const good = m.invert ? m.value <= 30 : m.value >= 65;
+          const bad = m.invert ? m.value >= 65 : m.value <= 30;
+          const barColor = good
+            ? "bg-[color:var(--color-success)]"
+            : bad
+              ? "bg-[color:var(--color-destructive)]"
+              : "bg-[color:var(--color-warning)]";
+          const valueColor = good
+            ? "text-[color:var(--color-success)]"
+            : bad
+              ? "text-[color:var(--color-destructive)]"
+              : "text-[color:var(--color-warning)]";
+          return (
+            <div key={m.label}>
+              <div className="text-[13px] font-medium text-muted-foreground">
+                {m.label}
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/[0.06]">
+                <motion.div
+                  initial={false}
+                  animate={{ width: `${clamp(m.value)}%` }}
+                  transition={{ duration: 0.6 }}
+                  className={cn("h-full rounded-full", barColor)}
+                />
+              </div>
+              <div className={cn("mt-1.5 text-[15px] font-bold", valueColor)}>
+                {m.display}
+              </div>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-strong">
-              <motion.div
-                initial={false}
-                animate={{ width: `${clamp(m.value)}%` }}
-                transition={{ duration: 0.5 }}
-                className={cn("h-full rounded-full", progressTone(m.value, m.invert))}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 const BADGE_META: Record<string, { label: string; emoji: string; desc: string }> = {
   "risk-manager": { label: "Risk Manager", emoji: "🛡️", desc: "Kept risk under control" },
@@ -1041,8 +1162,8 @@ function computeBadges(decisions: Decision[], metrics: Metrics): string[] {
 function BadgesPanel({ badges }: { badges: string[] }) {
   const all = Object.keys(BADGE_META);
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Badges</div>
+    <div className="play-card p-6">
+      <div className="mb-4 text-[15px] font-semibold text-foreground">Achievements</div>
       <div className="grid grid-cols-4 gap-2">
         {all.map((b) => {
           const earned = badges.includes(b);
@@ -1070,8 +1191,8 @@ function BadgesPanel({ badges }: { badges: string[] }) {
 function DecisionLog({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Decision Log</div>
+    <div className="play-card p-6">
+      <div className="mb-4 text-[15px] font-semibold text-foreground">Decision Log</div>
       <ol className="space-y-2">
         {decisions.slice(-6).reverse().map((d, i) => (
           <li key={`${d.scenarioId}-${i}`} className="flex items-start gap-2 text-xs">
