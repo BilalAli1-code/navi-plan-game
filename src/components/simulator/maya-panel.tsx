@@ -247,18 +247,58 @@ export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScore
         </AnimatePresence>
       </Tabs>
 
-      <AskMaya />
+      <AskMaya scenario={scenario} chosen={chosen} />
     </div>
   );
 }
 
-function AskMaya() {
+function AskMaya({ scenario, chosen }: { scenario: Scenario; chosen: Choice | null }) {
   const [q, setQ] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const prompts = [
     "Who owns this decision?",
     "What should I pay attention to?",
     "What PMI principle applies?",
   ];
+
+  async function ask(question: string) {
+    const trimmed = question.trim();
+    if (!trimmed || loading) return;
+    setLoading(true);
+    setError(null);
+    setAnswer("");
+    try {
+      const res = await fetch("/api/maya-ask", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          question: trimmed,
+          scenarioTitle: scenario.title,
+          scenarioSummary: scenario.body,
+          phase: scenario.phase,
+          chosenLabel: chosen?.label ?? null,
+        }),
+      });
+      if (!res.ok || !res.body) {
+        const msg = await res.text().catch(() => "Coach unavailable");
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        setAnswer((prev) => prev + decoder.decode(value, { stream: true }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Coach unavailable");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="mt-6">
       <div className="mb-3 text-[15px] font-semibold text-foreground">Ask Maya</div>
@@ -266,8 +306,12 @@ function AskMaya() {
         {prompts.map((p) => (
           <button
             key={p}
-            onClick={() => setQ(p)}
-            className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-left text-[13px] font-medium text-foreground/80 transition hover:-translate-y-0.5 hover:border-accent/40 hover:bg-accent/[0.04] hover:text-accent"
+            onClick={() => {
+              setQ(p);
+              void ask(p);
+            }}
+            disabled={loading}
+            className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-left text-[13px] font-medium text-foreground/80 transition hover:-translate-y-0.5 hover:border-accent/40 hover:bg-accent/[0.04] hover:text-accent disabled:opacity-60"
           >
             {p}
           </button>
@@ -276,7 +320,7 @@ function AskMaya() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          setQ("");
+          void ask(q);
         }}
         className="mt-3 flex items-center gap-2 rounded-full border border-black/[0.06] bg-white pl-4 pr-1.5 shadow-sm"
       >
@@ -288,12 +332,26 @@ function AskMaya() {
         />
         <button
           type="submit"
-          className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground transition hover:opacity-90"
+          disabled={loading || !q.trim()}
+          className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
           aria-label="Send question"
         >
           <Send className="h-4 w-4" />
         </button>
       </form>
+
+      {(loading || answer || error) && (
+        <div className="mt-3 rounded-2xl border border-black/[0.06] bg-white p-4 text-[13px] leading-relaxed text-foreground/85 shadow-sm">
+          {error ? (
+            <div className="text-[color:var(--color-destructive)]">{error}</div>
+          ) : (
+            <div className="whitespace-pre-wrap">
+              {answer || (loading ? "Maya is thinking…" : "")}
+              {loading && answer && <span className="ml-0.5 animate-pulse">▍</span>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
