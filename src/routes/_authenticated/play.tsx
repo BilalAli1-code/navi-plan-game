@@ -212,11 +212,11 @@ function Simulator() {
   }, [finished, saved, metrics, xp, badges, decisions]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+    <div className="play-theme min-h-screen bg-background font-sans text-foreground">
+      <div className="mx-auto flex min-h-screen max-w-[1440px] gap-6 p-6">
         <SideNav userEmail={userEmail} level={level} xp={xp} onSignOut={signOut} />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
           <TopBar
             phaseIdx={phaseIdx}
             finished={finished}
@@ -226,8 +226,8 @@ function Simulator() {
           />
           <ExamFocusBanner />
 
-          <main className="grid min-w-0 flex-1 gap-4 px-4 pb-16 pt-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <section className="min-w-0 space-y-4">
+          <main className="grid min-w-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="min-w-0 space-y-6">
               {finished ? (
                 <FinalReport
                   metrics={metrics}
@@ -252,9 +252,11 @@ function Simulator() {
                 />
               )}
               <MetricsPanel metrics={metrics} />
+              <BadgesPanel badges={badges} />
+              <DecisionLog decisions={decisions} />
             </section>
 
-            <aside className="space-y-4">
+            <aside className="space-y-6">
               {!finished && (
                 <MayaPanel
                   scenario={current}
@@ -264,8 +266,6 @@ function Simulator() {
                   perfScores={perfScores}
                 />
               )}
-              <BadgesPanel badges={badges} />
-              <DecisionLog decisions={decisions} />
             </aside>
           </main>
         </div>
