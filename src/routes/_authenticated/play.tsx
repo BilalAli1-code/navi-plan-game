@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getScenarioNarrative } from "@/lib/simulator/narrative";
+import { WorkplaceNarrative } from "@/components/simulator/workplace-narrative";
+import { MayaPanel } from "@/components/simulator/maya-panel";
 
 export const Route = createFileRoute("/_authenticated/play")({
   head: () => ({
