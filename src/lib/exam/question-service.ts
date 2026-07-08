@@ -34,6 +34,22 @@ export const MINI_MIX: ExamComposition = {
   difficultyProgression: true,
 };
 
+export const PRACTICE_MIX: ExamComposition = {
+  total: 60,
+  peopleRatio: 0.42,
+  processRatio: 0.5,
+  businessRatio: 0.08,
+  difficultyProgression: true,
+};
+
+export const PRO_MIX: ExamComposition = {
+  total: 120,
+  peopleRatio: 0.42,
+  processRatio: 0.5,
+  businessRatio: 0.08,
+  difficultyProgression: true,
+};
+
 const DIFFICULTY_RANK: Record<Difficulty, number> = {
   Easy: 1,
   Medium: 2,
@@ -53,12 +69,12 @@ function shuffle<T>(arr: T[]): T[] {
 function pickFromDomain(domain: ExamDomain, count: number): ExamQuestion[] {
   const pool = QUESTION_BANK.filter((q) => q.domain === domain);
   if (pool.length === 0) return [];
-  const picked: ExamQuestion[] = [];
-  // Cycle through pool if we need more than available (bank still small).
   const shuffled = shuffle(pool);
-  for (let i = 0; i < count; i++) {
-    picked.push(shuffled[i % shuffled.length]);
-  }
+  // No repeats when pool is large enough; fall back to cycling only if the
+  // request exceeds the pool.
+  if (count <= shuffled.length) return shuffled.slice(0, count);
+  const picked: ExamQuestion[] = [];
+  for (let i = 0; i < count; i++) picked.push(shuffled[i % shuffled.length]);
   return picked;
 }
 
