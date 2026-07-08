@@ -1,6 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  FileText,
+  Users,
+  AlertTriangle,
+  AlertOctagon,
+  UserCircle2,
+  BarChart3,
+  Trophy,
+  Settings,
+  Send,
+  Users2,
+  FileSearch,
+  FilePlus2,
+  MessageCircle,
+} from "lucide-react";
 import { PHASE_ORDER, PHASE_META, getScenarioMeta } from "@/lib/simulator/scenarios";
 import type {
   Choice,
