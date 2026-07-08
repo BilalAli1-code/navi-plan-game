@@ -1063,44 +1063,78 @@ function CoachMarkdown({ text }: { text: string }) {
 
 function MetricsPanel({ metrics }: { metrics: Metrics }) {
   const items: { label: string; value: number; display: string; invert?: boolean }[] = [
-    { label: "Budget remaining", value: metrics.budget, display: `${Math.round(metrics.budget)}%` },
-    { label: "Schedule", value: 50 + metrics.schedule / 2, display: scheduleLabel(metrics.schedule) },
-    { label: "Scope stability", value: metrics.scope, display: `${Math.round(metrics.scope)}%` },
-    { label: "Risk level", value: metrics.risk, display: `${Math.round(metrics.risk)}%`, invert: true },
-    { label: "Stakeholders", value: metrics.stakeholders, display: `${Math.round(metrics.stakeholders)}%` },
-    { label: "Team morale", value: metrics.morale, display: `${Math.round(metrics.morale)}%` },
+    { label: "Budget", value: metrics.budget, display: `${Math.round(metrics.budget)}%` },
+    {
+      label: "Schedule",
+      value: 50 + metrics.schedule / 2,
+      display: scheduleLabel(metrics.schedule),
+    },
+    { label: "Scope", value: metrics.scope, display: `${Math.round(metrics.scope)}%` },
+    {
+      label: "Risk",
+      value: metrics.risk,
+      display: `${Math.round(metrics.risk)}%`,
+      invert: true,
+    },
+    {
+      label: "Stakeholders",
+      value: metrics.stakeholders,
+      display: `${Math.round(metrics.stakeholders)}%`,
+    },
+    { label: "Team", value: metrics.morale, display: `${Math.round(metrics.morale)}%` },
     { label: "Quality", value: metrics.quality, display: `${Math.round(metrics.quality)}%` },
-    { label: "Business value", value: metrics.businessValue, display: `${Math.round(metrics.businessValue)}%` },
+    {
+      label: "Value",
+      value: metrics.businessValue,
+      display: `${Math.round(metrics.businessValue)}%`,
+    },
   ];
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-          Live Project Dashboard
+    <div className="play-card p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[15px] font-semibold text-[color:var(--color-success)]">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-success)]" />
+          Live Project Health
         </div>
-        <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
       </div>
-      <div className="space-y-3">
-        {items.map((m) => (
-          <div key={m.label}>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-foreground/80">{m.label}</span>
-              <span className={cn("font-semibold", toneFor(m.value, m.invert))}>{m.display}</span>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        {items.map((m) => {
+          const good = m.invert ? m.value <= 30 : m.value >= 65;
+          const bad = m.invert ? m.value >= 65 : m.value <= 30;
+          const barColor = good
+            ? "bg-[color:var(--color-success)]"
+            : bad
+              ? "bg-[color:var(--color-destructive)]"
+              : "bg-[color:var(--color-warning)]";
+          const valueColor = good
+            ? "text-[color:var(--color-success)]"
+            : bad
+              ? "text-[color:var(--color-destructive)]"
+              : "text-[color:var(--color-warning)]";
+          return (
+            <div key={m.label}>
+              <div className="text-[13px] font-medium text-muted-foreground">
+                {m.label}
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/[0.06]">
+                <motion.div
+                  initial={false}
+                  animate={{ width: `${clamp(m.value)}%` }}
+                  transition={{ duration: 0.6 }}
+                  className={cn("h-full rounded-full", barColor)}
+                />
+              </div>
+              <div className={cn("mt-1.5 text-[15px] font-bold", valueColor)}>
+                {m.display}
+              </div>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-strong">
-              <motion.div
-                initial={false}
-                animate={{ width: `${clamp(m.value)}%` }}
-                transition={{ duration: 0.5 }}
-                className={cn("h-full rounded-full", progressTone(m.value, m.invert))}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 const BADGE_META: Record<string, { label: string; emoji: string; desc: string }> = {
   "risk-manager": { label: "Risk Manager", emoji: "🛡️", desc: "Kept risk under control" },
