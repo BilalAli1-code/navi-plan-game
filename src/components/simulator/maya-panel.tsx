@@ -207,6 +207,56 @@ export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScore
           </motion.div>
         </AnimatePresence>
       </Tabs>
+
+      <AskMaya />
+    </div>
+  );
+}
+
+function AskMaya() {
+  const [q, setQ] = useState("");
+  const prompts = [
+    "Who owns this decision?",
+    "What should I pay attention to?",
+    "What PMI principle applies?",
+  ];
+  return (
+    <div className="mt-4 border-t border-border/60 pt-4">
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-foreground/70">
+        Ask Maya
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {prompts.map((p) => (
+          <button
+            key={p}
+            onClick={() => setQ(p)}
+            className="rounded-full border border-border/60 bg-surface/60 px-2.5 py-1 text-[11px] text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setQ("");
+        }}
+        className="mt-2 flex items-center gap-2 rounded-full border border-border/60 bg-surface/60 pl-3 pr-1"
+      >
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Ask a question…"
+          className="flex-1 bg-transparent py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+        />
+        <button
+          type="submit"
+          className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90"
+          aria-label="Send question"
+        >
+          ➤
+        </button>
+      </form>
     </div>
   );
 }
