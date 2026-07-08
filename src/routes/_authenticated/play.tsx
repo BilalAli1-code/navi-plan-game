@@ -1191,8 +1191,8 @@ function BadgesPanel({ badges }: { badges: string[] }) {
 function DecisionLog({ decisions }: { decisions: Decision[] }) {
   if (decisions.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-      <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Decision Log</div>
+    <div className="play-card p-6">
+      <div className="mb-4 text-[15px] font-semibold text-foreground">Decision Log</div>
       <ol className="space-y-2">
         {decisions.slice(-6).reverse().map((d, i) => (
           <li key={`${d.scenarioId}-${i}`} className="flex items-start gap-2 text-xs">
