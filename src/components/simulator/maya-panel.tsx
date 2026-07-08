@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, Heart, BookOpen, BarChart3, Lightbulb, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import mayaAvatar from "@/assets/maya-avatar.jpg";
@@ -67,46 +68,62 @@ type Props = {
 export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScores }: Props) {
   const meta = useMemo(() => getScenarioMeta(scenario), [scenario]);
   const [tab, setTab] = useState<string>("hint");
+  const [expanded, setExpanded] = useState(false);
 
-  // When a decision is made, jump to Mindset tab.
   useEffect(() => {
     if (chosen) setTab("mindset");
     else setTab("hint");
+    setExpanded(false);
   }, [chosen, scenario.id]);
 
-  const hint = buildHint(scenario, meta.knowledgeArea);
+  const { short: hintShort, more: hintMore } = buildHint(scenario, meta.knowledgeArea);
   const ref = PMBOK_REFERENCE[meta.knowledgeArea];
   const weak = weakestCategories(perfScores, 3);
 
+  const tabs: { id: string; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "hint", label: "Hint", Icon: MapPin },
+    { id: "mindset", label: "Mindset", Icon: Heart },
+    { id: "pmbok", label: "PMBOK", Icon: BookOpen },
+    { id: "insights", label: "Insights", Icon: BarChart3 },
+    { id: "tip", label: "Exam Tip", Icon: Lightbulb },
+  ];
+
   return (
-    <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-surface/60 p-4 shadow-lg">
-      <div className="flex items-center gap-3">
+    <div className="play-card p-6">
+      <div className="mb-5 text-[18px] font-semibold text-foreground">AI Coach: Maya</div>
+
+      <div className="flex flex-col items-center gap-3 pb-5">
         <div className="relative">
           <img
             src={mayaAvatar}
             alt="Maya, your PMP mentor"
-            width={44}
-            height={44}
-            loading="lazy"
-            className="h-11 w-11 rounded-full border-2 border-primary/50 object-cover"
+            className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-[0_6px_18px_rgba(28,43,107,0.18)]"
           />
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-400" />
+          <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[color:var(--color-success)]" />
         </div>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-foreground">Maya</div>
-          <div className="truncate text-[11px] text-muted-foreground">
-            Senior PM · PMP · Your live mentor
-          </div>
+        <div className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
+          <span className="h-2 w-2 rounded-full bg-[color:var(--color-success)]" />
+          Online
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab} className="mt-3">
-        <TabsList className="grid w-full grid-cols-5 bg-surface/60">
-          <TabsTrigger value="hint" className="text-[10px]">Hint</TabsTrigger>
-          <TabsTrigger value="mindset" className="text-[10px]">Mindset</TabsTrigger>
-          <TabsTrigger value="pmbok" className="text-[10px]">PMBOK</TabsTrigger>
-          <TabsTrigger value="perf" className="text-[10px]">Insights</TabsTrigger>
-          <TabsTrigger value="tip" className="text-[10px]">Exam Tip</TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-xl bg-transparent p-0">
+          {tabs.map((t) => (
+            <TabsTrigger
+              key={t.id}
+              value={t.id}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-lg border-none bg-transparent px-1 py-2 text-[11px] font-medium text-muted-foreground",
+                "data-[state=active]:bg-transparent data-[state=active]:text-accent data-[state=active]:shadow-none",
+                "relative after:absolute after:-bottom-1 after:left-1/2 after:h-0.5 after:w-0 after:-translate-x-1/2 after:rounded-full after:bg-accent after:transition-all",
+                "data-[state=active]:after:w-6",
+              )}
+            >
+              <t.Icon className="h-4 w-4" />
+              <span>{t.label}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <AnimatePresence mode="wait">
@@ -117,59 +134,76 @@ export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScore
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18 }}
           >
-            <TabsContent value="hint" className="mt-3">
-              <MayaBubble>
-                <p className="text-sm">
+            <TabsContent value="hint" className="mt-5">
+              <MayaCard>
+                <div className="text-[15px] font-semibold text-foreground">Maya's Hint</div>
+                <p className="mt-2 text-[15px] leading-relaxed text-foreground/85">
                   {chosen
-                    ? "You've already committed on this one — head over to Mindset to see how it lands."
-                    : hint}
+                    ? "You've already committed — check Mindset to see how it lands."
+                    : hintShort}
                 </p>
-                <p className="mt-2 text-[11px] italic text-muted-foreground">
-                  I won't hand you the answer — I'll point you at the right lens.
-                </p>
-              </MayaBubble>
-            </TabsContent>
-
-            <TabsContent value="mindset" className="mt-3">
-              <MayaBubble>
-                {chosen ? (
-                  <>
-                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-                      {chosen.id === meta.correctChoiceId ? "Well played" : "Let's unpack it"}
-                    </div>
-                    <p className="text-sm">{meta.explanation}</p>
-                    <p className="mt-2 text-sm italic text-foreground/85">{meta.pmMindset}</p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Make a call, then I'll walk you through the PMI mindset behind the strongest option.
+                {!chosen && expanded && (
+                  <p className="mt-3 text-[13px] italic leading-relaxed text-muted-foreground">
+                    {hintMore}
                   </p>
                 )}
-              </MayaBubble>
+                {!chosen && (
+                  <button
+                    onClick={() => setExpanded((v) => !v)}
+                    className="mt-4 w-full rounded-full bg-accent/10 py-2.5 text-[13px] font-semibold text-accent transition hover:bg-accent/15"
+                  >
+                    {expanded ? "Show less" : "Show more hint"}
+                  </button>
+                )}
+              </MayaCard>
             </TabsContent>
 
-            <TabsContent value="pmbok" className="mt-3">
-              <MayaBubble>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+            <TabsContent value="mindset" className="mt-5">
+              <MayaCard>
+                {chosen ? (
+                  <>
+                    <div className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+                      {chosen.id === meta.correctChoiceId ? "Well played" : "Let's unpack it"}
+                    </div>
+                    <p className="mt-2 text-[15px] leading-relaxed text-foreground/85">
+                      {meta.explanation}
+                    </p>
+                    <p className="mt-3 text-[15px] italic leading-relaxed text-foreground/80">
+                      {meta.pmMindset}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[15px] text-muted-foreground">
+                    Make a call, then I'll walk you through the PMI mindset.
+                  </p>
+                )}
+              </MayaCard>
+            </TabsContent>
+
+            <TabsContent value="pmbok" className="mt-5">
+              <MayaCard>
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-accent">
                   {meta.processGroup} · {meta.knowledgeArea}
                 </div>
-                <div className="mt-2 space-y-1.5">
+                <div className="mt-3 space-y-1.5">
                   {ref.processes.map((p) => (
-                    <div key={p} className="text-sm text-foreground/90">• {p}</div>
+                    <div key={p} className="text-[15px] text-foreground/85">
+                      • {p}
+                    </div>
                   ))}
                 </div>
-                <p className="mt-3 rounded-md border border-primary/20 bg-primary/[0.06] p-2 text-xs italic text-foreground/85">
+                <p className="mt-4 rounded-xl bg-accent/8 p-3 text-[13px] italic leading-relaxed text-foreground/80">
                   {ref.principle}
                 </p>
-              </MayaBubble>
+              </MayaCard>
             </TabsContent>
 
-            <TabsContent value="perf" className="mt-3">
-              <MayaBubble>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+            <TabsContent value="insights" className="mt-5">
+              <MayaCard>
+                <div className="text-[15px] font-semibold text-foreground">
                   Performance Insights
                 </div>
-                <div className="mt-2 space-y-1.5">
+                <div className="mt-3 space-y-2.5">
                   {(Object.entries(perfScores) as [PerfCategory, number][])
                     .sort(([, a], [, b]) => b - a)
                     .slice(0, 5)
@@ -178,31 +212,36 @@ export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScore
                     ))}
                 </div>
                 {weak.length > 0 && (
-                  <p className="mt-3 text-xs text-amber-200">
-                    Focus areas: <span className="font-semibold">{weak.join(", ")}</span>
+                  <p className="mt-4 text-[13px] text-[color:var(--color-warning)]">
+                    Focus areas:{" "}
+                    <span className="font-semibold">{weak.join(", ")}</span>
                   </p>
                 )}
                 {chosen && coachText && (
-                  <div className="mt-3 rounded-md border border-primary/20 bg-primary/5 p-2 text-xs text-foreground/85">
-                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-primary">
+                  <div className="mt-4 rounded-xl bg-accent/8 p-3 text-[13px] text-foreground/85">
+                    <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-accent">
                       Live coaching
                     </div>
                     <CoachMd text={coachText} />
                   </div>
                 )}
                 {chosen && coachLoading && !coachText && (
-                  <div className="mt-3 animate-pulse text-xs text-primary/70">Maya is analysing…</div>
+                  <div className="mt-4 animate-pulse text-[13px] text-accent">
+                    Maya is analysing…
+                  </div>
                 )}
-              </MayaBubble>
+              </MayaCard>
             </TabsContent>
 
-            <TabsContent value="tip" className="mt-3">
-              <MayaBubble>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-amber-200">
+            <TabsContent value="tip" className="mt-5">
+              <MayaCard>
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-[color:var(--color-warning)]">
                   💡 Exam tip
                 </div>
-                <p className="mt-1 text-sm text-foreground/90">{meta.examTip}</p>
-              </MayaBubble>
+                <p className="mt-2 text-[15px] leading-relaxed text-foreground/85">
+                  {meta.examTip}
+                </p>
+              </MayaCard>
             </TabsContent>
           </motion.div>
         </AnimatePresence>
@@ -221,16 +260,14 @@ function AskMaya() {
     "What PMI principle applies?",
   ];
   return (
-    <div className="mt-4 border-t border-border/60 pt-4">
-      <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-foreground/70">
-        Ask Maya
-      </div>
-      <div className="flex flex-wrap gap-1.5">
+    <div className="mt-6">
+      <div className="mb-3 text-[15px] font-semibold text-foreground">Ask Maya</div>
+      <div className="flex flex-col gap-2">
         {prompts.map((p) => (
           <button
             key={p}
             onClick={() => setQ(p)}
-            className="rounded-full border border-border/60 bg-surface/60 px-2.5 py-1 text-[11px] text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+            className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-left text-[13px] font-medium text-foreground/80 transition hover:-translate-y-0.5 hover:border-accent/40 hover:bg-accent/[0.04] hover:text-accent"
           >
             {p}
           </button>
@@ -241,43 +278,48 @@ function AskMaya() {
           e.preventDefault();
           setQ("");
         }}
-        className="mt-2 flex items-center gap-2 rounded-full border border-border/60 bg-surface/60 pl-3 pr-1"
+        className="mt-3 flex items-center gap-2 rounded-full border border-black/[0.06] bg-white pl-4 pr-1.5 shadow-sm"
       >
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask a question…"
-          className="flex-1 bg-transparent py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="flex-1 bg-transparent py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         <button
           type="submit"
-          className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90"
+          className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground transition hover:opacity-90"
           aria-label="Send question"
         >
-          ➤
+          <Send className="h-4 w-4" />
         </button>
       </form>
     </div>
   );
 }
 
-function MayaBubble({ children }: { children: React.ReactNode }) {
+function MayaCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-surface/70 p-3 text-foreground">
+    <div className="rounded-2xl border border-black/[0.05] bg-[color:var(--color-surface-strong)] p-5">
       {children}
     </div>
   );
 }
 
 function PerfRow({ label, score }: { label: string; score: number }) {
-  const tone = score >= 70 ? "bg-emerald-500" : score >= 50 ? "bg-amber-400" : "bg-rose-500";
+  const tone =
+    score >= 70
+      ? "bg-[color:var(--color-success)]"
+      : score >= 50
+        ? "bg-[color:var(--color-warning)]"
+        : "bg-[color:var(--color-destructive)]";
   return (
     <div>
-      <div className="flex items-center justify-between text-[11px]">
+      <div className="flex items-center justify-between text-[13px]">
         <span className="text-foreground/85">{label}</span>
         <span className="text-muted-foreground">{Math.round(score)}</span>
       </div>
-      <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-strong">
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
         <motion.div
           initial={false}
           animate={{ width: `${Math.max(0, Math.min(100, score))}%` }}
@@ -295,7 +337,7 @@ function CoachMd({ text }: { text: string }) {
     <p>
       {parts.map((p, i) =>
         p.startsWith("**") && p.endsWith("**") ? (
-          <strong key={i} className="text-primary">
+          <strong key={i} className="text-accent">
             {p.slice(2, -2)}
           </strong>
         ) : (
@@ -306,7 +348,7 @@ function CoachMd({ text }: { text: string }) {
   );
 }
 
-function buildHint(scenario: Scenario, ka: KnowledgeArea): string {
+function buildHint(scenario: Scenario, ka: KnowledgeArea): { short: string; more: string } {
   const hints: Record<KnowledgeArea, string> = {
     Integration: "Think integrated: what process governs this change? Charter, change control, or closure?",
     Scope: "Ask: is this a scope conversation? If yes, the answer usually routes through the CCB.",
@@ -319,9 +361,9 @@ function buildHint(scenario: Scenario, ka: KnowledgeArea): string {
     Procurement: "The contract exists for exactly this moment — use its clauses.",
     Stakeholder: "Analyze power/interest first. Engagement strategy follows classification.",
   };
-  const eventNudge =
+  const short =
     scenario.kind === "event"
-      ? " Unplanned events still go through the PMBOK process — resist the urge to react."
-      : "";
-  return hints[ka] + eventNudge;
+      ? "This is an unplanned event — resist the urge to react. PMI still expects you to run it through the process."
+      : "PMI expects you to focus on understanding the situation before jumping into planning or documentation.";
+  return { short, more: hints[ka] };
 }
