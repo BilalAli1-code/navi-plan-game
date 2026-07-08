@@ -230,6 +230,15 @@ function Simulator() {
         </section>
 
         <aside className="space-y-4">
+          {!finished && (
+            <MayaPanel
+              scenario={current}
+              chosen={pendingChoice}
+              coachText={coachText}
+              coachLoading={coachLoading}
+              perfScores={perfScores}
+            />
+          )}
           <MetricsPanel metrics={metrics} />
           <BadgesPanel badges={badges} />
           <DecisionLog decisions={decisions} />
