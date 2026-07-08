@@ -205,3 +205,66 @@
     letter-spacing: -0.015em;
   }
 }
+
+/*
+ * Premium light-theme scope for the interactive workplace simulator.
+ * Wrap a subtree in `.play-theme` to reskin all semantic tokens
+ * (cards, buttons, borders, primary, etc.) without touching the rest
+ * of the app. Uses Inter for a modern SaaS feel.
+ */
+.play-theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --background: oklch(0.975 0.005 260);        /* #f4f5f9 page */
+  --foreground: oklch(0.22 0.03 265);          /* near-black navy */
+  --surface: oklch(1 0 0);                     /* white card */
+  --surface-strong: oklch(0.955 0.008 260);    /* subtle light panel */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.03 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.03 265);
+
+  --primary: oklch(0.28 0.11 268);             /* #1C2B6B */
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-soft: oklch(0.55 0.18 278 / 12%);  /* lavender wash */
+
+  --secondary: oklch(0.955 0.008 260);
+  --secondary-foreground: oklch(0.22 0.03 265);
+  --muted: oklch(0.955 0.008 260);
+  --muted-foreground: oklch(0.50 0.02 265);
+  --accent: oklch(0.60 0.20 278);              /* #6C63FF */
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.66 0.19 22);          /* #EF5B5B */
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.72 0.17 152);             /* #32C36C */
+  --warning: oklch(0.78 0.16 68);              /* #F5A623 */
+
+  --border: oklch(0.22 0.03 265 / 8%);
+  --input: oklch(0.22 0.03 265 / 10%);
+  --ring: oklch(0.60 0.20 278);
+
+  --sidebar: oklch(0.20 0.06 268);             /* deep navy */
+  --sidebar-foreground: oklch(0.98 0.005 250);
+  --sidebar-primary: oklch(0.60 0.20 278);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.28 0.09 265);
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.60 0.20 278);
+
+  --radius: 1.125rem; /* 18px */
+
+  color-scheme: light;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+.play-theme .play-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid oklch(0.22 0.03 265 / 6%);
+}
+
