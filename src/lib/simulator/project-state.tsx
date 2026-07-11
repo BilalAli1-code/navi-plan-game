@@ -32,6 +32,17 @@ import {
   perfImpactFor,
   weakestCategories,
 } from "./performance";
+import { DEFAULT_INDUSTRY_ID, getIndustry, type IndustryCase } from "./industries";
+
+// Overlay an industry-specific business case onto the shared BUSINESS_CASE
+// template so the same choice engine plays across industries.
+function businessCaseFor(industry: IndustryCase): Scenario {
+  return {
+    ...BUSINESS_CASE,
+    title: `Approve the Business Case — ${industry.projectName}`,
+    body: industry.body,
+  };
+}
 
 export const INITIAL_METRICS: Metrics = {
   budget: 100,
@@ -192,10 +203,12 @@ type ProjectStateValue = {
   consequenceNote: string | null;
   perfScores: PerfScores;
   perfImpactPreview: Partial<Record<import("./types").PerfCategory, number>> | null;
+  industry: IndustryCase;
   // actions
   choose: (choice: Choice, coach: (text: string | null) => Promise<string> | string) => Promise<void>;
   advance: () => void;
   restart: () => void;
+  setIndustry: (id: string) => void;
   setCoach: (text: string | null, loading: boolean) => void;
 };
 
@@ -214,7 +227,9 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [current, setCurrent] = useState<Scenario>(() => BUSINESS_CASE);
+  const [industryId, setIndustryId] = useState<string>(DEFAULT_INDUSTRY_ID);
+  const industry = useMemo(() => getIndustry(industryId), [industryId]);
+  const [current, setCurrent] = useState<Scenario>(() => businessCaseFor(getIndustry(DEFAULT_INDUSTRY_ID)));
   const [businessCaseDone, setBusinessCaseDone] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
   const [coachText, setCoachText] = useState<string | null>(null);
@@ -367,7 +382,7 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     setDecisions([]);
     setXp(0);
     setStreak(0);
-    setCurrent(BUSINESS_CASE);
+    setCurrent(businessCaseFor(industry));
     setBusinessCaseDone(false);
     setPendingChoice(null);
     setCoachText(null);
@@ -376,6 +391,14 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     setPerfImpactPreview(null);
     eventsFired.current = new Set();
     phaseOrderRef.current = null;
+  }, [industry]);
+
+  const setIndustry = useCallback((id: string) => {
+    setIndustryId(id);
+    // Only reframe the opening business case if the run hasn't advanced yet.
+    setCurrent((cur) =>
+      cur.id === "biz-case" ? businessCaseFor(getIndustry(id)) : cur,
+    );
   }, []);
 
   const setCoach = useCallback((text: string | null, loading: boolean) => {
@@ -401,9 +424,11 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     consequenceNote,
     perfScores,
     perfImpactPreview,
+    industry,
     choose,
     advance,
     restart,
+    setIndustry,
     setCoach,
   };
 

@@ -29,6 +29,7 @@ import type {
   Scenario,
 } from "@/lib/simulator/types";
 import { useProjectState } from "@/lib/simulator/project-state";
+import { INDUSTRY_CASES } from "@/lib/simulator/industries";
 import { KNOWLEDGE_AREAS } from "@/lib/simulator/performance";
 import { useExamWeaknesses } from "@/lib/exam/use-exam-weaknesses";
 import { Button } from "@/components/ui/button";
@@ -111,9 +112,11 @@ function Simulator() {
     coachLoading,
     consequenceNote,
     perfScores,
+    industry,
     choose,
     advance,
     restart,
+    setIndustry,
   } = useProjectState();
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -228,6 +231,12 @@ function Simulator() {
 
           <main className="grid min-w-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <section className="min-w-0 space-y-6">
+              {!finished && current.id === "biz-case" && (
+                <IndustryPicker
+                  activeId={industry.id}
+                  onPick={setIndustry}
+                />
+              )}
               {finished ? (
                 <FinalReport
                   metrics={metrics}
@@ -1357,6 +1366,82 @@ function ReportRow({ k, v }: { k: string; v: string }) {
     <div className="flex items-center justify-between text-sm">
       <span className="text-foreground/80">{k}</span>
       <span className="font-semibold text-white">{v}</span>
+    </div>
+  );
+}
+
+function IndustryPicker({
+  activeId,
+  onPick,
+}: {
+  activeId: string;
+  onPick: (id: string) => void;
+}) {
+  const active = INDUSTRY_CASES.find((c) => c.id === activeId) ?? INDUSTRY_CASES[0];
+  return (
+    <div className="play-card p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+            Step 1 · Pick your business case
+          </div>
+          <h2 className="mt-1 text-[22px] font-bold text-foreground">
+            Choose the industry you'll run
+          </h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            All scenarios stay PMBOK 8-aligned and mapped to the PMI ECO — only the setting changes.
+          </p>
+        </div>
+        <div className="rounded-full bg-accent/10 px-3 py-1 text-[12px] font-semibold text-accent">
+          {active.emoji} {active.industry}
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {INDUSTRY_CASES.map((c) => {
+          const isActive = c.id === activeId;
+          return (
+            <button
+              key={c.id}
+              onClick={() => onPick(c.id)}
+              className={cn(
+                "group flex flex-col rounded-2xl border p-4 text-left transition",
+                isActive
+                  ? "border-accent bg-accent/[0.06] shadow-[0_6px_20px_rgba(108,99,255,0.18)]"
+                  : "border-black/[0.06] bg-white hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_6px_18px_rgba(28,43,107,0.08)]",
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] leading-none">{c.emoji}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {c.industry}
+                </span>
+              </div>
+              <div className="mt-2 text-[15px] font-semibold text-foreground">
+                {c.projectName}
+              </div>
+              <div className="mt-1 text-[12px] text-muted-foreground">{c.summary}</div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] font-medium text-foreground/75">
+                  {c.budget}
+                </span>
+                <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] font-medium text-foreground/75">
+                  {c.duration}
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {c.challenges.map((ch) => (
+                  <span
+                    key={ch}
+                    className="rounded-full bg-accent/[0.08] px-2 py-0.5 text-[10px] font-medium text-accent"
+                  >
+                    {ch}
+                  </span>
+                ))}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
