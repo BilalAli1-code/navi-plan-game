@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Flame, GraduationCap, Play, RotateCw, Trophy } from "lucide-react";
 import { ALL_ACHIEVEMENT_RULES } from "@/lib/exam/gamification";
 import { AppShell } from "@/components/app-shell";
+import { ECO_DOMAINS, PMBOK8_PRINCIPLES, PMBOK8_PERFORMANCE_DOMAINS } from "@/lib/pmbok8";
 
 export const Route = createFileRoute("/_authenticated/exam/")({
   head: () => ({
