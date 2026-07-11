@@ -391,6 +391,14 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     setPerfImpactPreview(null);
     eventsFired.current = new Set();
     phaseOrderRef.current = null;
+  }, [industry]);
+
+  const setIndustry = useCallback((id: string) => {
+    setIndustryId(id);
+    // Only reframe the opening business case if the run hasn't advanced yet.
+    setCurrent((cur) =>
+      cur.id === "biz-case" ? businessCaseFor(getIndustry(id)) : cur,
+    );
   }, []);
 
   const setCoach = useCallback((text: string | null, loading: boolean) => {
