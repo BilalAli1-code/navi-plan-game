@@ -112,9 +112,11 @@ function Simulator() {
     coachLoading,
     consequenceNote,
     perfScores,
+    industry,
     choose,
     advance,
     restart,
+    setIndustry,
   } = useProjectState();
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
