@@ -189,6 +189,54 @@ function ExamLanding() {
           </div>
         </Card>
 
+        <section className="mt-10 grid gap-4 lg:grid-cols-3">
+          <Card className="border-border/60 bg-card p-5">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              PMI Exam Content Outline (ECO)
+            </div>
+            <div className="mt-3 space-y-2">
+              {ECO_DOMAINS.map((d) => (
+                <div key={d.domain} className="flex items-center justify-between text-sm">
+                  <div>
+                    <div className="font-medium">{d.domain}</div>
+                    <div className="text-xs text-muted-foreground">{d.blurb}</div>
+                  </div>
+                  <Badge variant="secondary">{d.weight}%</Badge>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Every question and simulation decision is tagged to an ECO task.
+            </p>
+          </Card>
+          <Card className="border-border/60 bg-card p-5 lg:col-span-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              PMBOK Guide 8 · Principles & Performance Domains
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-xs font-semibold text-muted-foreground">12 Principles</div>
+                <ul className="mt-1 space-y-0.5 text-xs text-foreground/80">
+                  {PMBOK8_PRINCIPLES.map((p) => (
+                    <li key={p.id}>
+                      <span className="text-muted-foreground">{p.id}.</span> {p.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-muted-foreground">8 Performance Domains</div>
+                <ul className="mt-1 space-y-0.5 text-xs text-foreground/80">
+                  {PMBOK8_PERFORMANCE_DOMAINS.map((d) => (
+                    <li key={d.id}>• {d.name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+
         <section className="mt-10">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Achievements</h2>
