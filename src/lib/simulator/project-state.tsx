@@ -227,7 +227,9 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [current, setCurrent] = useState<Scenario>(() => BUSINESS_CASE);
+  const [industryId, setIndustryId] = useState<string>(DEFAULT_INDUSTRY_ID);
+  const industry = useMemo(() => getIndustry(industryId), [industryId]);
+  const [current, setCurrent] = useState<Scenario>(() => businessCaseFor(getIndustry(DEFAULT_INDUSTRY_ID)));
   const [businessCaseDone, setBusinessCaseDone] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
   const [coachText, setCoachText] = useState<string | null>(null);
