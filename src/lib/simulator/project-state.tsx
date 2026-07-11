@@ -382,7 +382,7 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     setDecisions([]);
     setXp(0);
     setStreak(0);
-    setCurrent(BUSINESS_CASE);
+    setCurrent(businessCaseFor(industry));
     setBusinessCaseDone(false);
     setPendingChoice(null);
     setCoachText(null);
