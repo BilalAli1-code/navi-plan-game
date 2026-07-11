@@ -32,6 +32,17 @@ import {
   perfImpactFor,
   weakestCategories,
 } from "./performance";
+import { DEFAULT_INDUSTRY_ID, getIndustry, type IndustryCase } from "./industries";
+
+// Overlay an industry-specific business case onto the shared BUSINESS_CASE
+// template so the same choice engine plays across industries.
+function businessCaseFor(industry: IndustryCase): Scenario {
+  return {
+    ...BUSINESS_CASE,
+    title: `Approve the Business Case — ${industry.projectName}`,
+    body: industry.body,
+  };
+}
 
 export const INITIAL_METRICS: Metrics = {
   budget: 100,
