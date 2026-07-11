@@ -424,9 +424,11 @@ export function ProjectStateProvider({ children }: { children: ReactNode }) {
     consequenceNote,
     perfScores,
     perfImpactPreview,
+    industry,
     choose,
     advance,
     restart,
+    setIndustry,
     setCoach,
   };
 
