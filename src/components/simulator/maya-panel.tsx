@@ -193,7 +193,39 @@ export function MayaPanel({ scenario, chosen, coachText, coachLoading, perfScore
                     </div>
                   ))}
                 </div>
-                <p className="mt-4 rounded-xl bg-accent/8 p-3 text-[13px] italic leading-relaxed text-foreground/80">
+                <div className="mt-4 grid gap-2">
+                  <div className="rounded-xl border border-accent/15 bg-accent/[0.06] p-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-accent">
+                      PMBOK 8 · Principle {principleFor(meta.knowledgeArea).id}
+                    </div>
+                    <div className="mt-0.5 text-[13px] font-semibold text-foreground">
+                      {principleFor(meta.knowledgeArea).name}
+                    </div>
+                    <div className="text-[12px] text-foreground/75">
+                      {principleFor(meta.knowledgeArea).summary}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-black/[0.06] bg-white p-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      PMBOK 8 · Performance Domain
+                    </div>
+                    <div className="mt-0.5 text-[13px] font-semibold text-foreground">
+                      {performanceDomainFor(meta.knowledgeArea).name}
+                    </div>
+                    <div className="text-[12px] text-foreground/75">
+                      {performanceDomainFor(meta.knowledgeArea).summary}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-black/[0.06] bg-white p-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      PMI ECO · Domain
+                    </div>
+                    <div className="mt-0.5 text-[13px] font-semibold text-foreground">
+                      {ecoDomainFor(meta.knowledgeArea)}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-3 rounded-xl bg-accent/8 p-3 text-[13px] italic leading-relaxed text-foreground/80">
                   {ref.principle}
                 </p>
               </MayaCard>
