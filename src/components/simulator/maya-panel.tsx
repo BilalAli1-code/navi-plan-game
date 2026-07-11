@@ -12,6 +12,7 @@ import type {
   Scenario,
 } from "@/lib/simulator/types";
 import { getScenarioMeta } from "@/lib/simulator/scenarios";
+import { ecoDomainFor, performanceDomainFor, principleFor } from "@/lib/pmbok8";
 import { weakestCategories } from "@/lib/simulator/performance";
 
 const PMBOK_REFERENCE: Record<KnowledgeArea, { processes: string[]; principle: string }> = {
