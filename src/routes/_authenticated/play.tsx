@@ -231,6 +231,12 @@ function Simulator() {
 
           <main className="grid min-w-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <section className="min-w-0 space-y-6">
+              {!finished && current.id === "biz-case" && (
+                <IndustryPicker
+                  activeId={industry.id}
+                  onPick={setIndustry}
+                />
+              )}
               {finished ? (
                 <FinalReport
                   metrics={metrics}
