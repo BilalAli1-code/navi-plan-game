@@ -203,10 +203,12 @@ type ProjectStateValue = {
   consequenceNote: string | null;
   perfScores: PerfScores;
   perfImpactPreview: Partial<Record<import("./types").PerfCategory, number>> | null;
+  industry: IndustryCase;
   // actions
   choose: (choice: Choice, coach: (text: string | null) => Promise<string> | string) => Promise<void>;
   advance: () => void;
   restart: () => void;
+  setIndustry: (id: string) => void;
   setCoach: (text: string | null, loading: boolean) => void;
 };
 
