@@ -29,6 +29,7 @@ import type {
   Scenario,
 } from "@/lib/simulator/types";
 import { useProjectState } from "@/lib/simulator/project-state";
+import { INDUSTRY_CASES } from "@/lib/simulator/industries";
 import { KNOWLEDGE_AREAS } from "@/lib/simulator/performance";
 import { useExamWeaknesses } from "@/lib/exam/use-exam-weaknesses";
 import { Button } from "@/components/ui/button";
