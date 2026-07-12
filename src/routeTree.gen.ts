@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiSimStakeholderRouteImport } from './routes/api/sim-stakeholder'
 import { Route as ApiMayaAskRouteImport } from './routes/api/maya-ask'
 import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/p
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedExamIndexRouteImport } from './routes/_authenticated/exam.index'
+import { Route as AuthenticatedSimCaseIdRouteImport } from './routes/_authenticated/sim.$caseId'
 import { Route as AuthenticatedExamSessionRouteImport } from './routes/_authenticated/exam.session'
 import { Route as AuthenticatedExamHistoryRouteImport } from './routes/_authenticated/exam.history'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -48,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSimStakeholderRoute = ApiSimStakeholderRouteImport.update({
+  id: '/api/sim-stakeholder',
+  path: '/api/sim-stakeholder',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMayaAskRoute = ApiMayaAskRouteImport.update({
@@ -86,6 +93,11 @@ const AuthenticatedExamIndexRoute = AuthenticatedExamIndexRouteImport.update({
   path: '/exam/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSimCaseIdRoute = AuthenticatedSimCaseIdRouteImport.update({
+  id: '/sim/$caseId',
+  path: '/sim/$caseId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamSessionRoute =
   AuthenticatedExamSessionRouteImport.update({
     id: '/exam/session',
@@ -121,9 +133,11 @@ export interface FileRoutesByFullPath {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
+  '/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/exam/': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -138,9 +152,11 @@ export interface FileRoutesByTo {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
+  '/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/exam': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -157,9 +173,11 @@ export interface FileRoutesById {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
+  '/_authenticated/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/_authenticated/exam/': typeof AuthenticatedExamIndexRoute
   '/_authenticated/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -176,9 +194,11 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
+    | '/sim/$caseId'
     | '/exam/'
     | '/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -193,9 +213,11 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
+    | '/sim/$caseId'
     | '/exam'
     | '/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -211,9 +233,11 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/_authenticated/exam/history'
     | '/_authenticated/exam/session'
+    | '/_authenticated/sim/$caseId'
     | '/_authenticated/exam/'
     | '/_authenticated/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -227,6 +251,7 @@ export interface RootRouteChildren {
   ApiCoachRoute: typeof ApiCoachRoute
   ApiExamCoachRoute: typeof ApiExamCoachRoute
   ApiMayaAskRoute: typeof ApiMayaAskRoute
+  ApiSimStakeholderRoute: typeof ApiSimStakeholderRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -266,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sim-stakeholder': {
+      id: '/api/sim-stakeholder'
+      path: '/api/sim-stakeholder'
+      fullPath: '/api/sim-stakeholder'
+      preLoaderRoute: typeof ApiSimStakeholderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/maya-ask': {
@@ -317,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sim/$caseId': {
+      id: '/_authenticated/sim/$caseId'
+      path: '/sim/$caseId'
+      fullPath: '/sim/$caseId'
+      preLoaderRoute: typeof AuthenticatedSimCaseIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exam/session': {
       id: '/_authenticated/exam/session'
       path: '/exam/session'
@@ -354,6 +393,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
   AuthenticatedExamHistoryRoute: typeof AuthenticatedExamHistoryRoute
   AuthenticatedExamSessionRoute: typeof AuthenticatedExamSessionRoute
+  AuthenticatedSimCaseIdRoute: typeof AuthenticatedSimCaseIdRoute
   AuthenticatedExamIndexRoute: typeof AuthenticatedExamIndexRoute
   AuthenticatedExamReportReportIdRoute: typeof AuthenticatedExamReportReportIdRoute
 }
@@ -364,6 +404,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
   AuthenticatedExamHistoryRoute: AuthenticatedExamHistoryRoute,
   AuthenticatedExamSessionRoute: AuthenticatedExamSessionRoute,
+  AuthenticatedSimCaseIdRoute: AuthenticatedSimCaseIdRoute,
   AuthenticatedExamIndexRoute: AuthenticatedExamIndexRoute,
   AuthenticatedExamReportReportIdRoute: AuthenticatedExamReportReportIdRoute,
 }
@@ -379,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCoachRoute: ApiCoachRoute,
   ApiExamCoachRoute: ApiExamCoachRoute,
   ApiMayaAskRoute: ApiMayaAskRoute,
+  ApiSimStakeholderRoute: ApiSimStakeholderRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
