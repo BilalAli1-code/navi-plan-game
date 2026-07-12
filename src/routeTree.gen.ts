@@ -22,6 +22,7 @@ import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/p
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedExamIndexRouteImport } from './routes/_authenticated/exam.index'
+import { Route as AuthenticatedSimCaseIdRouteImport } from './routes/_authenticated/sim.$caseId'
 import { Route as AuthenticatedExamSessionRouteImport } from './routes/_authenticated/exam.session'
 import { Route as AuthenticatedExamHistoryRouteImport } from './routes/_authenticated/exam.history'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -92,6 +93,11 @@ const AuthenticatedExamIndexRoute = AuthenticatedExamIndexRouteImport.update({
   path: '/exam/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSimCaseIdRoute = AuthenticatedSimCaseIdRouteImport.update({
+  id: '/sim/$caseId',
+  path: '/sim/$caseId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamSessionRoute =
   AuthenticatedExamSessionRouteImport.update({
     id: '/exam/session',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
+  '/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/exam/': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
+  '/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/exam': typeof AuthenticatedExamIndexRoute
   '/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
+  '/_authenticated/sim/$caseId': typeof AuthenticatedSimCaseIdRoute
   '/_authenticated/exam/': typeof AuthenticatedExamIndexRoute
   '/_authenticated/exam/report/$reportId': typeof AuthenticatedExamReportReportIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
+    | '/sim/$caseId'
     | '/exam/'
     | '/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
+    | '/sim/$caseId'
     | '/exam'
     | '/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/_authenticated/exam/history'
     | '/_authenticated/exam/session'
+    | '/_authenticated/sim/$caseId'
     | '/_authenticated/exam/'
     | '/_authenticated/exam/report/$reportId'
     | '/api/public/payments/webhook'
@@ -337,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sim/$caseId': {
+      id: '/_authenticated/sim/$caseId'
+      path: '/sim/$caseId'
+      fullPath: '/sim/$caseId'
+      preLoaderRoute: typeof AuthenticatedSimCaseIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exam/session': {
       id: '/_authenticated/exam/session'
       path: '/exam/session'
@@ -374,6 +393,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
   AuthenticatedExamHistoryRoute: typeof AuthenticatedExamHistoryRoute
   AuthenticatedExamSessionRoute: typeof AuthenticatedExamSessionRoute
+  AuthenticatedSimCaseIdRoute: typeof AuthenticatedSimCaseIdRoute
   AuthenticatedExamIndexRoute: typeof AuthenticatedExamIndexRoute
   AuthenticatedExamReportReportIdRoute: typeof AuthenticatedExamReportReportIdRoute
 }
@@ -384,6 +404,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
   AuthenticatedExamHistoryRoute: AuthenticatedExamHistoryRoute,
   AuthenticatedExamSessionRoute: AuthenticatedExamSessionRoute,
+  AuthenticatedSimCaseIdRoute: AuthenticatedSimCaseIdRoute,
   AuthenticatedExamIndexRoute: AuthenticatedExamIndexRoute,
   AuthenticatedExamReportReportIdRoute: AuthenticatedExamReportReportIdRoute,
 }
