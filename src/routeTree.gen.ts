@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiSimStakeholderRouteImport } from './routes/api/sim-stakeholder'
 import { Route as ApiMayaAskRouteImport } from './routes/api/maya-ask'
 import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
@@ -48,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSimStakeholderRoute = ApiSimStakeholderRouteImport.update({
+  id: '/api/sim-stakeholder',
+  path: '/api/sim-stakeholder',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMayaAskRoute = ApiMayaAskRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
   '/exam/session': typeof AuthenticatedExamSessionRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
   '/_authenticated/exam/session': typeof AuthenticatedExamSessionRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
     | '/exam/session'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/_authenticated/exam/history'
     | '/_authenticated/exam/session'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   ApiCoachRoute: typeof ApiCoachRoute
   ApiExamCoachRoute: typeof ApiExamCoachRoute
   ApiMayaAskRoute: typeof ApiMayaAskRoute
+  ApiSimStakeholderRoute: typeof ApiSimStakeholderRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sim-stakeholder': {
+      id: '/api/sim-stakeholder'
+      path: '/api/sim-stakeholder'
+      fullPath: '/api/sim-stakeholder'
+      preLoaderRoute: typeof ApiSimStakeholderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/maya-ask': {
@@ -379,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCoachRoute: ApiCoachRoute,
   ApiExamCoachRoute: ApiExamCoachRoute,
   ApiMayaAskRoute: ApiMayaAskRoute,
+  ApiSimStakeholderRoute: ApiSimStakeholderRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
