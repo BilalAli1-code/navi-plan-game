@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, XCircle, Sparkles, Loader2, Play, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSim } from "@/lib/sim/store";
 import {
   startPracticeSession,
   submitPracticeAnswer,
