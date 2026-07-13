@@ -27,14 +27,30 @@ type Attempt = {
   };
 };
 
+type SelectionMeta = {
+  learnerFacingSummary?: string;
+  mix?: Record<string, number>;
+  masteryContext?: {
+    developmentAreas?: string[];
+    averageMastery?: number;
+  };
+};
+
+type SelectedQuestion = PracticeQuestion & {
+  selectionReason?: string;
+  masteryTopic?: string | null;
+  selectionSource?: "development_area" | "current_simulation" | "spaced_repetition" | "reinforcement";
+};
+
 type Session = {
   id: string;
   status: string;
   total_questions: number;
   correct_answers: number;
   score: number;
-  questions: PracticeQuestion[];
+  questions: SelectedQuestion[];
   day_number: number;
+  metadata?: SelectionMeta;
 };
 
 export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: number }) {
