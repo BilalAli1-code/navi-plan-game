@@ -13,6 +13,8 @@ import {
 } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
+import { PracticePanel } from "./PracticePanel";
+import { FinalAssessment } from "./FinalAssessment";
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
   const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection } = useSim();
