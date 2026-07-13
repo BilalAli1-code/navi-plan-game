@@ -235,8 +235,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const res = await saveRunFn({
         data: { runId: runIdRef.current, state: next },
       });
+      const wasNew = runIdRef.current !== res.runId;
       runIdRef.current = res.runId;
-      if (runId !== res.runId) {
+      if (wasNew) {
         setRunId(res.runId);
         void refreshDays(res.runId);
       }
