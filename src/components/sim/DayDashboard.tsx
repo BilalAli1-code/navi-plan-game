@@ -17,7 +17,7 @@ import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
-  const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection } = useSim();
+  const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const day = getDay(state.currentDay);
   const dayRow = days.find((d) => d.day_number === state.currentDay);
