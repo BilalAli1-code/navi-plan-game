@@ -581,6 +581,68 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
   };
 }
 
+// Derive the initial event catalog from the generator-built collateral.
+// Every email / meeting / decision / document maps to one simulation_events row
+// keyed uniquely so re-runs are idempotent (unique on run_id + event_key).
+function eventsFromState(state: SimState): EventInput[] {
+  const events: EventInput[] = [];
+  // Emails.
+  for (const e of state.emails) {
+    const key = e.unlocksDecisionId ? `email:${e.unlocksDecisionId}` : `email:${e.id}`;
+    events.push({
+      eventKey: key,
+      eventType: "email",
+      status: e.read ? "viewed" : "available",
+      priority: "normal",
+      relatedDecisionId: e.unlocksDecisionId ?? null,
+      payload: { subject: e.subject, from: e.from, preview: e.preview },
+    });
+  }
+  // Meetings.
+  for (const m of state.meetings) {
+    const key = m.unlocksDecisionId ? `meeting:${m.unlocksDecisionId}` : `meeting:${m.id}`;
+    events.push({
+      eventKey: key,
+      eventType: "meeting",
+      status: "available",
+      priority: "normal",
+      relatedDecisionId: m.unlocksDecisionId ?? null,
+      payload: { title: m.title, time: m.time, attendees: m.attendees },
+    });
+  }
+  // Documents.
+  for (const d of state.documents) {
+    events.push({
+      eventKey: `document:${d.id}`,
+      eventType: "document",
+      status: "available",
+      priority: "low",
+      payload: { title: d.title, kind: d.kind },
+    });
+  }
+  // Decisions.
+  for (const d of state.decisions) {
+    const answered = state.log.some((l) => l.decisionId === d.id);
+    events.push({
+      eventKey: `decision:${d.id}`,
+      eventType: "decision",
+      status: answered ? "responded" : "available",
+      priority: "high",
+      relatedDecisionId: d.id,
+      triggerCondition: `phase == '${d.phase}'`,
+      pmbokMapping: { domain: d.pmbokDomain },
+      ecoMapping: { domain: d.ecoDomain, task: d.ecoTask },
+      payload: { title: d.title, source: d.source, phase: d.phase },
+    });
+  }
+  return events;
+}
+
+export function useSim(): Ctx {
+  const c = useContext(SimContext);
+  if (!c) throw new Error("useSim must be used inside <SimProvider>");
+  return c;
+
 export function useSim(): Ctx {
   const c = useContext(SimContext);
   if (!c) throw new Error("useSim must be used inside <SimProvider>");
