@@ -230,6 +230,18 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   );
 }
 
+function SaveIndicator({ status }: { status: "idle" | "saving" | "saved" | "error" | "offline" }) {
+  if (status === "idle") return null;
+  const map = {
+    saving: { label: "Saving…", cls: "text-muted-foreground" },
+    saved: { label: "Saved", cls: "text-[color:var(--color-success)]" },
+    offline: { label: "Offline — will retry", cls: "text-[color:var(--color-warning)]" },
+    error: { label: "Save failed", cls: "text-[color:var(--color-destructive)]" },
+  } as const;
+  const s = map[status];
+  return <span className={cn("hidden text-[11px] font-medium sm:inline", s.cls)}>{s.label}</span>;
+}
+
 function HealthPill({ value }: { value: number }) {
   const tone =
     value >= 70
