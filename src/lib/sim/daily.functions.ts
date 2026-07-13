@@ -123,7 +123,7 @@ export const completeDayActivity = createServerFn({ method: "POST" })
 
     const { error: upErr } = await context.supabase
       .from("daily_progress")
-      .update(asJson(updated))
+      .update(updated as TablesUpdate<"daily_progress">)
       .eq("id", row.id)
       .eq("user_id", context.userId);
     if (upErr) throw new Error(upErr.message);
