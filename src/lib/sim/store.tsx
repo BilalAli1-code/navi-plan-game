@@ -19,6 +19,16 @@ import {
   getReflection as getReflectionFn,
   type DailyProgressRow,
 } from "./daily.functions";
+import { applyMasteryUpdates } from "./mastery.functions";
+import { syncEvents, updateEventStatus } from "./events.functions";
+import {
+  decisionMasteryDelta,
+  tailoringMasteryDelta,
+  reflectionMasteryDelta,
+  dayCompletionMasteryDelta,
+} from "./mastery";
+import type { EventInput } from "./events.functions";
+import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import type {
