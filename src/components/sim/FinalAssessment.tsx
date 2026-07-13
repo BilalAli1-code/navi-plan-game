@@ -52,7 +52,7 @@ export function FinalAssessment({ runId }: { runId: string }) {
     setError(null);
     try {
       const res = await genFn({ data: { runId, force } });
-      setAssessment(res.assessment as StoredAssessment);
+      setAssessment(res.assessment as unknown as StoredAssessment);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Assessment generation failed");
     } finally {
