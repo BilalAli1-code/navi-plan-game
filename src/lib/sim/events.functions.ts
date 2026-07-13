@@ -43,8 +43,7 @@ export type EventInput = {
   ecoMapping?: Record<string, unknown>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
+const asJson = (v: unknown): Json => v as Json;
 
 export const syncEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
