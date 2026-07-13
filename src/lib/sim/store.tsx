@@ -11,6 +11,16 @@ import {
 import { commitDecision } from "./engine";
 import { scoreTailoring } from "./tailoring";
 import { loadRun, saveRun, saveDecision, setRunStatus } from "./sim.functions";
+import {
+  listDailyProgress,
+  completeDayActivity,
+  setCurrentDay as setCurrentDayFn,
+  saveReflection as saveReflectionFn,
+  getReflection as getReflectionFn,
+  type DailyProgressRow,
+} from "./daily.functions";
+import type { DayActivityKey } from "./days";
+import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import type {
   Decision,
   DecisionOption,
@@ -48,6 +58,8 @@ function bootstrap(caseId: string): SimState {
     xp: 0,
     createdAt: Date.now(),
     lastConsequence: null,
+    currentDay: 1,
+    completedMinutes: 0,
   };
 }
 
@@ -85,6 +97,26 @@ type Ctx = {
   pause: () => void;
   saveStatus: SaveStatus;
   hydrating: boolean;
+  // 7-day program
+  runId: string | null;
+  days: DailyProgressRow[];
+  completeActivity: (day: number, activity: DayActivityKey) => Promise<void>;
+  goToDay: (day: number) => void;
+  saveDayReflection: (
+    day: number,
+    payload: {
+      whatWentWell?: string;
+      whatWasChallenging?: string;
+      whatWouldChange?: string;
+      keyLearning?: string;
+    },
+  ) => Promise<void>;
+  loadDayReflection: (day: number) => Promise<{
+    what_went_well: string | null;
+    what_was_challenging: string | null;
+    what_would_change: string | null;
+    key_learning: string | null;
+  } | null>;
 };
 
 const SimContext = createContext<Ctx | null>(null);
@@ -93,6 +125,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const [state, setState] = useState<SimState>(() => bootstrap(caseId));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [hydrating, setHydrating] = useState(true);
+  const [runId, setRunId] = useState<string | null>(null);
+  const [days, setDays] = useState<DailyProgressRow[]>([]);
   const runIdRef = useRef<string | null>(null);
   const pendingRef = useRef<SimState | null>(null);
   const savingRef = useRef(false);
@@ -103,6 +137,30 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const saveRunFn = useServerFn(saveRun);
   const saveDecisionFn = useServerFn(saveDecision);
   const setStatusFn = useServerFn(setRunStatus);
+  const listDaysFn = useServerFn(listDailyProgress);
+  const completeActivityFn = useServerFn(completeDayActivity);
+  const setDayFn = useServerFn(setCurrentDayFn);
+  const saveReflectionSrv = useServerFn(saveReflectionFn);
+  const getReflectionSrv = useServerFn(getReflectionFn);
+
+  const refreshDays = useCallback(
+    async (rid: string) => {
+      try {
+        const res = await listDaysFn({ data: { runId: rid } });
+        setDays(res.days);
+        const done = res.days.filter((d) => d.status === "completed").length;
+        // Derive completedMinutes from actual per-day totals.
+        const minutes = res.days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
+        setState((s) =>
+          s.completedMinutes === minutes ? s : { ...s, completedMinutes: minutes },
+        );
+        return { done, minutes };
+      } catch {
+        return null;
+      }
+    },
+    [listDaysFn],
+  );
 
   // Hydrate: try Supabase first, then localStorage as offline fallback, then bootstrap.
   // If Supabase is empty but a legacy localStorage snapshot exists, ask once whether
@@ -116,6 +174,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (cancelled) return;
         if (res.run?.snapshot) {
           runIdRef.current = res.run.id;
+          setRunId(res.run.id);
+          void refreshDays(res.run.id);
           setState(rehydrate(caseId, res.run.snapshot));
           setSaveStatus("saved");
           setHydrating(false);
@@ -175,7 +235,12 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const res = await saveRunFn({
         data: { runId: runIdRef.current, state: next },
       });
+      const wasNew = runIdRef.current !== res.runId;
       runIdRef.current = res.runId;
+      if (wasNew) {
+        setRunId(res.runId);
+        void refreshDays(res.runId);
+      }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => {
@@ -269,6 +334,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     setState(fresh);
     lastDecisionKeyRef.current = null;
     runIdRef.current = null; // saveRun will create a new run row
+    setRunId(null);
+    setDays([]);
     if (typeof window !== "undefined") localStorage.removeItem(storageKey(caseId));
   }, [caseId]);
 
@@ -276,6 +343,97 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     if (!runIdRef.current) return;
     void setStatusFn({ data: { runId: runIdRef.current, status: "paused" } }).catch(() => {});
   }, [setStatusFn]);
+
+  const completeActivity = useCallback(
+    async (day: number, activity: DayActivityKey) => {
+      const rid = runIdRef.current;
+      if (!rid) return;
+      // Optimistic UI: bump completion locally, then reconcile from server.
+      setDays((ds) =>
+        ds.map((d) => {
+          if (d.day_number !== day) return d;
+          const flags: Record<DayActivityKey, boolean> = {
+            briefing: d.briefing_completed,
+            learning: d.learning_completed,
+            workplace: d.workplace_activities_completed,
+            decisions: d.decisions_completed,
+            practice: d.practice_completed,
+            reflection: d.reflection_completed,
+          };
+          if (flags[activity]) return d;
+          flags[activity] = true;
+          const completed = REQUIRED_ACTIVITIES.filter((a) => flags[a]).length;
+          const allDone = completed === REQUIRED_ACTIVITIES.length;
+          return {
+            ...d,
+            briefing_completed: flags.briefing,
+            learning_completed: flags.learning,
+            workplace_activities_completed: flags.workplace,
+            decisions_completed: flags.decisions,
+            practice_completed: flags.practice,
+            reflection_completed: flags.reflection,
+            completion_percentage: Math.round((completed / REQUIRED_ACTIVITIES.length) * 100),
+            completed_minutes: Math.round((completed / REQUIRED_ACTIVITIES.length) * DAILY_MINUTES),
+            status: allDone ? "completed" : "in_progress",
+          };
+        }),
+      );
+      try {
+        await completeActivityFn({ data: { runId: rid, dayNumber: day, activity } });
+      } catch {
+        /* offline; day snapshot save will still capture progress */
+      } finally {
+        void refreshDays(rid);
+      }
+    },
+    [completeActivityFn, refreshDays],
+  );
+
+  const goToDay = useCallback(
+    (day: number) => {
+      setState((s) => ({ ...s, currentDay: day }));
+      const rid = runIdRef.current;
+      if (rid) void setDayFn({ data: { runId: rid, dayNumber: day } }).catch(() => {});
+    },
+    [setDayFn],
+  );
+
+  const saveDayReflection = useCallback(
+    async (
+      day: number,
+      payload: {
+        whatWentWell?: string;
+        whatWasChallenging?: string;
+        whatWouldChange?: string;
+        keyLearning?: string;
+      },
+    ) => {
+      const rid = runIdRef.current;
+      if (!rid) return;
+      await saveReflectionSrv({ data: { runId: rid, dayNumber: day, ...payload } });
+      await completeActivity(day, "reflection");
+    },
+    [saveReflectionSrv, completeActivity],
+  );
+
+  const loadDayReflection = useCallback(
+    async (day: number) => {
+      const rid = runIdRef.current;
+      if (!rid) return null;
+      try {
+        const res = await getReflectionSrv({ data: { runId: rid, dayNumber: day } });
+        return (res.reflection as {
+          what_went_well: string | null;
+          what_was_challenging: string | null;
+          what_would_change: string | null;
+          key_learning: string | null;
+        } | null);
+      } catch {
+        return null;
+      }
+    },
+    [getReflectionSrv],
+  );
 
   const value: Ctx = {
     state,
@@ -288,6 +446,12 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     pause,
     saveStatus,
     hydrating,
+    runId,
+    days,
+    completeActivity,
+    goToDay,
+    saveDayReflection,
+    loadDayReflection,
   };
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>;
@@ -309,6 +473,8 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
     log: Array.isArray(snapshot.log) ? snapshot.log : [],
     xp: snapshot.xp ?? 0,
     lastConsequence: snapshot.lastConsequence ?? null,
+    currentDay: snapshot.currentDay ?? 1,
+    completedMinutes: snapshot.completedMinutes ?? 0,
     createdAt: snapshot.createdAt ?? fresh.createdAt,
     // mark emails that unlock decisions the learner already answered as read
     emails: fresh.emails.map((e) => {

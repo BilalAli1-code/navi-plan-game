@@ -14,6 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_progress: {
+        Row: {
+          briefing_completed: boolean
+          completed_at: string | null
+          completed_minutes: number
+          completion_percentage: number
+          created_at: string
+          day_number: number
+          day_title: string | null
+          decisions_completed: boolean
+          estimated_minutes: number
+          id: string
+          learning_completed: boolean
+          practice_completed: boolean
+          project_phase: string | null
+          reflection_completed: boolean
+          run_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          workplace_activities_completed: boolean
+        }
+        Insert: {
+          briefing_completed?: boolean
+          completed_at?: string | null
+          completed_minutes?: number
+          completion_percentage?: number
+          created_at?: string
+          day_number: number
+          day_title?: string | null
+          decisions_completed?: boolean
+          estimated_minutes?: number
+          id?: string
+          learning_completed?: boolean
+          practice_completed?: boolean
+          project_phase?: string | null
+          reflection_completed?: boolean
+          run_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          workplace_activities_completed?: boolean
+        }
+        Update: {
+          briefing_completed?: boolean
+          completed_at?: string | null
+          completed_minutes?: number
+          completion_percentage?: number
+          created_at?: string
+          day_number?: number
+          day_title?: string | null
+          decisions_completed?: boolean
+          estimated_minutes?: number
+          id?: string
+          learning_completed?: boolean
+          practice_completed?: boolean
+          project_phase?: string | null
+          reflection_completed?: boolean
+          run_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          workplace_activities_completed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_progress_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_reflections: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          key_learning: string | null
+          mentor_feedback: Json | null
+          run_id: string
+          updated_at: string
+          user_id: string
+          what_was_challenging: string | null
+          what_went_well: string | null
+          what_would_change: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          key_learning?: string | null
+          mentor_feedback?: Json | null
+          run_id: string
+          updated_at?: string
+          user_id: string
+          what_was_challenging?: string | null
+          what_went_well?: string | null
+          what_would_change?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          key_learning?: string | null
+          mentor_feedback?: Json | null
+          run_id?: string
+          updated_at?: string
+          user_id?: string
+          what_was_challenging?: string | null
+          what_went_well?: string | null
+          what_would_change?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reflections_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_reports: {
         Row: {
           avg_confidence: number
@@ -97,6 +224,7 @@ export type Database = {
           last_practiced_at: string | null
           mastery_score: number
           pmbok_domain: string | null
+          pmbok_principle: string | null
           successful_decisions: number
           topic: string
           updated_at: string
@@ -109,6 +237,7 @@ export type Database = {
           last_practiced_at?: string | null
           mastery_score?: number
           pmbok_domain?: string | null
+          pmbok_principle?: string | null
           successful_decisions?: number
           topic: string
           updated_at?: string
@@ -121,6 +250,7 @@ export type Database = {
           last_practiced_at?: string | null
           mastery_score?: number
           pmbok_domain?: string | null
+          pmbok_principle?: string | null
           successful_decisions?: number
           topic?: string
           updated_at?: string
@@ -272,11 +402,13 @@ export type Database = {
           budget_score: number
           case_id: string
           completed_at: string | null
+          completed_minutes: number
           created_at: string
           current_day: number
           current_phase: string
           current_week: number
           customer_satisfaction: number
+          estimated_total_minutes: number
           id: string
           last_activity_at: string
           project_health: number
@@ -290,6 +422,7 @@ export type Database = {
           status: string
           tailoring_config: Json
           team_morale: number
+          total_days: number
           updated_at: string
           user_id: string
           xp: number
@@ -298,11 +431,13 @@ export type Database = {
           budget_score?: number
           case_id: string
           completed_at?: string | null
+          completed_minutes?: number
           created_at?: string
           current_day?: number
           current_phase?: string
           current_week?: number
           customer_satisfaction?: number
+          estimated_total_minutes?: number
           id?: string
           last_activity_at?: string
           project_health?: number
@@ -316,6 +451,7 @@ export type Database = {
           status?: string
           tailoring_config?: Json
           team_morale?: number
+          total_days?: number
           updated_at?: string
           user_id: string
           xp?: number
@@ -324,11 +460,13 @@ export type Database = {
           budget_score?: number
           case_id?: string
           completed_at?: string | null
+          completed_minutes?: number
           created_at?: string
           current_day?: number
           current_phase?: string
           current_week?: number
           customer_satisfaction?: number
+          estimated_total_minutes?: number
           id?: string
           last_activity_at?: string
           project_health?: number
@@ -342,6 +480,7 @@ export type Database = {
           status?: string
           tailoring_config?: Json
           team_morale?: number
+          total_days?: number
           updated_at?: string
           user_id?: string
           xp?: number

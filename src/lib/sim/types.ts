@@ -142,6 +142,8 @@ export type SimState = {
   xp: number;
   createdAt: number;
   lastConsequence: string | null;
+  currentDay: number;         // active day in the 7-day plan (1..7)
+  completedMinutes: number;   // cumulative minutes across all days
 };
 
 export const INITIAL_METRICS: ProjectMetrics = {

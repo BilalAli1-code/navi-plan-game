@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   Sparkles,
   RotateCcw,
   ArrowLeft,
+  GraduationCap,
 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSim } from "@/lib/sim/store";
@@ -21,24 +22,46 @@ import { Stakeholders } from "./Stakeholders";
 import { Dashboard } from "./Dashboard";
 import { DecisionPanel } from "./DecisionPanel";
 import { TailoringWorkshop } from "./TailoringWorkshop";
+import { DayDashboard } from "./DayDashboard";
 
-type Tab = "dashboard" | "inbox" | "meetings" | "documents" | "stakeholders";
+type Tab = "program" | "dashboard" | "inbox" | "meetings" | "documents" | "stakeholders";
 
 export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
-  const { state, activeDecision, setActiveDecision, submitTailoring, reset, saveStatus, hydrating } = useSim();
+  const { state, activeDecision, setActiveDecision, submitTailoring, reset, saveStatus, hydrating, completeActivity, days } = useSim();
   const c = getCaseRef(state.caseId);
-  const [tab, setTab] = useState<Tab>("inbox");
+  const [tab, setTab] = useState<Tab>("program");
   const navigate = useNavigate();
 
   const unread = state.emails.filter((e) => !e.read).length;
 
   const tabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
+    { id: "program", label: "Program", icon: GraduationCap },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "inbox", label: "Inbox", icon: Mail, badge: unread },
     { id: "meetings", label: "Meetings", icon: CalendarDays },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "stakeholders", label: "Stakeholders", icon: Users },
   ];
+
+  // Auto-mark activities from behavioral signals so learners aren't forced to
+  // check boxes for things they've clearly done.
+  const currentDayRow = days.find((d) => d.day_number === state.currentDay);
+  useEffect(() => {
+    if (!currentDayRow) return;
+    // Reading any email marks the workplace-review activity.
+    if (!currentDayRow.workplace_activities_completed && state.emails.some((e) => e.read)) {
+      void completeActivity(state.currentDay, "workplace");
+    }
+    // Any decision in the log satisfies the decisions activity.
+    if (!currentDayRow.decisions_completed && state.log.some((l) => l.atPhase === state.phase)) {
+      void completeActivity(state.currentDay, "decisions");
+    }
+    // Completing Tailoring on Day 1 also satisfies the learning activity.
+    if (state.currentDay === 1 && !currentDayRow.learning_completed && state.approach) {
+      void completeActivity(1, "learning");
+    }
+  }, [currentDayRow, state.emails, state.log, state.phase, state.currentDay, state.approach, completeActivity]);
+
 
   function openDecision(id: string) {
     setActiveDecision(id);
@@ -110,7 +133,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             <button
               onClick={() => {
                 reset();
-                setTab("inbox");
+                setTab("program");
               }}
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
             >
@@ -175,15 +198,15 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             </div>
 
             <main className="min-h-[540px] rounded-3xl border border-white/10 bg-white/[0.02] p-5">
-              {state.phase === "Tailoring" ? (
+              {state.phase === "Complete" ? (
+                <CompleteView />
+              ) : state.phase === "Tailoring" && tab !== "program" ? (
                 <TailoringWorkshop
                   recommendedApproach={c.recommendedApproach}
                   industryName={c.industry}
                   projectName={c.projectName}
                   onSubmit={submitTailoring}
                 />
-              ) : state.phase === "Complete" ? (
-                <CompleteView />
               ) : (
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -193,6 +216,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
                   >
+                    {tab === "program" && <DayDashboard onOpenTab={(t) => setTab(t)} />}
                     {tab === "dashboard" && <Dashboard />}
                     {tab === "inbox" && <Inbox onOpenDecision={openDecision} />}
                     {tab === "meetings" && <Meetings onOpenDecision={openDecision} />}
