@@ -122,7 +122,7 @@ function PlayIndex() {
                         </div>
                         <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
                           <div className="text-[11px] text-muted-foreground">
-                            {c.budget} · {c.duration}
+                            {c.budget} · 1 week · ~7 hrs · {c.duration}
                           </div>
                           <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-accent group-hover:translate-x-0.5 transition">
                             Start <ArrowRight className="h-3.5 w-3.5" />
