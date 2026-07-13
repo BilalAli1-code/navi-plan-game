@@ -112,21 +112,17 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       decisions: {
         total: totalDecisions,
         correct: correctDecisions,
-        by_phase: (decisions ?? []).map(
-          (d: { phase: string; selected_option_text: string; mentor_feedback: unknown }) => ({
-            phase: d.phase,
-            option: d.selected_option_text,
-            feedback: d.mentor_feedback,
-          }),
-        ),
+        by_phase: (decisions ?? []).map((d) => ({
+          phase: d.phase,
+          option: d.selected_option_text,
+          feedback: d.mentor_feedback,
+        })),
       },
-      days: (days ?? []).map(
-        (d: { day_number: number; status: string; completion_percentage: number }) => ({
-          day: d.day_number,
-          status: d.status,
-          completion: d.completion_percentage,
-        }),
-      ),
+      days: (days ?? []).map((d) => ({
+        day: d.day_number,
+        status: d.status,
+        completion: d.completion_percentage,
+      })),
       reflections: (reflections ?? []).map(
         (r: {
           day_number: number;
