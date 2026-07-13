@@ -109,8 +109,7 @@ export const updateEventStatus = createServerFn({ method: "POST" })
     return { runId: i.runId, eventKey: i.eventKey, status: i.status };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const now = new Date().toISOString();
     const patch: Record<string, unknown> = { status: data.status };
     if (data.status === "viewed") patch.viewed_at = now;
