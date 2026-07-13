@@ -295,11 +295,12 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (lastDecisionKeyRef.current === dec.id) return s;
         lastDecisionKeyRef.current = dec.id;
         const next = commitDecision(s, dec, option);
-        // Fire-and-forget append to simulation_decisions (idempotent via unique key).
-        if (runIdRef.current) {
+        const rid = runIdRef.current;
+        if (rid) {
+          // Persist the decision row.
           void saveDecisionFn({
             data: {
-              runId: runIdRef.current,
+              runId: rid,
               decisionId: dec.id,
               phase: s.phase,
               selectedOptionId: option.id,
@@ -312,14 +313,29 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
               },
               eventId: dec.sourceId ?? null,
             },
-          }).catch(() => {
-            // Snapshot save via saveRun will still capture the log entry.
-          });
+          }).catch(() => {});
+          // Update mastery via the shared service.
+          void masteryFn({
+            data: { updates: [decisionMasteryDelta(dec, option)] },
+          }).catch(() => {});
+          // Mark decision event as responded, and the source (email/meeting) too.
+          void updateEventStatusFn({
+            data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
+          }).catch(() => {});
+          if (dec.source === "email") {
+            void updateEventStatusFn({
+              data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
+            }).catch(() => {});
+          } else if (dec.source === "meeting") {
+            void updateEventStatusFn({
+              data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
+            }).catch(() => {});
+          }
         }
         return next;
       });
     },
-    [saveDecisionFn],
+    [saveDecisionFn, masteryFn, updateEventStatusFn],
   );
 
   const submitTailoring = useCallback(
