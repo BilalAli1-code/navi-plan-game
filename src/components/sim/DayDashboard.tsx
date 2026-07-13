@@ -13,9 +13,11 @@ import {
 } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
+import { PracticePanel } from "./PracticePanel";
+import { FinalAssessment } from "./FinalAssessment";
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
-  const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection } = useSim();
+  const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const day = getDay(state.currentDay);
   const dayRow = days.find((d) => d.day_number === state.currentDay);
@@ -119,15 +121,25 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
               className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
             >
               <button
-                onClick={() => completeActivity(state.currentDay, a)}
-                disabled={flags[a]}
-                aria-label={flags[a] ? "Completed" : `Mark ${a} complete`}
+                onClick={() => {
+                  if (a === "practice" || a === "reflection") return;
+                  void completeActivity(state.currentDay, a);
+                }}
+                disabled={flags[a] || a === "practice" || a === "reflection"}
+                aria-label={flags[a] ? "Completed" : `${a} auto-completes`}
                 className="shrink-0"
+                title={
+                  a === "practice"
+                    ? "Practice completes automatically when all questions are answered."
+                    : a === "reflection"
+                      ? "Reflection completes when you save your daily reflection."
+                      : undefined
+                }
               >
                 {flags[a] ? (
                   <CheckCircle2 className="h-5 w-5 text-[color:var(--color-success)]" />
                 ) : (
-                  <Circle className="h-5 w-5 text-muted-foreground hover:text-accent" />
+                  <Circle className={cn("h-5 w-5 text-muted-foreground", (a !== "practice" && a !== "reflection") && "hover:text-accent")} />
                 )}
               </button>
               <div className="flex-1 min-w-0">
@@ -171,6 +183,18 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
           ))}
         </ul>
       </div>
+
+      {/* Adaptive practice */}
+      {runId ? (
+        <PracticePanel runId={runId} dayNumber={state.currentDay} />
+      ) : (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-[12px] text-muted-foreground">
+          Practice will unlock once your progress is saved to the cloud.
+        </div>
+      )}
+
+      {/* Day 7: final assessment */}
+      {state.currentDay === 7 && runId && <FinalAssessment runId={runId} />}
 
       {/* Reflection */}
       <ReflectionCard

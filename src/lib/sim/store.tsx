@@ -100,6 +100,7 @@ type Ctx = {
   // 7-day program
   runId: string | null;
   days: DailyProgressRow[];
+  refreshDays: () => Promise<void>;
   completeActivity: (day: number, activity: DayActivityKey) => Promise<void>;
   goToDay: (day: number) => void;
   saveDayReflection: (
@@ -448,6 +449,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     hydrating,
     runId,
     days,
+    refreshDays: async () => {
+      const rid = runIdRef.current;
+      if (rid) await refreshDays(rid);
+    },
     completeActivity,
     goToDay,
     saveDayReflection,

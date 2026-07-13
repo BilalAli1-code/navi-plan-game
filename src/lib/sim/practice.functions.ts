@@ -1,0 +1,324 @@
+// Adaptive practice server functions. All helpers live in ./practice.server so
+// the TanStack server-fn splitter doesn't strip them from handler bundles.
+
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  generateAdaptiveQuestions,
+  fallbackPracticeQuestions,
+  type PracticeQuestion,
+} from "./practice.server";
+
+export type { PracticeQuestion } from "./practice.server";
+
+export const startPracticeSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const i = input as { runId?: string; dayNumber?: number };
+    if (!i?.runId || !i?.dayNumber) throw new Error("runId/dayNumber required");
+    return { runId: i.runId, dayNumber: i.dayNumber };
+  })
+  .handler(async ({ data, context }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = context.supabase as any;
+
+    const { data: existing } = await db
+      .from("practice_sessions")
+      .select("*")
+      .eq("run_id", data.runId)
+      .eq("user_id", context.userId)
+      .eq("day_number", data.dayNumber)
+      .in("status", ["in_progress", "completed"])
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const current = existing?.[0];
+    if (current) {
+      const { data: attempts } = await db
+        .from("practice_attempts")
+        .select("*")
+        .eq("session_id", current.id)
+        .eq("user_id", context.userId);
+      return { session: current, attempts: attempts ?? [] };
+    }
+
+    const { data: runRow, error: runErr } = await db
+      .from("simulation_runs")
+      .select("state_snapshot, selected_delivery_approach, current_phase, case_id")
+      .eq("id", data.runId)
+      .eq("user_id", context.userId)
+      .single();
+    if (runErr) throw new Error(runErr.message);
+
+    const snapshot = (runRow?.state_snapshot ?? {}) as {
+      log?: Array<{ correct?: boolean; atPhase?: string; decisionId?: string }>;
+      decisions?: Array<{ id: string; title: string; ecoDomain?: string }>;
+    };
+    const log = snapshot.log ?? [];
+    const total = log.length || 1;
+    const correctRate = log.filter((l) => l.correct).length / total;
+    const decisionMap = new Map((snapshot.decisions ?? []).map((d) => [d.id, d]));
+    const recentDecisions = log
+      .slice(-6)
+      .map((l) => decisionMap.get(l.decisionId ?? "")?.title ?? "decision")
+      .filter(Boolean);
+    const weakDomains = Array.from(
+      new Set(
+        log
+          .filter((l) => l.correct === false)
+          .map((l) => decisionMap.get(l.decisionId ?? "")?.ecoDomain)
+          .filter((x): x is string => !!x),
+      ),
+    );
+
+    let questions: PracticeQuestion[];
+    try {
+      questions = await generateAdaptiveQuestions({
+        dayNumber: data.dayNumber,
+        phase: runRow?.current_phase ?? "Initiation",
+        approach: runRow?.selected_delivery_approach ?? null,
+        caseTitle: runRow?.case_id ?? "project",
+        weakDomains,
+        recentDecisions,
+        correctRate,
+      });
+    } catch {
+      questions = fallbackPracticeQuestions(data.dayNumber, runRow?.current_phase ?? "Initiation");
+    }
+
+    const { data: inserted, error: insErr } = await db
+      .from("practice_sessions")
+      .insert({
+        run_id: data.runId,
+        user_id: context.userId,
+        day_number: data.dayNumber,
+        status: "in_progress",
+        total_questions: questions.length,
+        estimated_minutes: 10,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        questions: questions as any,
+      })
+      .select("*")
+      .single();
+    if (insErr) throw new Error(insErr.message);
+    return { session: inserted, attempts: [] };
+  });
+
+export const submitPracticeAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const i = input as { sessionId?: string; questionId?: string; selectedOptionId?: string };
+    if (!i?.sessionId || !i?.questionId || !i?.selectedOptionId)
+      throw new Error("sessionId/questionId/selectedOptionId required");
+    return { sessionId: i.sessionId, questionId: i.questionId, selectedOptionId: i.selectedOptionId };
+  })
+  .handler(async ({ data, context }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = context.supabase as any;
+    const { data: session, error: sErr } = await db
+      .from("practice_sessions")
+      .select("*")
+      .eq("id", data.sessionId)
+      .eq("user_id", context.userId)
+      .single();
+    if (sErr) throw new Error(sErr.message);
+    if (session.status === "completed") throw new Error("Session already completed");
+
+    const questions = (session.questions ?? []) as PracticeQuestion[];
+    const q = questions.find((qq) => qq.id === data.questionId);
+    if (!q) throw new Error("Question not found");
+    const selected = q.options.find((o) => o.id === data.selectedOptionId);
+    if (!selected) throw new Error("Invalid option");
+    const correct = q.options.find((o) => o.id === q.correctOptionId);
+    const isCorrect = data.selectedOptionId === q.correctOptionId;
+
+    const feedback = {
+      effective: isCorrect,
+      why: isCorrect
+        ? `Effective. ${selected.rationale}`
+        : `Not the strongest option. ${selected.rationale}`,
+      strongerOption: isCorrect
+        ? null
+        : { id: correct?.id, label: correct?.label ?? "", rationale: correct?.rationale ?? "" },
+      alternatives: q.options
+        .filter((o) => o.id !== data.selectedOptionId && o.id !== q.correctOptionId)
+        .map((o) => ({ label: o.label, why: o.rationale })),
+      pmbokPrinciple: q.pmbokPrinciple,
+      pmbokDomain: q.pmbokDomain,
+      ecoDomain: q.ecoDomain,
+      competency: q.competency,
+      takeaway: q.takeaway,
+    };
+
+    const { error: insErr } = await db.from("practice_attempts").upsert(
+      {
+        session_id: data.sessionId,
+        run_id: session.run_id,
+        user_id: context.userId,
+        question_id: q.id,
+        selected_answer: data.selectedOptionId,
+        correct_answer: q.correctOptionId,
+        is_correct: isCorrect,
+        reasoning: selected.rationale,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        feedback: feedback as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as any,
+      },
+      { onConflict: "session_id,question_id" },
+    );
+    if (insErr) throw new Error(insErr.message);
+
+    return { isCorrect, feedback };
+  });
+
+export const completePracticeSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const i = input as { sessionId?: string };
+    if (!i?.sessionId) throw new Error("sessionId required");
+    return { sessionId: i.sessionId };
+  })
+  .handler(async ({ data, context }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = context.supabase as any;
+    const { data: session, error: sErr } = await db
+      .from("practice_sessions")
+      .select("*")
+      .eq("id", data.sessionId)
+      .eq("user_id", context.userId)
+      .single();
+    if (sErr) throw new Error(sErr.message);
+
+    const { data: attempts, error: aErr } = await db
+      .from("practice_attempts")
+      .select("*")
+      .eq("session_id", data.sessionId)
+      .eq("user_id", context.userId);
+    if (aErr) throw new Error(aErr.message);
+
+    const questions = (session.questions ?? []) as PracticeQuestion[];
+    const total = questions.length;
+    const answered = new Set((attempts ?? []).map((a: { question_id: string }) => a.question_id));
+    if (answered.size < total) throw new Error(`Answer all ${total} questions before completing.`);
+
+    const correct = (attempts ?? []).filter((a: { is_correct: boolean }) => a.is_correct).length;
+    const score = Math.round((correct / total) * 100);
+
+    const { error: upErr } = await db
+      .from("practice_sessions")
+      .update({
+        status: "completed",
+        correct_answers: correct,
+        score,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", session.id)
+      .eq("user_id", context.userId);
+    if (upErr) throw new Error(upErr.message);
+
+    // Update learner_mastery per ECO domain (best-effort — table schema may vary).
+    const byDomain = new Map<string, { correct: number; total: number }>();
+    for (const a of attempts ?? []) {
+      const attempt = a as { eco_mapping: { domain?: string } | null; is_correct: boolean };
+      const dom = attempt.eco_mapping?.domain ?? "Process";
+      const cur = byDomain.get(dom) ?? { correct: 0, total: 0 };
+      cur.total += 1;
+      if (attempt.is_correct) cur.correct += 1;
+      byDomain.set(dom, cur);
+    }
+    for (const [domain, stats] of byDomain) {
+      try {
+        await db.from("learner_mastery").upsert(
+          {
+            user_id: context.userId,
+            eco_domain: domain,
+            attempts: stats.total,
+            correct: stats.correct,
+            last_practiced_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,eco_domain" },
+        );
+      } catch {
+        /* schema variance — ignore */
+      }
+    }
+
+    // Mark the daily "practice" activity complete and unlock the next day when all done.
+    try {
+      const { data: dayRow } = await db
+        .from("daily_progress")
+        .select(
+          "id, practice_completed, briefing_completed, learning_completed, workplace_activities_completed, decisions_completed, reflection_completed",
+        )
+        .eq("run_id", session.run_id)
+        .eq("user_id", context.userId)
+        .eq("day_number", session.day_number)
+        .single();
+      if (dayRow && !dayRow.practice_completed) {
+        const flags = {
+          briefing: dayRow.briefing_completed,
+          learning: dayRow.learning_completed,
+          workplace: dayRow.workplace_activities_completed,
+          decisions: dayRow.decisions_completed,
+          practice: true,
+          reflection: dayRow.reflection_completed,
+        };
+        const done = Object.values(flags).filter(Boolean).length;
+        const allDone = done === 6;
+        await db
+          .from("daily_progress")
+          .update({
+            practice_completed: true,
+            completion_percentage: Math.round((done / 6) * 100),
+            completed_minutes: Math.round((done / 6) * 60),
+            status: allDone ? "completed" : "in_progress",
+            completed_at: allDone ? new Date().toISOString() : null,
+          })
+          .eq("id", dayRow.id)
+          .eq("user_id", context.userId);
+        if (allDone && session.day_number < 7) {
+          await db
+            .from("daily_progress")
+            .update({ status: "available" })
+            .eq("run_id", session.run_id)
+            .eq("user_id", context.userId)
+            .eq("day_number", session.day_number + 1)
+            .eq("status", "locked");
+        }
+      }
+    } catch {
+      /* best-effort */
+    }
+
+    return { score, correct, total };
+  });
+
+export const getPracticeSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const i = input as { runId?: string; dayNumber?: number };
+    if (!i?.runId || !i?.dayNumber) throw new Error("runId/dayNumber required");
+    return { runId: i.runId, dayNumber: i.dayNumber };
+  })
+  .handler(async ({ data, context }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = context.supabase as any;
+    const { data: rows } = await db
+      .from("practice_sessions")
+      .select("*")
+      .eq("run_id", data.runId)
+      .eq("user_id", context.userId)
+      .eq("day_number", data.dayNumber)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const session = rows?.[0] ?? null;
+    if (!session) return { session: null, attempts: [] };
+    const { data: attempts } = await db
+      .from("practice_attempts")
+      .select("*")
+      .eq("session_id", session.id)
+      .eq("user_id", context.userId);
+    return { session, attempts: attempts ?? [] };
+  });
