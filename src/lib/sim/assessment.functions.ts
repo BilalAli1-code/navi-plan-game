@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { generateFinalReport, type FinalReport } from "./assessment.server";
 
 export type { FinalReport } from "./assessment.server";
