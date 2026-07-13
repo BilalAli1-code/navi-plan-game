@@ -236,6 +236,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         data: { runId: runIdRef.current, state: next },
       });
       runIdRef.current = res.runId;
+      if (runId !== res.runId) {
+        setRunId(res.runId);
+        void refreshDays(res.runId);
+      }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => {
