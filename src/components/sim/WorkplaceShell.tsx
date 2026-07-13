@@ -39,6 +39,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   const tabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { id: "program", label: "Program", icon: GraduationCap },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "mastery", label: "Mastery", icon: Target },
     { id: "inbox", label: "Inbox", icon: Mail, badge: unread },
     { id: "meetings", label: "Meetings", icon: CalendarDays },
     { id: "documents", label: "Documents", icon: FileText },
