@@ -216,6 +216,59 @@ export type Database = {
         }
         Relationships: []
       }
+      final_assessments: {
+        Row: {
+          assessment_data: Json
+          created_at: string
+          development_areas: Json
+          generated_at: string
+          id: string
+          overall_score: number
+          readiness_level: string
+          recommended_next_steps: Json
+          run_id: string
+          strengths: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_data?: Json
+          created_at?: string
+          development_areas?: Json
+          generated_at?: string
+          id?: string
+          overall_score?: number
+          readiness_level?: string
+          recommended_next_steps?: Json
+          run_id: string
+          strengths?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_data?: Json
+          created_at?: string
+          development_areas?: Json
+          generated_at?: string
+          id?: string
+          overall_score?: number
+          readiness_level?: string
+          recommended_next_steps?: Json
+          run_id?: string
+          strengths?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "final_assessments_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: true
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learner_mastery: {
         Row: {
           attempts: number
@@ -257,6 +310,125 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      practice_attempts: {
+        Row: {
+          correct_answer: string | null
+          created_at: string
+          eco_mapping: Json
+          feedback: Json
+          id: string
+          is_correct: boolean
+          pmbok_mapping: Json
+          question_id: string
+          reasoning: string | null
+          run_id: string
+          selected_answer: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string
+          eco_mapping?: Json
+          feedback?: Json
+          id?: string
+          is_correct?: boolean
+          pmbok_mapping?: Json
+          question_id: string
+          reasoning?: string | null
+          run_id: string
+          selected_answer?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string
+          eco_mapping?: Json
+          feedback?: Json
+          id?: string
+          is_correct?: boolean
+          pmbok_mapping?: Json
+          question_id?: string
+          reasoning?: string | null
+          run_id?: string
+          selected_answer?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_attempts_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_attempts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "practice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_sessions: {
+        Row: {
+          completed_at: string | null
+          correct_answers: number
+          created_at: string
+          day_number: number
+          estimated_minutes: number
+          id: string
+          questions: Json
+          run_id: string
+          score: number
+          status: string
+          total_questions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          day_number: number
+          estimated_minutes?: number
+          id?: string
+          questions?: Json
+          run_id: string
+          score?: number
+          status?: string
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          day_number?: number
+          estimated_minutes?: number
+          id?: string
+          questions?: Json
+          run_id?: string
+          score?: number
+          status?: string
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_sessions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
