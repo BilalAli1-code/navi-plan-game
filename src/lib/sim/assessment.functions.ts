@@ -37,8 +37,7 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
     return { runId: i.runId, force: !!i.force };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     const { data: existing } = await db
       .from("final_assessments")
