@@ -145,8 +145,14 @@ export const processAction = createServerFn({ method: "POST" })
         return {
           ok: false as const,
           duplicate: true as const,
-          actionId: existing.id,
+          actionId: existing.id as string,
           message: "This action has already been submitted for this run.",
+          quality: null,
+          outcomeData: asJson({}),
+          metricImpacts: asJson({}),
+          metrics: asJson({}),
+          masteryTopics: [] as string[],
+          delayedEventKeys: [] as string[],
         };
       }
     }
