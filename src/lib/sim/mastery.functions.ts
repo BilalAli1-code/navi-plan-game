@@ -13,6 +13,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Tables } from "@/integrations/supabase/types";
 
 export type MasteryUpdate = {
   topic: string;                 // canonical topic label (unique key)
