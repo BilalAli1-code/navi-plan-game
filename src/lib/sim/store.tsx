@@ -48,6 +48,8 @@ function bootstrap(caseId: string): SimState {
     xp: 0,
     createdAt: Date.now(),
     lastConsequence: null,
+    currentDay: 1,
+    completedMinutes: 0,
   };
 }
 
