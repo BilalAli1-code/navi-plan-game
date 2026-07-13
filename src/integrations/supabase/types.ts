@@ -272,40 +272,67 @@ export type Database = {
       learner_mastery: {
         Row: {
           attempts: number
+          competency: string | null
+          consecutive_correct: number
+          consecutive_wrong: number
+          difficulty: string | null
           eco_domain: string | null
           id: string
+          is_development_area: boolean
+          is_mastered: boolean
           last_practiced_at: string | null
+          mastered_at: string | null
           mastery_score: number
           pmbok_domain: string | null
           pmbok_principle: string | null
+          recent_scores: Json
           successful_decisions: number
           topic: string
+          total_score: number
           updated_at: string
           user_id: string
         }
         Insert: {
           attempts?: number
+          competency?: string | null
+          consecutive_correct?: number
+          consecutive_wrong?: number
+          difficulty?: string | null
           eco_domain?: string | null
           id?: string
+          is_development_area?: boolean
+          is_mastered?: boolean
           last_practiced_at?: string | null
+          mastered_at?: string | null
           mastery_score?: number
           pmbok_domain?: string | null
           pmbok_principle?: string | null
+          recent_scores?: Json
           successful_decisions?: number
           topic: string
+          total_score?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           attempts?: number
+          competency?: string | null
+          consecutive_correct?: number
+          consecutive_wrong?: number
+          difficulty?: string | null
           eco_domain?: string | null
           id?: string
+          is_development_area?: boolean
+          is_mastered?: boolean
           last_practiced_at?: string | null
+          mastered_at?: string | null
           mastery_score?: number
           pmbok_domain?: string | null
           pmbok_principle?: string | null
+          recent_scores?: Json
           successful_decisions?: number
           topic?: string
+          total_score?: number
           updated_at?: string
           user_id?: string
         }
@@ -520,44 +547,74 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          day_number: number | null
+          eco_mapping: Json
           event_key: string
           event_type: string | null
           id: string
+          metric_effects: Json
           payload: Json
+          pmbok_mapping: Json
+          priority: string
+          related_decision_id: string | null
+          responded_at: string | null
           run_id: string
           scheduled_day: number | null
           scheduled_week: number | null
           status: string
+          trigger_condition: string | null
           unlocked_at: string | null
+          updated_at: string
           user_id: string
+          viewed_at: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          day_number?: number | null
+          eco_mapping?: Json
           event_key: string
           event_type?: string | null
           id?: string
+          metric_effects?: Json
           payload?: Json
+          pmbok_mapping?: Json
+          priority?: string
+          related_decision_id?: string | null
+          responded_at?: string | null
           run_id: string
           scheduled_day?: number | null
           scheduled_week?: number | null
           status?: string
+          trigger_condition?: string | null
           unlocked_at?: string | null
+          updated_at?: string
           user_id: string
+          viewed_at?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          day_number?: number | null
+          eco_mapping?: Json
           event_key?: string
           event_type?: string | null
           id?: string
+          metric_effects?: Json
           payload?: Json
+          pmbok_mapping?: Json
+          priority?: string
+          related_decision_id?: string | null
+          responded_at?: string | null
           run_id?: string
           scheduled_day?: number | null
           scheduled_week?: number | null
           status?: string
+          trigger_condition?: string | null
           unlocked_at?: string | null
+          updated_at?: string
           user_id?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
