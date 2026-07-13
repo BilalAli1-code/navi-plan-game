@@ -409,6 +409,7 @@ export type Database = {
           day_number: number
           estimated_minutes: number
           id: string
+          metadata: Json
           questions: Json
           run_id: string
           score: number
@@ -424,6 +425,7 @@ export type Database = {
           day_number: number
           estimated_minutes?: number
           id?: string
+          metadata?: Json
           questions?: Json
           run_id: string
           score?: number
@@ -439,6 +441,7 @@ export type Database = {
           day_number?: number
           estimated_minutes?: number
           id?: string
+          metadata?: Json
           questions?: Json
           run_id?: string
           score?: number

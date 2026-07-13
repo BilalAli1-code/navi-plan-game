@@ -1,14 +1,12 @@
 // Adaptive practice server functions. All helpers live in ./practice.server so
 // the TanStack server-fn splitter doesn't strip them from handler bundles.
+// Selection logic lives in ./selection.server and is dynamically imported
+// inside the handler for the same reason.
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
-import {
-  generateAdaptiveQuestions,
-  fallbackPracticeQuestions,
-  type PracticeQuestion,
-} from "./practice.server";
+import type { PracticeQuestion } from "./practice.server";
 
 export type { PracticeQuestion } from "./practice.server";
 
@@ -42,49 +40,15 @@ export const startPracticeSession = createServerFn({ method: "POST" })
       return { session: current, attempts: attempts ?? [] };
     }
 
-    const { data: runRow, error: runErr } = await db
-      .from("simulation_runs")
-      .select("state_snapshot, selected_delivery_approach, current_phase, case_id")
-      .eq("id", data.runId)
-      .eq("user_id", context.userId)
-      .single();
-    if (runErr) throw new Error(runErr.message);
-
-    const snapshot = (runRow?.state_snapshot ?? {}) as {
-      log?: Array<{ correct?: boolean; atPhase?: string; decisionId?: string }>;
-      decisions?: Array<{ id: string; title: string; ecoDomain?: string }>;
-    };
-    const log = snapshot.log ?? [];
-    const total = log.length || 1;
-    const correctRate = log.filter((l) => l.correct).length / total;
-    const decisionMap = new Map((snapshot.decisions ?? []).map((d) => [d.id, d]));
-    const recentDecisions = log
-      .slice(-6)
-      .map((l) => decisionMap.get(l.decisionId ?? "")?.title ?? "decision")
-      .filter(Boolean);
-    const weakDomains = Array.from(
-      new Set(
-        log
-          .filter((l) => l.correct === false)
-          .map((l) => decisionMap.get(l.decisionId ?? "")?.ecoDomain)
-          .filter((x): x is string => !!x),
-      ),
-    );
-
-    let questions: PracticeQuestion[];
-    try {
-      questions = await generateAdaptiveQuestions({
-        dayNumber: data.dayNumber,
-        phase: runRow?.current_phase ?? "Initiation",
-        approach: runRow?.selected_delivery_approach ?? null,
-        caseTitle: runRow?.case_id ?? "project",
-        weakDomains,
-        recentDecisions,
-        correctRate,
-      });
-    } catch {
-      questions = fallbackPracticeQuestions(data.dayNumber, runRow?.current_phase ?? "Initiation");
-    }
+    // Delegate to the adaptive selection engine (server-only import).
+    const { selectAdaptiveQuestions } = await import("./selection.server");
+    const { questions, metadata } = await selectAdaptiveQuestions({
+      db,
+      userId: context.userId,
+      runId: data.runId,
+      dayNumber: data.dayNumber,
+      questionCount: 5,
+    });
 
     const { data: inserted, error: insErr } = await db
       .from("practice_sessions")
@@ -96,6 +60,7 @@ export const startPracticeSession = createServerFn({ method: "POST" })
         total_questions: questions.length,
         estimated_minutes: 10,
         questions: questions as unknown as Json,
+        metadata: metadata as unknown as Json,
       })
       .select("*")
       .single();

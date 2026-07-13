@@ -43,21 +43,27 @@ export async function generateAdaptiveQuestions(input: {
   weakDomains: string[];
   recentDecisions: string[];
   correctRate: number;
+  briefOverride?: string;
+  count?: number;
 }): Promise<PracticeQuestion[]> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   const gateway = createLovableAiGatewayProvider(key);
   const model = gateway("google/gemini-3-flash-preview");
 
-  const day = getDay(input.dayNumber);
-  const targeting =
-    input.weakDomains.length > 0
-      ? `Emphasize these weaker areas: ${input.weakDomains.join(", ")}.`
-      : `Balance across People, Process, and Business Environment.`;
-  const difficulty =
-    input.correctRate < 0.5 ? "easy-to-medium" : input.correctRate > 0.8 ? "medium-to-hard" : "medium";
+  const count = input.count ?? 5;
 
-  const prompt = `Generate 5 adaptive PMP practice questions for a learner on Day ${input.dayNumber} of a 7-day PMBOK simulation.
+  let prompt = input.briefOverride;
+  if (!prompt) {
+    const day = getDay(input.dayNumber);
+    const targeting =
+      input.weakDomains.length > 0
+        ? `Emphasize these weaker areas: ${input.weakDomains.join(", ")}.`
+        : `Balance across People, Process, and Business Environment.`;
+    const difficulty =
+      input.correctRate < 0.5 ? "easy-to-medium" : input.correctRate > 0.8 ? "medium-to-hard" : "medium";
+
+    prompt = `Generate ${count} adaptive PMP practice questions for a learner on Day ${input.dayNumber} of a 7-day PMBOK simulation.
 
 Simulation context:
 - Project: ${input.caseTitle}
@@ -76,6 +82,7 @@ Instructions:
 - Map every question to a PMBOK principle, PMBOK performance domain, PMI ECO domain, and a PM competency.
 - Ground in PMI terminology. Use realistic project situations.
 - Return JSON only.`;
+  }
 
   const { object } = await generateObject({ model, schema: GenSchema, prompt });
   return object.questions;
