@@ -25,7 +25,7 @@ import { TailoringWorkshop } from "./TailoringWorkshop";
 type Tab = "dashboard" | "inbox" | "meetings" | "documents" | "stakeholders";
 
 export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
-  const { state, activeDecision, setActiveDecision, submitTailoring, reset } = useSim();
+  const { state, activeDecision, setActiveDecision, submitTailoring, reset, saveStatus, hydrating } = useSim();
   const c = getCaseRef(state.caseId);
   const [tab, setTab] = useState<Tab>("inbox");
   const navigate = useNavigate();
