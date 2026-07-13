@@ -487,6 +487,65 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_actions: {
+        Row: {
+          action_key: string
+          action_type: string
+          created_at: string
+          eco_mapping: Json
+          id: string
+          input_data: Json
+          mastery_impacts: Json
+          metric_impacts: Json
+          outcome_data: Json
+          pmbok_mapping: Json
+          run_id: string
+          section_number: number | null
+          subject_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_key: string
+          action_type: string
+          created_at?: string
+          eco_mapping?: Json
+          id?: string
+          input_data?: Json
+          mastery_impacts?: Json
+          metric_impacts?: Json
+          outcome_data?: Json
+          pmbok_mapping?: Json
+          run_id: string
+          section_number?: number | null
+          subject_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_key?: string
+          action_type?: string
+          created_at?: string
+          eco_mapping?: Json
+          id?: string
+          input_data?: Json
+          mastery_impacts?: Json
+          metric_impacts?: Json
+          outcome_data?: Json
+          pmbok_mapping?: Json
+          run_id?: string
+          section_number?: number | null
+          subject_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       simulation_decisions: {
         Row: {
           created_at: string
