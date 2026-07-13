@@ -152,5 +152,6 @@ export const listMastery = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("mastery_score", { ascending: false });
     if (error) throw new Error(error.message);
-    return { rows: (data ?? []) as Array<Record<string, unknown>> };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { rows: (data ?? []) as any[] };
   });
