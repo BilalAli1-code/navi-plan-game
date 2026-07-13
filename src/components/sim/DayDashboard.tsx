@@ -184,6 +184,18 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         </ul>
       </div>
 
+      {/* Adaptive practice */}
+      {runId ? (
+        <PracticePanel runId={runId} dayNumber={state.currentDay} />
+      ) : (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-[12px] text-muted-foreground">
+          Practice will unlock once your progress is saved to the cloud.
+        </div>
+      )}
+
+      {/* Day 7: final assessment */}
+      {state.currentDay === 7 && runId && <FinalAssessment runId={runId} />}
+
       {/* Reflection */}
       <ReflectionCard
         day={state.currentDay}
