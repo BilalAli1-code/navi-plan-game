@@ -272,11 +272,11 @@ export const processAction = createServerFn({ method: "POST" })
     return {
       ok: true as const,
       duplicate: false as const,
-      actionId: inserted.id,
+      actionId: inserted.id as string,
       quality: outcome.quality,
-      outcomeData: outcome.outcomeData,
-      metricImpacts: outcome.metricImpacts,
-      metrics: nextMetrics,
+      outcomeData: asJson(outcome.outcomeData),
+      metricImpacts: asJson(outcome.metricImpacts),
+      metrics: asJson(nextMetrics),
       masteryTopics: outcome.masteryImpacts.map((m) => m.topic),
       delayedEventKeys: outcome.delayedEvents.map((e) => e.eventKey),
     };
