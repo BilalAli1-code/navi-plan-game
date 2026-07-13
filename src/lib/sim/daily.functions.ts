@@ -3,10 +3,8 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { DAY_PLAN, DAILY_MINUTES, REQUIRED_ACTIVITIES, type DayActivityKey } from "./days";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
 
 export type DailyProgressRow = {
   id: string;
