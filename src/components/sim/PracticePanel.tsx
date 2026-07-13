@@ -42,6 +42,7 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
   const submitFn = useServerFn(submitPracticeAnswer);
   const completeFn = useServerFn(completePracticeSession);
   const getFn = useServerFn(getPracticeSession);
+  const { refreshDays } = useSim();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
