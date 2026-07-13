@@ -3,7 +3,7 @@
 // simulator (Maya coach) and exam UI. Additive only; does not replace legacy
 // KnowledgeArea/ProcessGroup content.
 
-import type { KnowledgeArea } from "./simulator/types";
+import type { KnowledgeArea } from "./sim/legacy/types";
 
 // ---------- PMBOK 8: 12 Principles of Project Management ----------
 // PMBOK 8 keeps the 12 principles from PMBOK 7 and strengthens their linkage to

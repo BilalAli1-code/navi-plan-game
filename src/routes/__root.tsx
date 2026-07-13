@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { ProjectStateProvider } from "@/lib/simulator/project-state";
+import { ProjectStateProvider } from "@/lib/sim/legacy/project-state";
 import { ExamStateProvider } from "@/lib/exam/exam-state";
 
 function NotFoundComponent() {

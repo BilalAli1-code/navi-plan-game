@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useProjectState } from "@/lib/simulator/project-state";
+import { useProjectState } from "@/lib/sim/legacy/project-state";
 import {
   PERF_CATEGORIES,
   KNOWLEDGE_AREAS,
   recommendations,
   knowledgeAreaLevel,
   weakestCategories,
-} from "@/lib/simulator/performance";
+} from "@/lib/sim/legacy/performance";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/performance")({
