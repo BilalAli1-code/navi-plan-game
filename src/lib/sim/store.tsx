@@ -449,6 +449,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     hydrating,
     runId,
     days,
+    refreshDays: async () => {
+      const rid = runIdRef.current;
+      if (rid) await refreshDays(rid);
+    },
     completeActivity,
     goToDay,
     saveDayReflection,
