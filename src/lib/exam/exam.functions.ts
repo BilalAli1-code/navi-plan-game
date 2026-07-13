@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import type { ExamReport } from "./types";
 
 type SaveInput = { report: ExamReport };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
+const asJson = (v: unknown): Json => v as Json;
 
 export const saveExamReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
