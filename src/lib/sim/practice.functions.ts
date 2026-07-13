@@ -158,12 +158,9 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
         correct_answer: q.correctOptionId,
         is_correct: isCorrect,
         reasoning: selected.rationale,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        feedback: feedback as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as any,
+        feedback: feedback as unknown as Json,
+        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as unknown as Json,
+        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as unknown as Json,
       },
       { onConflict: "session_id,question_id" },
     );
