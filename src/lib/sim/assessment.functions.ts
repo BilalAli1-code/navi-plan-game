@@ -151,18 +151,16 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       user_id: context.userId,
       overall_score: report.overall_score,
       readiness_level: report.readiness_level,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      assessment_data: report as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      strengths: [...report.leadership_strengths, ...report.decision_making_strengths] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      development_areas: report.development_areas as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assessment_data: report as unknown as Json,
+      strengths: [
+        ...report.leadership_strengths,
+        ...report.decision_making_strengths,
+      ] as unknown as Json,
+      development_areas: report.development_areas as unknown as Json,
       recommended_next_steps: {
         next_case: report.recommended_next_case,
         seven_day_plan: report.seven_day_follow_up_plan,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as Json,
       generated_at: new Date().toISOString(),
     };
 
