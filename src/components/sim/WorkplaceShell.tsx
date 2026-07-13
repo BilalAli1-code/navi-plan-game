@@ -25,7 +25,7 @@ import { TailoringWorkshop } from "./TailoringWorkshop";
 type Tab = "dashboard" | "inbox" | "meetings" | "documents" | "stakeholders";
 
 export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
-  const { state, activeDecision, setActiveDecision, submitTailoring, reset } = useSim();
+  const { state, activeDecision, setActiveDecision, submitTailoring, reset, saveStatus, hydrating } = useSim();
   const c = getCaseRef(state.caseId);
   const [tab, setTab] = useState<Tab>("inbox");
   const navigate = useNavigate();
@@ -132,6 +132,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                 <h1 className="mt-0.5 truncate text-[22px] font-bold text-foreground">{c.projectName}</h1>
               </div>
               <div className="flex items-center gap-3">
+                <SaveIndicator status={hydrating ? "saving" : saveStatus} />
                 <HealthPill value={state.metrics.health} />
                 <span className="hidden items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-[12px] font-semibold text-accent sm:inline-flex">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -227,6 +228,18 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
       </div>
     </div>
   );
+}
+
+function SaveIndicator({ status }: { status: "idle" | "saving" | "saved" | "error" | "offline" }) {
+  if (status === "idle") return null;
+  const map = {
+    saving: { label: "Saving…", cls: "text-muted-foreground" },
+    saved: { label: "Saved", cls: "text-[color:var(--color-success)]" },
+    offline: { label: "Offline — will retry", cls: "text-[color:var(--color-warning)]" },
+    error: { label: "Save failed", cls: "text-[color:var(--color-destructive)]" },
+  } as const;
+  const s = map[status];
+  return <span className={cn("hidden text-[11px] font-medium sm:inline", s.cls)}>{s.label}</span>;
 }
 
 function HealthPill({ value }: { value: number }) {
