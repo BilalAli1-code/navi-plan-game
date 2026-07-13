@@ -159,6 +159,5 @@ export const listEvents = createServerFn({ method: "POST" })
       .order("day_number", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { events: (rows ?? []) as any[] };
+    return { events: (rows ?? []) as Tables<"simulation_events">[] };
   });
