@@ -19,6 +19,16 @@ import {
   getReflection as getReflectionFn,
   type DailyProgressRow,
 } from "./daily.functions";
+import { applyMasteryUpdates } from "./mastery.functions";
+import { syncEvents, updateEventStatus } from "./events.functions";
+import {
+  decisionMasteryDelta,
+  tailoringMasteryDelta,
+  reflectionMasteryDelta,
+  dayCompletionMasteryDelta,
+} from "./mastery";
+import type { EventInput } from "./events.functions";
+import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import type {
@@ -143,6 +153,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const setDayFn = useServerFn(setCurrentDayFn);
   const saveReflectionSrv = useServerFn(saveReflectionFn);
   const getReflectionSrv = useServerFn(getReflectionFn);
+  const masteryFn = useServerFn(applyMasteryUpdates);
+  const syncEventsFn = useServerFn(syncEvents);
+  const updateEventStatusFn = useServerFn(updateEventStatus);
 
   const refreshDays = useCallback(
     async (rid: string) => {
@@ -241,6 +254,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (wasNew) {
         setRunId(res.runId);
         void refreshDays(res.runId);
+        // First time we have a runId — publish generator content as events.
+        void syncEventsFn({
+          data: { runId: res.runId, events: eventsFromState(next) },
+        }).catch(() => {});
       }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -278,11 +295,12 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (lastDecisionKeyRef.current === dec.id) return s;
         lastDecisionKeyRef.current = dec.id;
         const next = commitDecision(s, dec, option);
-        // Fire-and-forget append to simulation_decisions (idempotent via unique key).
-        if (runIdRef.current) {
+        const rid = runIdRef.current;
+        if (rid) {
+          // Persist the decision row.
           void saveDecisionFn({
             data: {
-              runId: runIdRef.current,
+              runId: rid,
               decisionId: dec.id,
               phase: s.phase,
               selectedOptionId: option.id,
@@ -295,21 +313,38 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
               },
               eventId: dec.sourceId ?? null,
             },
-          }).catch(() => {
-            // Snapshot save via saveRun will still capture the log entry.
-          });
+          }).catch(() => {});
+          // Update mastery via the shared service.
+          void masteryFn({
+            data: { updates: [decisionMasteryDelta(dec, option)] },
+          }).catch(() => {});
+          // Mark decision event as responded, and the source (email/meeting) too.
+          void updateEventStatusFn({
+            data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
+          }).catch(() => {});
+          if (dec.source === "email") {
+            void updateEventStatusFn({
+              data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
+            }).catch(() => {});
+          } else if (dec.source === "meeting") {
+            void updateEventStatusFn({
+              data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
+            }).catch(() => {});
+          }
         }
         return next;
       });
     },
-    [saveDecisionFn],
+    [saveDecisionFn, masteryFn, updateEventStatusFn],
   );
 
   const submitTailoring = useCallback(
     (answers: TailoringAnswers, approach: DeliveryApproach) => {
+      let percent = 0;
       setState((s) => {
         const c = getCaseRef(s.caseId);
         const score = scoreTailoring(answers, c.recommendedApproach);
+        percent = score.percent;
         return {
           ...s,
           tailoring: answers,
@@ -319,16 +354,41 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           xp: s.xp + Math.round(score.percent / 4),
         };
       });
+      // Mastery: record tailoring as a scored activity.
+      void masteryFn({
+        data: { updates: [tailoringMasteryDelta(percent)] },
+      }).catch(() => {});
+      const rid = runIdRef.current;
+      if (rid) {
+        void updateEventStatusFn({
+          data: { runId: rid, eventKey: "activity:tailoring", status: "completed" },
+        }).catch(() => {});
+      }
     },
-    [],
+    [masteryFn, updateEventStatusFn],
   );
 
-  const markEmailRead = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
-    }));
-  }, []);
+  const markEmailRead = useCallback(
+    (id: string) => {
+      setState((s) => ({
+        ...s,
+        emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
+      }));
+      const rid = runIdRef.current;
+      if (rid) {
+        // Email events use key `email:<decisionId>` (see eventsFromState).
+        // Emails are keyed by their id; look up the unlocked decision id.
+        const email = state.emails.find((e) => e.id === id);
+        const key = email?.unlocksDecisionId
+          ? `email:${email.unlocksDecisionId}`
+          : `email:${id}`;
+        void updateEventStatusFn({
+          data: { runId: rid, eventKey: key, status: "viewed" },
+        }).catch(() => {});
+      }
+    },
+    [state.emails, updateEventStatusFn],
+  );
 
   const reset = useCallback(() => {
     const fresh = bootstrap(caseId);
@@ -381,13 +441,35 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       );
       try {
         await completeActivityFn({ data: { runId: rid, dayNumber: day, activity } });
+        // Notification event so the timeline reflects the tick.
+        void updateEventStatusFn({
+          data: {
+            runId: rid,
+            eventKey: `activity:day-${day}:${activity}`,
+            status: "completed",
+          },
+        }).catch(() => {});
       } catch {
         /* offline; day snapshot save will still capture progress */
       } finally {
-        void refreshDays(rid);
+        const result = await refreshDays(rid);
+        // If this activity just closed out a full day, log day mastery.
+        const dayRow = (result as unknown) ? undefined : undefined; // unused
+        void dayRow;
+        // Re-inspect days state after refresh.
+        setDays((cur) => {
+          const done = cur.find((d) => d.day_number === day);
+          if (done && done.status === "completed") {
+            const def = getDay(day);
+            void masteryFn({
+              data: { updates: [dayCompletionMasteryDelta(day, def.phase)] },
+            }).catch(() => {});
+          }
+          return cur;
+        });
       }
     },
-    [completeActivityFn, refreshDays],
+    [completeActivityFn, refreshDays, updateEventStatusFn, masteryFn],
   );
 
   const goToDay = useCallback(
@@ -412,9 +494,17 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const rid = runIdRef.current;
       if (!rid) return;
       await saveReflectionSrv({ data: { runId: rid, dayNumber: day, ...payload } });
+      const chars =
+        (payload.whatWentWell?.length ?? 0) +
+        (payload.whatWasChallenging?.length ?? 0) +
+        (payload.whatWouldChange?.length ?? 0) +
+        (payload.keyLearning?.length ?? 0);
+      void masteryFn({
+        data: { updates: [reflectionMasteryDelta(chars)] },
+      }).catch(() => {});
       await completeActivity(day, "reflection");
     },
-    [saveReflectionSrv, completeActivity],
+    [saveReflectionSrv, completeActivity, masteryFn],
   );
 
   const loadDayReflection = useCallback(
@@ -490,6 +580,64 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
     }),
   };
 }
+
+// Derive the initial event catalog from the generator-built collateral.
+// Every email / meeting / decision / document maps to one simulation_events row
+// keyed uniquely so re-runs are idempotent (unique on run_id + event_key).
+function eventsFromState(state: SimState): EventInput[] {
+  const events: EventInput[] = [];
+  // Emails.
+  for (const e of state.emails) {
+    const key = e.unlocksDecisionId ? `email:${e.unlocksDecisionId}` : `email:${e.id}`;
+    events.push({
+      eventKey: key,
+      eventType: "email",
+      status: e.read ? "viewed" : "available",
+      priority: "normal",
+      relatedDecisionId: e.unlocksDecisionId ?? null,
+      payload: { subject: e.subject, from: e.from, preview: e.preview },
+    });
+  }
+  // Meetings.
+  for (const m of state.meetings) {
+    const key = m.unlocksDecisionId ? `meeting:${m.unlocksDecisionId}` : `meeting:${m.id}`;
+    events.push({
+      eventKey: key,
+      eventType: "meeting",
+      status: "available",
+      priority: "normal",
+      relatedDecisionId: m.unlocksDecisionId ?? null,
+      payload: { title: m.title, time: m.time, attendees: m.attendees },
+    });
+  }
+  // Documents.
+  for (const d of state.documents) {
+    events.push({
+      eventKey: `document:${d.id}`,
+      eventType: "document",
+      status: "available",
+      priority: "low",
+      payload: { title: d.title, kind: d.kind },
+    });
+  }
+  // Decisions.
+  for (const d of state.decisions) {
+    const answered = state.log.some((l) => l.decisionId === d.id);
+    events.push({
+      eventKey: `decision:${d.id}`,
+      eventType: "decision",
+      status: answered ? "responded" : "available",
+      priority: "high",
+      relatedDecisionId: d.id,
+      triggerCondition: `phase == '${d.phase}'`,
+      pmbokMapping: { domain: d.pmbokDomain },
+      ecoMapping: { domain: d.ecoDomain, task: d.ecoTask },
+      payload: { title: d.title, source: d.source, phase: d.phase },
+    });
+  }
+  return events;
+}
+
 
 export function useSim(): Ctx {
   const c = useContext(SimContext);

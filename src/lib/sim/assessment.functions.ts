@@ -184,5 +184,56 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       .eq("id", data.runId)
       .eq("user_id", context.userId);
 
+    // Record the mentor_review event so the timeline shows it.
+    try {
+      await db.from("simulation_events").upsert(
+        {
+          run_id: data.runId,
+          user_id: context.userId,
+          event_key: "mentor_review:final",
+          event_type: "mentor_review",
+          status: "completed",
+          day_number: 7,
+          priority: "urgent",
+          completed_at: new Date().toISOString(),
+          payload: {
+            overall_score: report.overall_score,
+            readiness_level: report.readiness_level,
+          },
+        },
+        { onConflict: "run_id,event_key" },
+      );
+    } catch {
+      /* best-effort */
+    }
+
+    // Bump program-level mastery from the final overall score.
+    try {
+      const overall = Math.max(0, Math.min(100, Math.round(report.overall_score)));
+      await db.from("learner_mastery").upsert(
+        {
+          user_id: context.userId,
+          topic: "Program — Final Assessment",
+          pmbok_domain: "Overall",
+          eco_domain: "Business Environment",
+          competency: "Integrated project management",
+          difficulty: "hard",
+          attempts: 1,
+          successful_decisions: overall >= 75 ? 1 : 0,
+          recent_scores: [overall],
+          mastery_score: overall,
+          consecutive_correct: overall >= 75 ? 1 : 0,
+          consecutive_wrong: overall < 40 ? 1 : 0,
+          is_mastered: overall >= 85,
+          mastered_at: overall >= 85 ? new Date().toISOString() : null,
+          is_development_area: overall < 40,
+          last_practiced_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,topic" },
+      );
+    } catch {
+      /* best-effort */
+    }
+
     return { assessment: saved };
   });
