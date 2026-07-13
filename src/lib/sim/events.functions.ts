@@ -111,7 +111,7 @@ export const updateEventStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
     const now = new Date().toISOString();
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: Partial<Tables<"simulation_events">> = { status: data.status };
     if (data.status === "viewed") patch.viewed_at = now;
     if (data.status === "responded") patch.responded_at = now;
     if (data.status === "completed") patch.completed_at = now;
