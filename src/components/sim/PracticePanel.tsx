@@ -190,6 +190,13 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
         </div>
       </div>
 
+      {session.metadata?.learnerFacingSummary && (
+        <div className="mb-3 rounded-xl border border-accent/20 bg-accent/[0.06] p-2.5 text-[11.5px] leading-relaxed text-foreground/85">
+          <span className="font-semibold text-accent">Why these questions: </span>
+          {session.metadata.learnerFacingSummary}
+        </div>
+      )}
+
       {error && <div className="mb-2 text-[11px] text-[color:var(--color-destructive)]">{error}</div>}
 
       <ol className="space-y-4">
@@ -197,11 +204,22 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
           const attempt = attemptsByQ.get(q.id);
           return (
             <li key={q.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                 <span>Q{idx + 1}</span>
                 <span className="rounded-full bg-white/10 px-1.5 py-0.5">{q.ecoDomain}</span>
                 <span className="rounded-full bg-white/10 px-1.5 py-0.5">{q.pmbokDomain}</span>
                 <span className="rounded-full bg-white/10 px-1.5 py-0.5">{q.difficulty}</span>
+                {q.selectionSource && (
+                  <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-accent normal-case tracking-normal">
+                    {q.selectionSource === "development_area"
+                      ? "Development area"
+                      : q.selectionSource === "current_simulation"
+                      ? "Current project"
+                      : q.selectionSource === "spaced_repetition"
+                      ? "Spaced review"
+                      : "Reinforcement"}
+                  </span>
+                )}
               </div>
               <div className="mb-2 text-[13px] text-foreground">{q.prompt}</div>
               <div className="grid gap-1.5">
