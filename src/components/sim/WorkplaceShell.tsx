@@ -132,6 +132,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                 <h1 className="mt-0.5 truncate text-[22px] font-bold text-foreground">{c.projectName}</h1>
               </div>
               <div className="flex items-center gap-3">
+                <SaveIndicator status={hydrating ? "saving" : saveStatus} />
                 <HealthPill value={state.metrics.health} />
                 <span className="hidden items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-[12px] font-semibold text-accent sm:inline-flex">
                   <Sparkles className="h-3.5 w-3.5" />
