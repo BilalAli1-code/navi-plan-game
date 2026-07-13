@@ -142,11 +142,11 @@ export const setRunStatus = createServerFn({ method: "POST" })
     return { runId: i.runId, status: i.status };
   })
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {
+    const patch = {
       status: data.status,
       last_activity_at: new Date().toISOString(),
+      completed_at: data.status === "completed" ? new Date().toISOString() : null,
     };
-    if (data.status === "completed") patch.completed_at = new Date().toISOString();
     const { error } = await context.supabase
       .from("simulation_runs")
       .update(patch)
