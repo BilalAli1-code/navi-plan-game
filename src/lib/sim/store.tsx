@@ -340,9 +340,11 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const submitTailoring = useCallback(
     (answers: TailoringAnswers, approach: DeliveryApproach) => {
+      let percent = 0;
       setState((s) => {
         const c = getCaseRef(s.caseId);
         const score = scoreTailoring(answers, c.recommendedApproach);
+        percent = score.percent;
         return {
           ...s,
           tailoring: answers,
@@ -352,16 +354,41 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           xp: s.xp + Math.round(score.percent / 4),
         };
       });
+      // Mastery: record tailoring as a scored activity.
+      void masteryFn({
+        data: { updates: [tailoringMasteryDelta(percent)] },
+      }).catch(() => {});
+      const rid = runIdRef.current;
+      if (rid) {
+        void updateEventStatusFn({
+          data: { runId: rid, eventKey: "activity:tailoring", status: "completed" },
+        }).catch(() => {});
+      }
     },
-    [],
+    [masteryFn, updateEventStatusFn],
   );
 
-  const markEmailRead = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
-    }));
-  }, []);
+  const markEmailRead = useCallback(
+    (id: string) => {
+      setState((s) => ({
+        ...s,
+        emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
+      }));
+      const rid = runIdRef.current;
+      if (rid) {
+        // Email events use key `email:<decisionId>` (see eventsFromState).
+        // Emails are keyed by their id; look up the unlocked decision id.
+        const email = state.emails.find((e) => e.id === id);
+        const key = email?.unlocksDecisionId
+          ? `email:${email.unlocksDecisionId}`
+          : `email:${id}`;
+        void updateEventStatusFn({
+          data: { runId: rid, eventKey: key, status: "viewed" },
+        }).catch(() => {});
+      }
+    },
+    [state.emails, updateEventStatusFn],
+  );
 
   const reset = useCallback(() => {
     const fresh = bootstrap(caseId);
