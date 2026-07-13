@@ -66,7 +66,7 @@ export function RiskResponsePanel({ dayNumber }: { dayNumber: number }) {
             risk={risk}
             completed={responded.has(`risk:${risk.id}`)}
             onSubmit={async (draft) => {
-              if (!runId) return;
+              if (!runId) return { ok: false, message: "Not ready" } as const;
               const res = await processFn({
                 data: {
                   action: {
