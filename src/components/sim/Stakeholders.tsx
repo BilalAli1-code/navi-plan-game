@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
+import { processAction } from "@/lib/sim/actions.functions";
 import type { Stakeholder } from "@/lib/sim/types";
 import { cn } from "@/lib/utils";
 
