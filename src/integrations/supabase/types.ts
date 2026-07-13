@@ -89,6 +89,45 @@ export type Database = {
         }
         Relationships: []
       }
+      learner_mastery: {
+        Row: {
+          attempts: number
+          eco_domain: string | null
+          id: string
+          last_practiced_at: string | null
+          mastery_score: number
+          pmbok_domain: string | null
+          successful_decisions: number
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          eco_domain?: string | null
+          id?: string
+          last_practiced_at?: string | null
+          mastery_score?: number
+          pmbok_domain?: string | null
+          successful_decisions?: number
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          eco_domain?: string | null
+          id?: string
+          last_practiced_at?: string | null
+          mastery_score?: number
+          pmbok_domain?: string | null
+          successful_decisions?: number
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -116,36 +155,196 @@ export type Database = {
         }
         Relationships: []
       }
-      simulation_runs: {
+      simulation_decisions: {
         Row: {
-          badges: Json
-          completed_at: string
-          decisions: Json
+          created_at: string
+          day_number: number | null
+          decision_id: string
+          event_id: string | null
           id: string
-          metrics: Json
-          score: number
+          mentor_feedback: Json
+          metric_impacts: Json
+          phase: string | null
+          reasoning: string | null
+          run_id: string
+          selected_option_id: string | null
+          selected_option_text: string | null
           user_id: string
-          xp_earned: number
+          week_number: number | null
         }
         Insert: {
-          badges?: Json
-          completed_at?: string
-          decisions?: Json
+          created_at?: string
+          day_number?: number | null
+          decision_id: string
+          event_id?: string | null
           id?: string
-          metrics?: Json
-          score?: number
+          mentor_feedback?: Json
+          metric_impacts?: Json
+          phase?: string | null
+          reasoning?: string | null
+          run_id: string
+          selected_option_id?: string | null
+          selected_option_text?: string | null
           user_id: string
-          xp_earned?: number
+          week_number?: number | null
         }
         Update: {
-          badges?: Json
-          completed_at?: string
-          decisions?: Json
+          created_at?: string
+          day_number?: number | null
+          decision_id?: string
+          event_id?: string | null
           id?: string
-          metrics?: Json
-          score?: number
+          mentor_feedback?: Json
+          metric_impacts?: Json
+          phase?: string | null
+          reasoning?: string | null
+          run_id?: string
+          selected_option_id?: string | null
+          selected_option_text?: string | null
           user_id?: string
-          xp_earned?: number
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_decisions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulation_events: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          event_key: string
+          event_type: string | null
+          id: string
+          payload: Json
+          run_id: string
+          scheduled_day: number | null
+          scheduled_week: number | null
+          status: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          event_key: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          run_id: string
+          scheduled_day?: number | null
+          scheduled_week?: number | null
+          status?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          event_key?: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          run_id?: string
+          scheduled_day?: number | null
+          scheduled_week?: number | null
+          status?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulation_runs: {
+        Row: {
+          budget_score: number
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          current_day: number
+          current_phase: string
+          current_week: number
+          customer_satisfaction: number
+          id: string
+          last_activity_at: string
+          project_health: number
+          quality_score: number
+          risk_score: number
+          schedule_score: number
+          selected_delivery_approach: string | null
+          stakeholder_trust: number
+          started_at: string
+          state_snapshot: Json
+          status: string
+          tailoring_config: Json
+          team_morale: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          budget_score?: number
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          current_phase?: string
+          current_week?: number
+          customer_satisfaction?: number
+          id?: string
+          last_activity_at?: string
+          project_health?: number
+          quality_score?: number
+          risk_score?: number
+          schedule_score?: number
+          selected_delivery_approach?: string | null
+          stakeholder_trust?: number
+          started_at?: string
+          state_snapshot?: Json
+          status?: string
+          tailoring_config?: Json
+          team_morale?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          budget_score?: number
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          current_phase?: string
+          current_week?: number
+          customer_satisfaction?: number
+          id?: string
+          last_activity_at?: string
+          project_health?: number
+          quality_score?: number
+          risk_score?: number
+          schedule_score?: number
+          selected_delivery_approach?: string | null
+          stakeholder_trust?: number
+          started_at?: string
+          state_snapshot?: Json
+          status?: string
+          tailoring_config?: Json
+          team_morale?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }
