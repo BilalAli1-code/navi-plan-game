@@ -150,8 +150,7 @@ export const listEvents = createServerFn({ method: "POST" })
     return { runId: i.runId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: rows, error } = await db
       .from("simulation_events")
       .select("*")
