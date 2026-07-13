@@ -125,6 +125,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const [state, setState] = useState<SimState>(() => bootstrap(caseId));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [hydrating, setHydrating] = useState(true);
+  const [runId, setRunId] = useState<string | null>(null);
+  const [days, setDays] = useState<DailyProgressRow[]>([]);
   const runIdRef = useRef<string | null>(null);
   const pendingRef = useRef<SimState | null>(null);
   const savingRef = useRef(false);
@@ -135,6 +137,30 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const saveRunFn = useServerFn(saveRun);
   const saveDecisionFn = useServerFn(saveDecision);
   const setStatusFn = useServerFn(setRunStatus);
+  const listDaysFn = useServerFn(listDailyProgress);
+  const completeActivityFn = useServerFn(completeDayActivity);
+  const setDayFn = useServerFn(setCurrentDayFn);
+  const saveReflectionSrv = useServerFn(saveReflectionFn);
+  const getReflectionSrv = useServerFn(getReflectionFn);
+
+  const refreshDays = useCallback(
+    async (rid: string) => {
+      try {
+        const res = await listDaysFn({ data: { runId: rid } });
+        setDays(res.days);
+        const done = res.days.filter((d) => d.status === "completed").length;
+        // Derive completedMinutes from actual per-day totals.
+        const minutes = res.days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
+        setState((s) =>
+          s.completedMinutes === minutes ? s : { ...s, completedMinutes: minutes },
+        );
+        return { done, minutes };
+      } catch {
+        return null;
+      }
+    },
+    [listDaysFn],
+  );
 
   // Hydrate: try Supabase first, then localStorage as offline fallback, then bootstrap.
   // If Supabase is empty but a legacy localStorage snapshot exists, ask once whether
