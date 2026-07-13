@@ -112,8 +112,7 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
     return { sessionId: i.sessionId, questionId: i.questionId, selectedOptionId: i.selectedOptionId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
