@@ -11,6 +11,16 @@ import {
 import { commitDecision } from "./engine";
 import { scoreTailoring } from "./tailoring";
 import { loadRun, saveRun, saveDecision, setRunStatus } from "./sim.functions";
+import {
+  listDailyProgress,
+  completeDayActivity,
+  setCurrentDay as setCurrentDayFn,
+  saveReflection as saveReflectionFn,
+  getReflection as getReflectionFn,
+  type DailyProgressRow,
+} from "./daily.functions";
+import type { DayActivityKey } from "./days";
+import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import type {
   Decision,
   DecisionOption,
