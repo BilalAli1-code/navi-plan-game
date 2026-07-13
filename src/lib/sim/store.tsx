@@ -100,6 +100,7 @@ type Ctx = {
   // 7-day program
   runId: string | null;
   days: DailyProgressRow[];
+  refreshDays: () => Promise<void>;
   completeActivity: (day: number, activity: DayActivityKey) => Promise<void>;
   goToDay: (day: number) => void;
   saveDayReflection: (
