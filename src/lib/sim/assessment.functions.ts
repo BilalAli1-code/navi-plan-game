@@ -97,7 +97,7 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       project: {
         case_id: run.case_id,
         delivery_approach: run.selected_delivery_approach,
-        final_metrics: run.state_snapshot?.metrics ?? {},
+        final_metrics: (snapshot as { metrics?: Record<string, number> })?.metrics ?? {},
         health: run.project_health,
         budget: run.budget_score,
         schedule: run.schedule_score,
