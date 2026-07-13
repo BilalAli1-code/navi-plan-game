@@ -120,6 +120,7 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
     try {
       const res = await completeFn({ data: { sessionId: session.id } });
       setSession({ ...session, status: "completed", correct_answers: res.correct, score: res.score });
+      await refreshDays();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not complete practice");
     } finally {
