@@ -494,9 +494,17 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const rid = runIdRef.current;
       if (!rid) return;
       await saveReflectionSrv({ data: { runId: rid, dayNumber: day, ...payload } });
+      const chars =
+        (payload.whatWentWell?.length ?? 0) +
+        (payload.whatWasChallenging?.length ?? 0) +
+        (payload.whatWouldChange?.length ?? 0) +
+        (payload.keyLearning?.length ?? 0);
+      void masteryFn({
+        data: { updates: [reflectionMasteryDelta(chars)] },
+      }).catch(() => {});
       await completeActivity(day, "reflection");
     },
-    [saveReflectionSrv, completeActivity],
+    [saveReflectionSrv, completeActivity, masteryFn],
   );
 
   const loadDayReflection = useCallback(
