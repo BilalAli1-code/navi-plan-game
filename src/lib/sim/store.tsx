@@ -638,10 +638,6 @@ function eventsFromState(state: SimState): EventInput[] {
   return events;
 }
 
-export function useSim(): Ctx {
-  const c = useContext(SimContext);
-  if (!c) throw new Error("useSim must be used inside <SimProvider>");
-  return c;
 
 export function useSim(): Ctx {
   const c = useContext(SimContext);
