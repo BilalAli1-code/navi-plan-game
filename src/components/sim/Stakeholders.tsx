@@ -51,11 +51,12 @@ export function Stakeholders() {
 }
 
 function StakeholderChat({ stakeholder, onClose }: { stakeholder: Stakeholder; onClose: () => void }) {
-  const { state } = useSim();
+  const { state, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const [messages, setMessages] = useState<{ role: "you" | "them"; text: string }[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
+  const recordAction = useServerFn(processAction);
 
   async function send() {
     const trimmed = q.trim();
