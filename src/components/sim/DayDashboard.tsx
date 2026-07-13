@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
 import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
+import { RiskResponsePanel } from "./RiskResponsePanel";
+import { ConflictPanel } from "./ConflictPanel";
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
   const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
@@ -192,6 +194,11 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
           Practice will unlock once your progress is saved to the cloud.
         </div>
       )}
+
+      {/* First-class engine actions: risk & conflict */}
+      <RiskResponsePanel dayNumber={state.currentDay} />
+      <ConflictPanel dayNumber={state.currentDay} />
+
 
       {/* Day 7: final assessment */}
       {state.currentDay === 7 && runId && <FinalAssessment runId={runId} />}

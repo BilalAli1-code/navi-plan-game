@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
+import { processAction } from "@/lib/sim/actions.functions";
 import type { Stakeholder } from "@/lib/sim/types";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +51,12 @@ export function Stakeholders() {
 }
 
 function StakeholderChat({ stakeholder, onClose }: { stakeholder: Stakeholder; onClose: () => void }) {
-  const { state } = useSim();
+  const { state, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const [messages, setMessages] = useState<{ role: "you" | "them"; text: string }[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
+  const recordAction = useServerFn(processAction);
 
   async function send() {
     const trimmed = q.trim();
@@ -97,8 +100,24 @@ function StakeholderChat({ stakeholder, onClose }: { stakeholder: Stakeholder; o
       });
     } finally {
       setLoading(false);
+      // Record as a first-class stakeholder_interaction action (fire-and-forget).
+      if (runId) {
+        void recordAction({
+          data: {
+            action: {
+              actionType: "stakeholder_interaction",
+              runId,
+              sectionNumber: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+              stakeholderId: stakeholder.id,
+              interactionType: "chat",
+              learnerMessage: trimmed,
+            },
+          },
+        }).catch(() => {});
+      }
     }
   }
+
 
   return (
     <motion.div
