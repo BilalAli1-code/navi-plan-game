@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
 import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
+import { RiskResponsePanel } from "./RiskResponsePanel";
+import { ConflictPanel } from "./ConflictPanel";
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
   const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
