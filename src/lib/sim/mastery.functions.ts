@@ -144,14 +144,12 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
 export const listMastery = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
       .from("learner_mastery")
       .select("*")
       .eq("user_id", context.userId)
       .order("mastery_score", { ascending: false });
     if (error) throw new Error(error.message);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { rows: (data ?? []) as any[] };
+    return { rows: (data ?? []) as Tables<"learner_mastery">[] };
   });
