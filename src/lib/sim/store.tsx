@@ -311,6 +311,8 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
     log: Array.isArray(snapshot.log) ? snapshot.log : [],
     xp: snapshot.xp ?? 0,
     lastConsequence: snapshot.lastConsequence ?? null,
+    currentDay: snapshot.currentDay ?? 1,
+    completedMinutes: snapshot.completedMinutes ?? 0,
     createdAt: snapshot.createdAt ?? fresh.createdAt,
     // mark emails that unlock decisions the learner already answered as read
     emails: fresh.emails.map((e) => {
