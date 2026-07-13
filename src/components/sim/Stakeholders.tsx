@@ -100,8 +100,24 @@ function StakeholderChat({ stakeholder, onClose }: { stakeholder: Stakeholder; o
       });
     } finally {
       setLoading(false);
+      // Record as a first-class stakeholder_interaction action (fire-and-forget).
+      if (runId) {
+        void recordAction({
+          data: {
+            action: {
+              actionType: "stakeholder_interaction",
+              runId,
+              sectionNumber: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+              stakeholderId: stakeholder.id,
+              interactionType: "chat",
+              learnerMessage: trimmed,
+            },
+          },
+        }).catch(() => {});
+      }
     }
   }
+
 
   return (
     <motion.div
