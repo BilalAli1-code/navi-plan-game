@@ -174,6 +174,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (cancelled) return;
         if (res.run?.snapshot) {
           runIdRef.current = res.run.id;
+          setRunId(res.run.id);
+          void refreshDays(res.run.id);
           setState(rehydrate(caseId, res.run.snapshot));
           setSaveStatus("saved");
           setHydrating(false);
