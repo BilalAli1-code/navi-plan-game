@@ -1,153 +1,16 @@
-// Adaptive practice: AI-generated PMP-style questions per simulation day.
-// Questions are generated server-side, scored server-side, and completion is
-// gated on submitted answers — no client-side "mark complete" path.
+// Adaptive practice server functions. All helpers live in ./practice.server so
+// the TanStack server-fn splitter doesn't strip them from handler bundles.
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { generateObject } from "ai";
-import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { getDay } from "./days";
+import {
+  generateAdaptiveQuestions,
+  fallbackPracticeQuestions,
+  type PracticeQuestion,
+} from "./practice.server";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
+export type { PracticeQuestion } from "./practice.server";
 
-const QuestionSchema = z.object({
-  id: z.string(),
-  prompt: z.string(),
-  options: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        rationale: z.string().describe("Why this option is stronger or weaker than the others."),
-      }),
-    )
-    .min(3)
-    .max(4),
-  correctOptionId: z.string(),
-  pmbokPrinciple: z.string(),
-  pmbokDomain: z.string(),
-  ecoDomain: z.enum(["People", "Process", "Business Environment"]),
-  competency: z.string(),
-  difficulty: z.enum(["easy", "medium", "hard"]),
-  takeaway: z.string().describe("One-sentence practical takeaway."),
-});
-
-const GenSchema = z.object({
-  questions: z.array(QuestionSchema).min(4).max(6),
-});
-
-export type PracticeQuestion = z.infer<typeof QuestionSchema>;
-
-async function generateQuestionsWithAI(input: {
-  dayNumber: number;
-  phase: string;
-  approach: string | null;
-  caseTitle: string;
-  weakDomains: string[];
-  recentDecisions: string[];
-  correctRate: number;
-}): Promise<PracticeQuestion[]> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const gateway = createLovableAiGatewayProvider(key);
-  const model = gateway("google/gemini-3-flash-preview");
-
-  const day = getDay(input.dayNumber);
-  const targeting =
-    input.weakDomains.length > 0
-      ? `Emphasize these weaker areas: ${input.weakDomains.join(", ")}.`
-      : `Balance across People, Process, and Business Environment.`;
-
-  const difficulty =
-    input.correctRate < 0.5 ? "easy-to-medium" : input.correctRate > 0.8 ? "medium-to-hard" : "medium";
-
-  const prompt = `Generate 5 adaptive PMP practice questions for a learner on Day ${input.dayNumber} of a 7-day PMBOK simulation.
-
-Simulation context:
-- Project: ${input.caseTitle}
-- Day focus: ${day.title} — ${day.focus}
-- Current PMBOK performance domain / phase: ${input.phase}
-- Delivery approach chosen: ${input.approach ?? "not yet selected"}
-- Learner correctness so far: ${(input.correctRate * 100).toFixed(0)}%
-- Recent simulation decisions the learner made: ${input.recentDecisions.slice(0, 6).join(" | ") || "none yet"}
-
-Instructions:
-- Mix question styles: multiple-choice, situational, best-next-action, matching concepts.
-- Difficulty: mostly ${difficulty}.
-- ${targeting}
-- Each question must have 3-4 options with a unique correctOptionId.
-- Every option's rationale must explain why it is stronger or weaker than the others (do NOT restrict this to only the correct one).
-- Map every question to a PMBOK principle, PMBOK performance domain, PMI ECO domain (People / Process / Business Environment), and a PM competency (e.g. Risk Management, Stakeholder Engagement, Change Control).
-- Ground language in PMI terminology. Use realistic project situations, not textbook definitions.
-- Return JSON only.`;
-
-  const { object } = await generateObject({
-    model,
-    schema: GenSchema,
-    prompt,
-  });
-  return object.questions;
-}
-
-// Fallback questions if AI is unavailable — never lets practice hard-fail.
-function fallbackQuestions(dayNumber: number, phase: string): PracticeQuestion[] {
-  const day = getDay(dayNumber);
-  const mk = (n: number, prompt: string, correct: string, opts: [string, string, string, string]): PracticeQuestion => ({
-    id: `d${dayNumber}-q${n}`,
-    prompt,
-    options: opts.map((o, i) => ({
-      id: `o${i}`,
-      label: o,
-      rationale:
-        `o${i}` === correct
-          ? "Aligns with PMI stewardship, stakeholder engagement, and value delivery."
-          : "Bypasses PMI-recommended engagement, integration, or risk controls.",
-    })),
-    correctOptionId: correct,
-    pmbokPrinciple: "Stakeholders",
-    pmbokDomain: day.phase,
-    ecoDomain: n % 3 === 0 ? "Business Environment" : n % 2 === 0 ? "Process" : "People",
-    competency: "Project Management Fundamentals",
-    difficulty: "medium",
-    takeaway: "PMI expects proactive stakeholder engagement and integrated change control.",
-  });
-  return [
-    mk(1, `In the ${phase} phase, what should the project manager do FIRST when a critical stakeholder raises a concern?`, "o0", [
-      "Listen, log the concern in the register, then plan engagement",
-      "Escalate to the sponsor immediately",
-      "Reassure them that the plan is on track",
-      "Wait until the next status meeting",
-    ]),
-    mk(2, `A team member misses a key deadline during ${phase}. Best next action?`, "o1", [
-      "Escalate to their functional manager",
-      "Have a private, coaching conversation to understand root cause",
-      "Reduce their scope silently",
-      "Note it in performance review",
-    ]),
-    mk(3, `A change request would improve value but exceed the current baseline. What should you do?`, "o0", [
-      "Submit through integrated change control",
-      "Approve informally to keep momentum",
-      "Reject to protect the baseline",
-      "Defer to closing",
-    ]),
-    mk(4, `Which artifact best supports adaptive tailoring decisions during ${phase}?`, "o2", [
-      "Charter",
-      "Risk register",
-      "Tailoring workshop outputs and lessons learned",
-      "Stakeholder register",
-    ]),
-    mk(5, `The sponsor wants weekly one-page updates. Which principle drives your format?`, "o0", [
-      "Stakeholder engagement + value delivery",
-      "Quality management",
-      "Risk optimization",
-      "Change control",
-    ]),
-  ];
-}
-
-// Start (or resume) a practice session for a day.
 export const startPracticeSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
@@ -159,7 +22,6 @@ export const startPracticeSession = createServerFn({ method: "POST" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
 
-    // Reuse an in-progress session if one exists.
     const { data: existing } = await db
       .from("practice_sessions")
       .select("*")
@@ -179,7 +41,6 @@ export const startPracticeSession = createServerFn({ method: "POST" })
       return { session: current, attempts: attempts ?? [] };
     }
 
-    // Build adaptive context from the run snapshot.
     const { data: runRow, error: runErr } = await db
       .from("simulation_runs")
       .select("state_snapshot, selected_delivery_approach, current_phase, case_id")
@@ -211,7 +72,7 @@ export const startPracticeSession = createServerFn({ method: "POST" })
 
     let questions: PracticeQuestion[];
     try {
-      questions = await generateQuestionsWithAI({
+      questions = await generateAdaptiveQuestions({
         dayNumber: data.dayNumber,
         phase: runRow?.current_phase ?? "Initiation",
         approach: runRow?.selected_delivery_approach ?? null,
@@ -221,7 +82,7 @@ export const startPracticeSession = createServerFn({ method: "POST" })
         correctRate,
       });
     } catch {
-      questions = fallbackQuestions(data.dayNumber, runRow?.current_phase ?? "Initiation");
+      questions = fallbackPracticeQuestions(data.dayNumber, runRow?.current_phase ?? "Initiation");
     }
 
     const { data: inserted, error: insErr } = await db
@@ -233,7 +94,8 @@ export const startPracticeSession = createServerFn({ method: "POST" })
         status: "in_progress",
         total_questions: questions.length,
         estimated_minutes: 10,
-        questions: asJson(questions),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        questions: questions as any,
       })
       .select("*")
       .single();
@@ -241,8 +103,6 @@ export const startPracticeSession = createServerFn({ method: "POST" })
     return { session: inserted, attempts: [] };
   });
 
-// Submit a single answer. Feedback is built server-side from the stored
-// question metadata — the browser cannot claim a wrong answer is correct.
 export const submitPracticeAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
@@ -276,7 +136,9 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
       why: isCorrect
         ? `Effective. ${selected.rationale}`
         : `Not the strongest option. ${selected.rationale}`,
-      strongerOption: isCorrect ? null : { id: correct?.id, label: correct?.label, rationale: correct?.rationale ?? "" },
+      strongerOption: isCorrect
+        ? null
+        : { id: correct?.id, label: correct?.label ?? "", rationale: correct?.rationale ?? "" },
       alternatives: q.options
         .filter((o) => o.id !== data.selectedOptionId && o.id !== q.correctOptionId)
         .map((o) => ({ label: o.label, why: o.rationale })),
@@ -297,9 +159,12 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
         correct_answer: q.correctOptionId,
         is_correct: isCorrect,
         reasoning: selected.rationale,
-        feedback: asJson(feedback),
-        pmbok_mapping: asJson({ principle: q.pmbokPrinciple, domain: q.pmbokDomain }),
-        eco_mapping: asJson({ domain: q.ecoDomain, competency: q.competency }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        feedback: feedback as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as any,
       },
       { onConflict: "session_id,question_id" },
     );
@@ -308,8 +173,6 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
     return { isCorrect, feedback };
   });
 
-// Finalize the session: score, mark completed, update learner_mastery per ECO
-// domain, and mark the daily "practice" activity complete.
 export const completePracticeSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
@@ -355,7 +218,7 @@ export const completePracticeSession = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     if (upErr) throw new Error(upErr.message);
 
-    // Update learner_mastery per ECO domain (best-effort).
+    // Update learner_mastery per ECO domain (best-effort — table schema may vary).
     const byDomain = new Map<string, { correct: number; total: number }>();
     for (const a of attempts ?? []) {
       const attempt = a as { eco_mapping: { domain?: string } | null; is_correct: boolean };
@@ -378,15 +241,17 @@ export const completePracticeSession = createServerFn({ method: "POST" })
           { onConflict: "user_id,eco_domain" },
         );
       } catch {
-        /* learner_mastery schema may differ; ignore */
+        /* schema variance — ignore */
       }
     }
 
-    // Mark the daily practice activity as complete.
+    // Mark the daily "practice" activity complete and unlock the next day when all done.
     try {
       const { data: dayRow } = await db
         .from("daily_progress")
-        .select("id, practice_completed, briefing_completed, learning_completed, workplace_activities_completed, decisions_completed, reflection_completed")
+        .select(
+          "id, practice_completed, briefing_completed, learning_completed, workplace_activities_completed, decisions_completed, reflection_completed",
+        )
         .eq("run_id", session.run_id)
         .eq("user_id", context.userId)
         .eq("day_number", session.day_number)
