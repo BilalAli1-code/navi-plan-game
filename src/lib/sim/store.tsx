@@ -441,13 +441,35 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       );
       try {
         await completeActivityFn({ data: { runId: rid, dayNumber: day, activity } });
+        // Notification event so the timeline reflects the tick.
+        void updateEventStatusFn({
+          data: {
+            runId: rid,
+            eventKey: `activity:day-${day}:${activity}`,
+            status: "completed",
+          },
+        }).catch(() => {});
       } catch {
         /* offline; day snapshot save will still capture progress */
       } finally {
-        void refreshDays(rid);
+        const result = await refreshDays(rid);
+        // If this activity just closed out a full day, log day mastery.
+        const dayRow = (result as unknown) ? undefined : undefined; // unused
+        void dayRow;
+        // Re-inspect days state after refresh.
+        setDays((cur) => {
+          const done = cur.find((d) => d.day_number === day);
+          if (done && done.status === "completed") {
+            const def = getDay(day);
+            void masteryFn({
+              data: { updates: [dayCompletionMasteryDelta(day, def.phase)] },
+            }).catch(() => {});
+          }
+          return cur;
+        });
       }
     },
-    [completeActivityFn, refreshDays],
+    [completeActivityFn, refreshDays, updateEventStatusFn, masteryFn],
   );
 
   const goToDay = useCallback(
