@@ -6,36 +6,9 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { generateObject } from "ai";
-import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { generateFinalReport, type FinalReport } from "./assessment.server";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
-
-const ReportSchema = z.object({
-  overall_score: z.number().min(0).max(100),
-  readiness_level: z.enum(["developing", "approaching", "ready", "exam_ready"]),
-  project_outcome_summary: z.string(),
-  leadership_strengths: z.array(z.string()).min(1),
-  decision_making_strengths: z.array(z.string()).min(1),
-  development_areas: z.array(z.string()).min(1),
-  stakeholder_management_assessment: z.string(),
-  risk_management_assessment: z.string(),
-  delivery_approach_assessment: z.string(),
-  pmbok_performance_domains: z.array(
-    z.object({ domain: z.string(), score: z.number().min(0).max(100), notes: z.string() }),
-  ).min(4),
-  eco_people_score: z.number().min(0).max(100),
-  eco_process_score: z.number().min(0).max(100),
-  eco_business_environment_score: z.number().min(0).max(100),
-  recommended_next_case: z.string(),
-  seven_day_follow_up_plan: z.array(
-    z.object({ day: z.number(), focus: z.string(), activities: z.array(z.string()) }),
-  ).length(7),
-});
-
-export type FinalReport = z.infer<typeof ReportSchema>;
+export type { FinalReport } from "./assessment.server";
 
 export const getFinalAssessment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -67,7 +40,6 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
 
-    // Prevent duplicate generation unless force=true.
     const { data: existing } = await db
       .from("final_assessments")
       .select("*")
@@ -76,7 +48,6 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing && !data.force) return { assessment: existing };
 
-    // Build trusted context — everything from the DB, nothing from the browser.
     const { data: run, error: runErr } = await db
       .from("simulation_runs")
       .select("*")
@@ -123,7 +94,7 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
         )
       : 0;
 
-    const context_payload = {
+    const payload = {
       project: {
         case_id: run.case_id,
         delivery_approach: run.selected_delivery_approach,
@@ -170,65 +141,43 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
           learning: r.key_learning,
         }),
       ),
-      practice: {
-        average_score: practiceAvg,
-        sessions: practice ?? [],
-      },
+      practice: { average_score: practiceAvg, sessions: practice ?? [] },
     };
-
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
-    const model = gateway("google/gemini-3-flash-preview");
-
-    const system = `You are Maya, a senior PMP-certified project management mentor.
-Write a rigorous, honest, PMI-aligned final assessment for a learner who completed a 7-day project simulation.
-Ground scores in the trusted data provided. Do not invent numbers. Be specific, use PMI vocabulary, and give actionable coaching.`;
-
-    const prompt = `Generate the final assessment as strict JSON matching the schema.
-
-Trusted learner data:
-${JSON.stringify(context_payload, null, 2)}
-
-Scoring guidance:
-- overall_score: weighted blend of project health, decision correctness, and practice average.
-- readiness_level: developing (<55), approaching (55-69), ready (70-84), exam_ready (>=85).
-- pmbok_performance_domains: cover at minimum Stakeholders, Team, Planning, Delivery, Measurement, Uncertainty.
-- ECO scores: derive from decisions and practice mapped to People / Process / Business Environment.
-- seven_day_follow_up_plan: exactly 7 days of targeted follow-up, each 60-90 min, targeting the learner's weakest areas.
-- recommended_next_case: pick a plausible next industry (e.g. Healthcare, Software, Aerospace, Retail) different from ${run.case_id}.`;
 
     let report: FinalReport;
     try {
-      const { object } = await generateObject({ model, schema: ReportSchema, prompt, system });
-      report = object;
+      report = await generateFinalReport(payload, run.case_id);
     } catch (err) {
       throw new Error(`Assessment generation failed: ${err instanceof Error ? err.message : "unknown"}`);
     }
 
-    const payload = {
+    const row = {
       run_id: data.runId,
       user_id: context.userId,
       overall_score: report.overall_score,
       readiness_level: report.readiness_level,
-      assessment_data: asJson(report),
-      strengths: asJson([...report.leadership_strengths, ...report.decision_making_strengths]),
-      development_areas: asJson(report.development_areas),
-      recommended_next_steps: asJson({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assessment_data: report as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      strengths: [...report.leadership_strengths, ...report.decision_making_strengths] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      development_areas: report.development_areas as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recommended_next_steps: {
         next_case: report.recommended_next_case,
         seven_day_plan: report.seven_day_follow_up_plan,
-      }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
       generated_at: new Date().toISOString(),
     };
 
     const { data: saved, error: upErr } = await db
       .from("final_assessments")
-      .upsert(payload, { onConflict: "run_id" })
+      .upsert(row, { onConflict: "run_id" })
       .select("*")
       .single();
     if (upErr) throw new Error(upErr.message);
 
-    // Mark run completed on final assessment.
     await db
       .from("simulation_runs")
       .update({ status: "completed", completed_at: new Date().toISOString() })
