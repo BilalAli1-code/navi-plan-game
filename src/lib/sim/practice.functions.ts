@@ -218,31 +218,123 @@ export const completePracticeSession = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     if (upErr) throw new Error(upErr.message);
 
-    // Update learner_mastery per ECO domain (best-effort — table schema may vary).
-    const byDomain = new Map<string, { correct: number; total: number }>();
+    // Update learner_mastery via the shared service (one record per topic).
+    // Group attempts by canonical topic derived from PMBOK/ECO mapping.
+    const byTopic = new Map<
+      string,
+      {
+        correct: number;
+        total: number;
+        pmbokDomain?: string;
+        pmbokPrinciple?: string;
+        ecoDomain?: string;
+        competency?: string;
+      }
+    >();
     for (const a of attempts ?? []) {
-      const attempt = a as { eco_mapping: { domain?: string } | null; is_correct: boolean };
-      const dom = attempt.eco_mapping?.domain ?? "Process";
-      const cur = byDomain.get(dom) ?? { correct: 0, total: 0 };
+      const attempt = a as {
+        eco_mapping: { domain?: string; competency?: string } | null;
+        pmbok_mapping: { domain?: string; principle?: string } | null;
+        is_correct: boolean;
+      };
+      const dom = attempt.pmbok_mapping?.domain ?? "Process";
+      const eco = attempt.eco_mapping?.domain ?? "Process";
+      const topic = `${dom} — ${eco}`;
+      const cur = byTopic.get(topic) ?? {
+        correct: 0,
+        total: 0,
+        pmbokDomain: dom,
+        pmbokPrinciple: attempt.pmbok_mapping?.principle,
+        ecoDomain: eco,
+        competency: attempt.eco_mapping?.competency,
+      };
       cur.total += 1;
       if (attempt.is_correct) cur.correct += 1;
-      byDomain.set(dom, cur);
+      byTopic.set(topic, cur);
     }
-    for (const [domain, stats] of byDomain) {
+    const now2 = new Date().toISOString();
+    for (const [topic, stats] of byTopic) {
+      // Session-level score for this topic drives the mastery delta.
+      const score = Math.round((stats.correct / Math.max(stats.total, 1)) * 100);
+      const { data: existing } = await db
+        .from("learner_mastery")
+        .select("*")
+        .eq("user_id", context.userId)
+        .eq("topic", topic)
+        .maybeSingle();
+      const prevAttempts: number = existing?.attempts ?? 0;
+      const prevSuccess: number = existing?.successful_decisions ?? 0;
+      const prevRecent: number[] = Array.isArray(existing?.recent_scores)
+        ? (existing.recent_scores as number[])
+        : [];
+      const prevStreakOK: number = existing?.consecutive_correct ?? 0;
+      const prevStreakBad: number = existing?.consecutive_wrong ?? 0;
+      const attemptsN = prevAttempts + 1;
+      const recent = [...prevRecent, score].slice(-10);
+      const n = recent.length;
+      let num = 0, den = 0;
+      recent.forEach((s, i) => {
+        const w = 1 + i * (2 / Math.max(n - 1, 1));
+        num += s * w;
+        den += w;
+      });
+      let mastery = num / den;
+      const last3 = recent.slice(-3);
+      if (last3.length === 3 && last3.every((s) => s >= 75)) mastery += 5;
+      if (last3.length === 3 && last3.every((s) => s <= 30)) mastery -= 5;
+      if (attemptsN < 3) mastery *= 0.85;
+      const masteryScore = Math.max(0, Math.min(100, Math.round(mastery)));
+      const consecutive_correct = score >= 75 ? prevStreakOK + 1 : 0;
+      const consecutive_wrong = score < 40 ? prevStreakBad + 1 : 0;
+      const isMastered = masteryScore >= 85 && attemptsN >= 3 && consecutive_correct >= 3;
+
       try {
         await db.from("learner_mastery").upsert(
           {
             user_id: context.userId,
-            eco_domain: domain,
-            attempts: stats.total,
-            correct: stats.correct,
-            last_practiced_at: new Date().toISOString(),
+            topic,
+            pmbok_domain: stats.pmbokDomain ?? null,
+            pmbok_principle: stats.pmbokPrinciple ?? null,
+            eco_domain: stats.ecoDomain ?? null,
+            competency: stats.competency ?? null,
+            difficulty: "medium",
+            attempts: attemptsN,
+            successful_decisions: prevSuccess + (score >= 75 ? 1 : 0),
+            recent_scores: recent,
+            consecutive_correct,
+            consecutive_wrong,
+            mastery_score: masteryScore,
+            is_mastered: isMastered,
+            mastered_at: isMastered ? existing?.mastered_at ?? now2 : null,
+            is_development_area: (masteryScore < 40 && attemptsN >= 2) || consecutive_wrong >= 3,
+            last_practiced_at: now2,
           },
-          { onConflict: "user_id,eco_domain" },
+          { onConflict: "user_id,topic" },
         );
       } catch {
-        /* schema variance — ignore */
+        /* best-effort */
       }
+    }
+
+    // Record the practice event.
+    try {
+      await db.from("simulation_events").upsert(
+        {
+          run_id: session.run_id,
+          user_id: context.userId,
+          event_key: `practice:day-${session.day_number}`,
+          event_type: "practice",
+          status: "completed",
+          day_number: session.day_number,
+          priority: "normal",
+          completed_at: new Date().toISOString(),
+          unlocked_at: session.created_at ?? new Date().toISOString(),
+          payload: { score, correct, total },
+        },
+        { onConflict: "run_id,event_key" },
+      );
+    } catch {
+      /* best-effort */
     }
 
     // Mark the daily "practice" activity complete and unlock the next day when all done.
