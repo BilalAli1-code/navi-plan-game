@@ -254,6 +254,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (wasNew) {
         setRunId(res.runId);
         void refreshDays(res.runId);
+        // First time we have a runId — publish generator content as events.
+        void syncEventsFn({
+          data: { runId: res.runId, events: eventsFromState(next) },
+        }).catch(() => {});
       }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
