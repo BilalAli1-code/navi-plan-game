@@ -1,12 +1,12 @@
 // Adaptive practice server functions. All helpers live in ./practice.server so
 // the TanStack server-fn splitter doesn't strip them from handler bundles.
+// Selection logic lives in ./selection.server and is dynamically imported
+// inside the handler for the same reason.
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import {
-  generateAdaptiveQuestions,
-  fallbackPracticeQuestions,
   type PracticeQuestion,
 } from "./practice.server";
 
