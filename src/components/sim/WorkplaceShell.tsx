@@ -133,7 +133,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             <button
               onClick={() => {
                 reset();
-                setTab("inbox");
+                setTab("program");
               }}
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
             >
