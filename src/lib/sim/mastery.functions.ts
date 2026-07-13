@@ -74,8 +74,7 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
     return { updates: i.updates };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const now = new Date().toISOString();
     const results: Array<{ topic: string; mastery: number; is_mastered: boolean }> = [];
 
