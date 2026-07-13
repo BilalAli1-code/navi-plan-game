@@ -153,6 +153,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const setDayFn = useServerFn(setCurrentDayFn);
   const saveReflectionSrv = useServerFn(saveReflectionFn);
   const getReflectionSrv = useServerFn(getReflectionFn);
+  const masteryFn = useServerFn(applyMasteryUpdates);
+  const syncEventsFn = useServerFn(syncEvents);
+  const updateEventStatusFn = useServerFn(updateEventStatus);
 
   const refreshDays = useCallback(
     async (rid: string) => {
