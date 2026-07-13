@@ -10,6 +10,7 @@ import {
   RotateCcw,
   ArrowLeft,
   GraduationCap,
+  Target,
 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSim } from "@/lib/sim/store";
@@ -23,8 +24,9 @@ import { Dashboard } from "./Dashboard";
 import { DecisionPanel } from "./DecisionPanel";
 import { TailoringWorkshop } from "./TailoringWorkshop";
 import { DayDashboard } from "./DayDashboard";
+import { CompetencyDashboard } from "./CompetencyDashboard";
 
-type Tab = "program" | "dashboard" | "inbox" | "meetings" | "documents" | "stakeholders";
+type Tab = "program" | "dashboard" | "mastery" | "inbox" | "meetings" | "documents" | "stakeholders";
 
 export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   const { state, activeDecision, setActiveDecision, submitTailoring, reset, saveStatus, hydrating, completeActivity, days } = useSim();
