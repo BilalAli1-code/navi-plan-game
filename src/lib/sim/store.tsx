@@ -97,6 +97,26 @@ type Ctx = {
   pause: () => void;
   saveStatus: SaveStatus;
   hydrating: boolean;
+  // 7-day program
+  runId: string | null;
+  days: DailyProgressRow[];
+  completeActivity: (day: number, activity: DayActivityKey) => Promise<void>;
+  goToDay: (day: number) => void;
+  saveDayReflection: (
+    day: number,
+    payload: {
+      whatWentWell?: string;
+      whatWasChallenging?: string;
+      whatWouldChange?: string;
+      keyLearning?: string;
+    },
+  ) => Promise<void>;
+  loadDayReflection: (day: number) => Promise<{
+    what_went_well: string | null;
+    what_was_challenging: string | null;
+    what_would_change: string | null;
+    key_learning: string | null;
+  } | null>;
 };
 
 const SimContext = createContext<Ctx | null>(null);
