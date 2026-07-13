@@ -95,8 +95,7 @@ export const startPracticeSession = createServerFn({ method: "POST" })
         status: "in_progress",
         total_questions: questions.length,
         estimated_minutes: 10,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        questions: questions as any,
+        questions: questions as unknown as Json,
       })
       .select("*")
       .single();
