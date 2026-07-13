@@ -195,6 +195,11 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         </div>
       )}
 
+      {/* First-class engine actions: risk & conflict */}
+      <RiskResponsePanel dayNumber={state.currentDay} />
+      <ConflictPanel dayNumber={state.currentDay} />
+
+
       {/* Day 7: final assessment */}
       {state.currentDay === 7 && runId && <FinalAssessment runId={runId} />}
 
