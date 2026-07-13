@@ -54,8 +54,7 @@ export const syncEvents = createServerFn({ method: "POST" })
     return { runId: i.runId, events: i.events };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     // Load existing to avoid clobbering user-progressed statuses.
     const { data: existing } = await db
