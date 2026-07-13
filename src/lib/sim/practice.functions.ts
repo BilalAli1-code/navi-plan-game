@@ -177,8 +177,7 @@ export const completePracticeSession = createServerFn({ method: "POST" })
     return { sessionId: i.sessionId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
@@ -391,8 +390,7 @@ export const getPracticeSession = createServerFn({ method: "POST" })
     return { runId: i.runId, dayNumber: i.dayNumber };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: rows } = await db
       .from("practice_sessions")
       .select("*")
