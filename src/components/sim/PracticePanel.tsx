@@ -62,8 +62,8 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
     setError(null);
     try {
       const res = await getFn({ data: { runId, dayNumber } });
-      setSession(res.session as Session | null);
-      setAttempts((res.attempts ?? []) as Attempt[]);
+      setSession(res.session as unknown as Session | null);
+      setAttempts((res.attempts ?? []) as unknown as Attempt[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load practice");
     } finally {
@@ -80,8 +80,8 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
     setError(null);
     try {
       const res = await startFn({ data: { runId, dayNumber } });
-      setSession(res.session as Session);
-      setAttempts((res.attempts ?? []) as Attempt[]);
+      setSession(res.session as unknown as Session);
+      setAttempts((res.attempts ?? []) as unknown as Attempt[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start practice");
     } finally {
