@@ -6,9 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
-import {
-  type PracticeQuestion,
-} from "./practice.server";
+import type { PracticeQuestion } from "./practice.server";
 
 export type { PracticeQuestion } from "./practice.server";
 
