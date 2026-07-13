@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json, Tables } from "@/integrations/supabase/types";
 
 export type EventType =
   | "email"
@@ -42,8 +43,7 @@ export type EventInput = {
   ecoMapping?: Record<string, unknown>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
+const asJson = (v: unknown): Json => v as Json;
 
 export const syncEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -54,8 +54,7 @@ export const syncEvents = createServerFn({ method: "POST" })
     return { runId: i.runId, events: i.events };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     // Load existing to avoid clobbering user-progressed statuses.
     const { data: existing } = await db
@@ -110,10 +109,9 @@ export const updateEventStatus = createServerFn({ method: "POST" })
     return { runId: i.runId, eventKey: i.eventKey, status: i.status };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const now = new Date().toISOString();
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: Partial<Tables<"simulation_events">> = { status: data.status };
     if (data.status === "viewed") patch.viewed_at = now;
     if (data.status === "responded") patch.responded_at = now;
     if (data.status === "completed") patch.completed_at = now;
@@ -152,8 +150,7 @@ export const listEvents = createServerFn({ method: "POST" })
     return { runId: i.runId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: rows, error } = await db
       .from("simulation_events")
       .select("*")
@@ -162,6 +159,5 @@ export const listEvents = createServerFn({ method: "POST" })
       .order("day_number", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { events: (rows ?? []) as any[] };
+    return { events: (rows ?? []) as Tables<"simulation_events">[] };
   });

@@ -6,10 +6,10 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import type { SimState } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asJson = (v: unknown) => v as any;
+const asJson = (v: unknown): Json => v as Json;
 
 function metricRow(state: SimState) {
   const m = state.metrics;

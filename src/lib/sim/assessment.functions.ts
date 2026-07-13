@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { generateFinalReport, type FinalReport } from "./assessment.server";
 
 export type { FinalReport } from "./assessment.server";
@@ -18,8 +19,7 @@ export const getFinalAssessment = createServerFn({ method: "POST" })
     return { runId: i.runId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: row } = await db
       .from("final_assessments")
       .select("*")
@@ -37,8 +37,7 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
     return { runId: i.runId, force: !!i.force };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     const { data: existing } = await db
       .from("final_assessments")
@@ -98,7 +97,7 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       project: {
         case_id: run.case_id,
         delivery_approach: run.selected_delivery_approach,
-        final_metrics: run.state_snapshot?.metrics ?? {},
+        final_metrics: (snapshot as { metrics?: Record<string, number> })?.metrics ?? {},
         health: run.project_health,
         budget: run.budget_score,
         schedule: run.schedule_score,
@@ -113,21 +112,17 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       decisions: {
         total: totalDecisions,
         correct: correctDecisions,
-        by_phase: (decisions ?? []).map(
-          (d: { phase: string; selected_option_text: string; mentor_feedback: unknown }) => ({
-            phase: d.phase,
-            option: d.selected_option_text,
-            feedback: d.mentor_feedback,
-          }),
-        ),
+        by_phase: (decisions ?? []).map((d) => ({
+          phase: d.phase,
+          option: d.selected_option_text,
+          feedback: d.mentor_feedback,
+        })),
       },
-      days: (days ?? []).map(
-        (d: { day_number: number; status: string; completion_percentage: number }) => ({
-          day: d.day_number,
-          status: d.status,
-          completion: d.completion_percentage,
-        }),
-      ),
+      days: (days ?? []).map((d) => ({
+        day: d.day_number,
+        status: d.status,
+        completion: d.completion_percentage,
+      })),
       reflections: (reflections ?? []).map(
         (r: {
           day_number: number;
@@ -156,18 +151,16 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
       user_id: context.userId,
       overall_score: report.overall_score,
       readiness_level: report.readiness_level,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      assessment_data: report as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      strengths: [...report.leadership_strengths, ...report.decision_making_strengths] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      development_areas: report.development_areas as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assessment_data: report as unknown as Json,
+      strengths: [
+        ...report.leadership_strengths,
+        ...report.decision_making_strengths,
+      ] as unknown as Json,
+      development_areas: report.development_areas as unknown as Json,
       recommended_next_steps: {
         next_case: report.recommended_next_case,
         seven_day_plan: report.seven_day_follow_up_plan,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as Json,
       generated_at: new Date().toISOString(),
     };
 

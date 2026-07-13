@@ -3,6 +3,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import {
   generateAdaptiveQuestions,
   fallbackPracticeQuestions,
@@ -19,8 +20,8 @@ export const startPracticeSession = createServerFn({ method: "POST" })
     return { runId: i.runId, dayNumber: i.dayNumber };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
+
 
     const { data: existing } = await db
       .from("practice_sessions")
@@ -94,8 +95,7 @@ export const startPracticeSession = createServerFn({ method: "POST" })
         status: "in_progress",
         total_questions: questions.length,
         estimated_minutes: 10,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        questions: questions as any,
+        questions: questions as unknown as Json,
       })
       .select("*")
       .single();
@@ -112,8 +112,7 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
     return { sessionId: i.sessionId, questionId: i.questionId, selectedOptionId: i.selectedOptionId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
@@ -159,12 +158,9 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
         correct_answer: q.correctOptionId,
         is_correct: isCorrect,
         reasoning: selected.rationale,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        feedback: feedback as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as any,
+        feedback: feedback as unknown as Json,
+        pmbok_mapping: { principle: q.pmbokPrinciple, domain: q.pmbokDomain } as unknown as Json,
+        eco_mapping: { domain: q.ecoDomain, competency: q.competency } as unknown as Json,
       },
       { onConflict: "session_id,question_id" },
     );
@@ -181,8 +177,7 @@ export const completePracticeSession = createServerFn({ method: "POST" })
     return { sessionId: i.sessionId };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
@@ -395,8 +390,7 @@ export const getPracticeSession = createServerFn({ method: "POST" })
     return { runId: i.runId, dayNumber: i.dayNumber };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data: rows } = await db
       .from("practice_sessions")
       .select("*")

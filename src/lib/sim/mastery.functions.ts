@@ -13,6 +13,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Tables } from "@/integrations/supabase/types";
 
 export type MasteryUpdate = {
   topic: string;                 // canonical topic label (unique key)
@@ -73,8 +74,7 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
     return { updates: i.updates };
   })
   .handler(async ({ data, context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const now = new Date().toISOString();
     const results: Array<{ topic: string; mastery: number; is_mastered: boolean }> = [];
 
@@ -144,14 +144,12 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
 export const listMastery = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
       .from("learner_mastery")
       .select("*")
       .eq("user_id", context.userId)
       .order("mastery_score", { ascending: false });
     if (error) throw new Error(error.message);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { rows: (data ?? []) as any[] };
+    return { rows: (data ?? []) as Tables<"learner_mastery">[] };
   });

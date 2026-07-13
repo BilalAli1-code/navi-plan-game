@@ -35,7 +35,7 @@ export function FinalAssessment({ runId }: { runId: string }) {
     setError(null);
     try {
       const res = await getFn({ data: { runId } });
-      setAssessment((res.assessment ?? null) as StoredAssessment | null);
+      setAssessment((res.assessment ?? null) as unknown as StoredAssessment | null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load assessment");
     } finally {
@@ -52,7 +52,7 @@ export function FinalAssessment({ runId }: { runId: string }) {
     setError(null);
     try {
       const res = await genFn({ data: { runId, force } });
-      setAssessment(res.assessment as StoredAssessment);
+      setAssessment(res.assessment as unknown as StoredAssessment);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Assessment generation failed");
     } finally {
