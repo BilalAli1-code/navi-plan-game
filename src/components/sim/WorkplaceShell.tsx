@@ -221,6 +221,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   >
                     {tab === "program" && <DayDashboard onOpenTab={(t) => setTab(t)} />}
                     {tab === "dashboard" && <Dashboard />}
+                    {tab === "mastery" && <CompetencyDashboard />}
                     {tab === "inbox" && <Inbox onOpenDecision={openDecision} />}
                     {tab === "meetings" && <Meetings onOpenDecision={openDecision} />}
                     {tab === "documents" && <Documents />}
