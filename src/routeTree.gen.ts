@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiSimStakeholderRouteImport } from './routes/api/sim-stakeholder'
+import { Route as ApiProcessStakeholderActionRouteImport } from './routes/api/process-stakeholder-action'
 import { Route as ApiMayaAskRouteImport } from './routes/api/maya-ask'
 import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
@@ -57,6 +58,12 @@ const ApiSimStakeholderRoute = ApiSimStakeholderRouteImport.update({
   path: '/api/sim-stakeholder',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProcessStakeholderActionRoute =
+  ApiProcessStakeholderActionRouteImport.update({
+    id: '/api/process-stakeholder-action',
+    path: '/api/process-stakeholder-action',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMayaAskRoute = ApiMayaAskRouteImport.update({
   id: '/api/maya-ask',
   path: '/api/maya-ask',
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/process-stakeholder-action': typeof ApiProcessStakeholderActionRoute
   '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
@@ -152,6 +160,7 @@ export interface FileRoutesByTo {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/process-stakeholder-action': typeof ApiProcessStakeholderActionRoute
   '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/exam/history': typeof AuthenticatedExamHistoryRoute
@@ -173,6 +182,7 @@ export interface FileRoutesById {
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
+  '/api/process-stakeholder-action': typeof ApiProcessStakeholderActionRoute
   '/api/sim-stakeholder': typeof ApiSimStakeholderRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/_authenticated/exam/history': typeof AuthenticatedExamHistoryRoute
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/process-stakeholder-action'
     | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/process-stakeholder-action'
     | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/exam/history'
@@ -233,6 +245,7 @@ export interface FileRouteTypes {
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
+    | '/api/process-stakeholder-action'
     | '/api/sim-stakeholder'
     | '/checkout/return'
     | '/_authenticated/exam/history'
@@ -251,6 +264,7 @@ export interface RootRouteChildren {
   ApiCoachRoute: typeof ApiCoachRoute
   ApiExamCoachRoute: typeof ApiExamCoachRoute
   ApiMayaAskRoute: typeof ApiMayaAskRoute
+  ApiProcessStakeholderActionRoute: typeof ApiProcessStakeholderActionRoute
   ApiSimStakeholderRoute: typeof ApiSimStakeholderRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -298,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/api/sim-stakeholder'
       fullPath: '/api/sim-stakeholder'
       preLoaderRoute: typeof ApiSimStakeholderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/process-stakeholder-action': {
+      id: '/api/process-stakeholder-action'
+      path: '/api/process-stakeholder-action'
+      fullPath: '/api/process-stakeholder-action'
+      preLoaderRoute: typeof ApiProcessStakeholderActionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/maya-ask': {
@@ -420,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCoachRoute: ApiCoachRoute,
   ApiExamCoachRoute: ApiExamCoachRoute,
   ApiMayaAskRoute: ApiMayaAskRoute,
+  ApiProcessStakeholderActionRoute: ApiProcessStakeholderActionRoute,
   ApiSimStakeholderRoute: ApiSimStakeholderRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
