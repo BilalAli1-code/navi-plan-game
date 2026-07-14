@@ -293,9 +293,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   }, []);
 
   const submitDecision = useCallback(
-    (option: DecisionOption) => {
+    (option: DecisionOption, decisionId?: string) => {
       setState((s) => {
-        const dec = s.decisions.find((d) => d.id === s.activeDecisionId);
+        const targetId = decisionId ?? s.activeDecisionId;
+        const dec = s.decisions.find((d) => d.id === targetId);
         if (!dec) return s;
         // Prevent duplicate submission: same decision id landing twice.
         if (s.log.some((l) => l.decisionId === dec.id)) return s;
