@@ -353,7 +353,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
             console.error("Failed to update meeting event status:", err);
           });
         }
-      });
+      }
     },
     [state, saveDecisionFn, masteryFn, updateEventStatusFn],
   );
