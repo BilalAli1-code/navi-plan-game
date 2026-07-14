@@ -12,7 +12,7 @@ export function DecisionPanel({ decision }: { decision: Decision }) {
     : null;
 
   function pick(o: DecisionOption) {
-    submitDecision(o);
+    submitDecision(o, decision.id);
   }
 
   return (
