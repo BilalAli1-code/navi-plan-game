@@ -1,7 +1,7 @@
 // Industry-aware risk and conflict catalogs with layered resolution.
 
 import { z } from "zod";
-import type { SimPhase, DeliveryApproach, MetricImpact, EcoDomain } from "./types";
+import type { SimPhase, DeliveryApproach, MetricImpact, EcoDomain } from "../types";
 
 /**
  * Risk catalog entry: describes an identifiable risk event with outcomes.

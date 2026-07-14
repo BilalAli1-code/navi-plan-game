@@ -17,12 +17,14 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type MasteryUpdate = {
   topic: string;                 // canonical topic label (unique key)
-  score: number;                 // 0-100 for this activity
+  score?: number;                // 0-100 for this activity (derived from deltaXp when omitted)
   pmbokDomain?: string | null;
   pmbokPrinciple?: string | null;
   ecoDomain?: string | null;
   competency?: string | null;
   difficulty?: "easy" | "medium" | "hard" | null;
+  deltaXp?: number;
+  noteTags?: string[];
 };
 
 const WINDOW = 10;
@@ -68,7 +70,7 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
       throw new Error("updates required");
     for (const u of i.updates) {
       if (!u.topic || typeof u.topic !== "string") throw new Error("topic required");
-      if (typeof u.score !== "number" || u.score < 0 || u.score > 100)
+      if (typeof (u.score ?? 0) !== "number" || (u.score ?? 0) < 0 || (u.score ?? 0) > 100)
         throw new Error("score must be 0-100");
     }
     return { updates: i.updates };
@@ -96,12 +98,12 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
       const prevTotal: number = Number(existing?.total_score ?? 0);
 
       const attempts = prevAttempts + 1;
-      const successful = prevSuccess + (u.score >= 75 ? 1 : 0);
-      const consecutive_correct = u.score >= 75 ? prevStreakOK + 1 : 0;
-      const consecutive_wrong = u.score < 40 ? prevStreakBad + 1 : 0;
+      const successful = prevSuccess + ((u.score ?? 0) >= 75 ? 1 : 0);
+      const consecutive_correct = (u.score ?? 0) >= 75 ? prevStreakOK + 1 : 0;
+      const consecutive_wrong = (u.score ?? 0) < 40 ? prevStreakBad + 1 : 0;
       const { mastery, recent } = computeMastery(
         prevRecent,
-        u.score,
+        (u.score ?? 0),
         attempts,
         u.difficulty ?? null,
       );
@@ -120,7 +122,7 @@ export const applyMasteryUpdates = createServerFn({ method: "POST" })
         difficulty: u.difficulty ?? existing?.difficulty ?? null,
         attempts,
         successful_decisions: successful,
-        total_score: prevTotal + u.score,
+        total_score: prevTotal + (u.score ?? 0),
         recent_scores: recent,
         consecutive_correct,
         consecutive_wrong,

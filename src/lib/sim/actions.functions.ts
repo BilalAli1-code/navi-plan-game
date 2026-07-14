@@ -218,10 +218,10 @@ export const processAction = createServerFn({ method: "POST" })
       const prevTotal: number = Number(existing?.total_score ?? 0);
 
       const attempts = prevAttempts + 1;
-      const successful = prevSuccess + (u.score >= 75 ? 1 : 0);
-      const consecutive_correct = u.score >= 75 ? prevStreakOK + 1 : 0;
-      const consecutive_wrong = u.score < 40 ? prevStreakBad + 1 : 0;
-      const { mastery, recent } = computeMastery(prevRecent, u.score, attempts, u.difficulty ?? null);
+      const successful = prevSuccess + ((u.score ?? 0) >= 75 ? 1 : 0);
+      const consecutive_correct = (u.score ?? 0) >= 75 ? prevStreakOK + 1 : 0;
+      const consecutive_wrong = (u.score ?? 0) < 40 ? prevStreakBad + 1 : 0;
+      const { mastery, recent } = computeMastery(prevRecent, (u.score ?? 0), attempts, u.difficulty ?? null);
       const is_mastered = mastery >= 85 && attempts >= 3 && consecutive_correct >= 3;
       const is_development_area =
         (mastery < 40 && attempts >= 2) || consecutive_wrong >= 3;
@@ -239,7 +239,7 @@ export const processAction = createServerFn({ method: "POST" })
             difficulty: u.difficulty ?? existing?.difficulty ?? null,
             attempts,
             successful_decisions: successful,
-            total_score: prevTotal + u.score,
+            total_score: prevTotal + (u.score ?? 0),
             recent_scores: recent,
             consecutive_correct,
             consecutive_wrong,
