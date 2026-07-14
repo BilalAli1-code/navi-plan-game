@@ -24,6 +24,7 @@ export type MasteryUpdate = {
   competency?: string | null;
   difficulty?: "easy" | "medium" | "hard" | null;
   deltaXp?: number;
+  noteTags?: string[];
 };
 
 const WINDOW = 10;
