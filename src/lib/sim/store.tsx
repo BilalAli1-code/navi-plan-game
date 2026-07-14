@@ -169,7 +169,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           s.completedMinutes === minutes ? s : { ...s, completedMinutes: minutes },
         );
         return { done, minutes };
-      } catch {
+      } catch (err) {
+        console.error("Failed to refresh days:", err);
         return null;
       }
     },
@@ -189,7 +190,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (res.run?.snapshot) {
           runIdRef.current = res.run.id;
           setRunId(res.run.id);
-          void refreshDays(res.run.id);
+          refreshDays(res.run.id).catch((err) => {
+            console.error("Failed to load days during rehydration:", err);
+          });
           setState(rehydrate(caseId, res.run.snapshot));
           setSaveStatus("saved");
           setHydrating(false);
@@ -213,8 +216,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           }
         }
         setState(bootstrap(caseId));
-      } catch {
+      } catch (err) {
         // Supabase unreachable — fall back to local snapshot if any.
+        console.error("Failed to load run during hydration:", err);
         const local = readLocal(caseId);
         setState(local ? rehydrate(caseId, local) : bootstrap(caseId));
         setSaveStatus("offline");
@@ -257,14 +261,17 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         // First time we have a runId — publish generator content as events.
         void syncEventsFn({
           data: { runId: res.runId, events: eventsFromState(next) },
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error("Failed to sync events:", err);
+        });
       }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => {
         setSaveStatus((s) => (s === "saved" ? "idle" : s));
       }, 2000);
-    } catch {
+    } catch (err) {
+      console.error("Failed to flush state to server:", err);
       setSaveStatus("offline");
       // Retry later — either on next state change, or after a short backoff.
       pendingRef.current = pendingRef.current ?? next;
@@ -313,23 +320,33 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
               },
               eventId: dec.sourceId ?? null,
             },
-          }).catch(() => {});
+          }).catch((err) => {
+            console.error("Failed to save decision:", err);
+          });
           // Update mastery via the shared service.
           void masteryFn({
             data: { updates: [decisionMasteryDelta(dec, option)] },
-          }).catch(() => {});
+          }).catch((err) => {
+            console.error("Failed to update mastery:", err);
+          });
           // Mark decision event as responded, and the source (email/meeting) too.
           void updateEventStatusFn({
             data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
-          }).catch(() => {});
+          }).catch((err) => {
+            console.error("Failed to update decision event status:", err);
+          });
           if (dec.source === "email") {
             void updateEventStatusFn({
               data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
-            }).catch(() => {});
+            }).catch((err) => {
+              console.error("Failed to update email event status:", err);
+            });
           } else if (dec.source === "meeting") {
             void updateEventStatusFn({
               data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
-            }).catch(() => {});
+            }).catch((err) => {
+              console.error("Failed to update meeting event status:", err);
+            });
           }
         }
         return next;
@@ -357,12 +374,16 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       // Mastery: record tailoring as a scored activity.
       void masteryFn({
         data: { updates: [tailoringMasteryDelta(percent)] },
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error("Failed to record tailoring mastery:", err);
+      });
       const rid = runIdRef.current;
       if (rid) {
         void updateEventStatusFn({
           data: { runId: rid, eventKey: "activity:tailoring", status: "completed" },
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error("Failed to update tailoring event status:", err);
+        });
       }
     },
     [masteryFn, updateEventStatusFn],
@@ -384,7 +405,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           : `email:${id}`;
         void updateEventStatusFn({
           data: { runId: rid, eventKey: key, status: "viewed" },
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error("Failed to mark email as viewed:", err);
+        });
       }
     },
     [state.emails, updateEventStatusFn],
@@ -402,7 +425,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const pause = useCallback(() => {
     if (!runIdRef.current) return;
-    void setStatusFn({ data: { runId: runIdRef.current, status: "paused" } }).catch(() => {});
+    void setStatusFn({ data: { runId: runIdRef.current, status: "paused" } }).catch((err) => {
+      console.error("Failed to pause run:", err);
+    });
   }, [setStatusFn]);
 
   const completeActivity = useCallback(
@@ -448,14 +473,14 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
             eventKey: `activity:day-${day}:${activity}`,
             status: "completed",
           },
-        }).catch(() => {});
-      } catch {
+        }).catch((err) => {
+          console.error("Failed to update activity event status:", err);
+        });
+      } catch (err) {
+        console.error("Failed to complete activity:", err);
         /* offline; day snapshot save will still capture progress */
       } finally {
         const result = await refreshDays(rid);
-        // If this activity just closed out a full day, log day mastery.
-        const dayRow = (result as unknown) ? undefined : undefined; // unused
-        void dayRow;
         // Re-inspect days state after refresh.
         setDays((cur) => {
           const done = cur.find((d) => d.day_number === day);
@@ -463,7 +488,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
             const def = getDay(day);
             void masteryFn({
               data: { updates: [dayCompletionMasteryDelta(day, def.phase)] },
-            }).catch(() => {});
+            }).catch((err) => {
+              console.error("Failed to record day completion mastery:", err);
+            });
           }
           return cur;
         });
@@ -476,7 +503,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     (day: number) => {
       setState((s) => ({ ...s, currentDay: day }));
       const rid = runIdRef.current;
-      if (rid) void setDayFn({ data: { runId: rid, dayNumber: day } }).catch(() => {});
+      if (rid) void setDayFn({ data: { runId: rid, dayNumber: day } }).catch((err) => {
+        console.error("Failed to set current day:", err);
+      });
     },
     [setDayFn],
   );
@@ -501,7 +530,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         (payload.keyLearning?.length ?? 0);
       void masteryFn({
         data: { updates: [reflectionMasteryDelta(chars)] },
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error("Failed to record reflection mastery:", err);
+      });
       await completeActivity(day, "reflection");
     },
     [saveReflectionSrv, completeActivity, masteryFn],
@@ -519,7 +550,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           what_would_change: string | null;
           key_learning: string | null;
         } | null);
-      } catch {
+      } catch (err) {
+        console.error("Failed to load reflection:", err);
         return null;
       }
     },

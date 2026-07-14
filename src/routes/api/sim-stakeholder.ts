@@ -18,9 +18,15 @@ export const Route = createFileRoute("/api/sim-stakeholder")({
     handlers: {
       POST: async ({ request }) => {
         const body = (await request.json()) as Body;
+        
+        // Validate required fields
         if (!body?.question?.trim()) {
           return new Response("Missing question", { status: 400 });
         }
+        if (!body?.stakeholderName || !body?.stakeholderRole || !body?.projectName) {
+          return new Response("Missing stakeholder context", { status: 400 });
+        }
+        
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
@@ -47,6 +53,7 @@ Rules:
           return result.toTextStreamResponse();
         } catch (err) {
           const message = err instanceof Error ? err.message : "Stakeholder unavailable";
+          console.error("Stakeholder API error:", err);
           return new Response(message, { status: 500 });
         }
       },
