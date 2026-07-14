@@ -22,6 +22,15 @@ export const Route = createFileRoute("/api/exam-coach")({
     handlers: {
       POST: async ({ request }) => {
         const body = (await request.json()) as CoachRequest;
+        
+        // Validate required fields
+        if (!body?.question?.trim()) {
+          return new Response("Missing question", { status: 400 });
+        }
+        if (!body?.report) {
+          return new Response("Missing report context", { status: 400 });
+        }
+        
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
@@ -41,8 +50,8 @@ Be specific to their weakest topics. No fluff.`;
         const prompt = `Learner exam report:
 - Overall: ${body.report.overallPercent}% (${body.report.readiness}, est. pass probability ${body.report.passProbability}%)
 - Domain scores: ${body.report.domainScores.map((d) => `${d.domain} ${d.percent}%`).join(", ")}
-- Weakest topics: ${body.report.weakestTopics.join(", ") || "n/a"}
-- Strongest topics: ${body.report.strongestTopics.join(", ") || "n/a"}
+- Weakest topics: ${(body.report.weakestTopics ?? []).join(", ") || "n/a"}
+- Strongest topics: ${(body.report.strongestTopics ?? []).join(", ") || "n/a"}
 - Avg time per question: ${(body.report.avgTimePerQuestionMs / 1000).toFixed(1)}s
 
 Learner question: ${body.question}`;
@@ -52,6 +61,7 @@ Learner question: ${body.question}`;
           return Response.json({ text });
         } catch (err) {
           const message = err instanceof Error ? err.message : "Coach unavailable";
+          console.error("Exam coach error:", err);
           return new Response(message, { status: 500 });
         }
       },
