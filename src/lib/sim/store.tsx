@@ -294,66 +294,68 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const submitDecision = useCallback(
     (option: DecisionOption, decisionId?: string) => {
-      setState((s) => {
-        const targetId = decisionId ?? s.activeDecisionId;
-        const dec = s.decisions.find((d) => d.id === targetId);
-        if (!dec) return s;
-        // Prevent duplicate submission: same decision id landing twice.
-        if (s.log.some((l) => l.decisionId === dec.id)) return s;
-        if (lastDecisionKeyRef.current === dec.id) return s;
-        lastDecisionKeyRef.current = dec.id;
-        const next = commitDecision(s, dec, option);
-        const rid = runIdRef.current;
-        if (rid) {
-          // Persist the decision row.
-          void saveDecisionFn({
-            data: {
-              runId: rid,
-              decisionId: dec.id,
-              phase: s.phase,
-              selectedOptionId: option.id,
-              selectedOptionText: option.label,
-              metricImpacts: option.impact as Record<string, number>,
-              mentorFeedback: {
-                pmiPrinciple: option.pmiPrinciple,
-                quality: option.quality,
-                consequence: option.consequence,
-              },
-              eventId: dec.sourceId ?? null,
+      const targetId = decisionId ?? state.activeDecisionId;
+      const dec = state.decisions.find((d) => d.id === targetId);
+      if (!dec) return;
+      // Prevent duplicate submissions without mutating inside the React state updater.
+      // Dev Strict Mode may invoke updater functions twice; keeping this side-effect
+      // outside the updater prevents the second invocation from cancelling the choice.
+      if (state.log.some((l) => l.decisionId === dec.id)) return;
+      if (lastDecisionKeyRef.current === dec.id) return;
+      lastDecisionKeyRef.current = dec.id;
+
+      const next = commitDecision(state, dec, option);
+      setState(next);
+
+      const rid = runIdRef.current;
+      if (rid) {
+        // Persist the decision row.
+        void saveDecisionFn({
+          data: {
+            runId: rid,
+            decisionId: dec.id,
+            phase: state.phase,
+            selectedOptionId: option.id,
+            selectedOptionText: option.label,
+            metricImpacts: option.impact as Record<string, number>,
+            mentorFeedback: {
+              pmiPrinciple: option.pmiPrinciple,
+              quality: option.quality,
+              consequence: option.consequence,
             },
-          }).catch((err) => {
-            console.error("Failed to save decision:", err);
-          });
-          // Update mastery via the shared service.
-          void masteryFn({
-            data: { updates: [decisionMasteryDelta(dec, option)] },
-          }).catch((err) => {
-            console.error("Failed to update mastery:", err);
-          });
-          // Mark decision event as responded, and the source (email/meeting) too.
+            eventId: dec.sourceId ?? null,
+          },
+        }).catch((err) => {
+          console.error("Failed to save decision:", err);
+        });
+        // Update mastery via the shared service.
+        void masteryFn({
+          data: { updates: [decisionMasteryDelta(dec, option)] },
+        }).catch((err) => {
+          console.error("Failed to update mastery:", err);
+        });
+        // Mark decision event as responded, and the source (email/meeting) too.
+        void updateEventStatusFn({
+          data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
+        }).catch((err) => {
+          console.error("Failed to update decision event status:", err);
+        });
+        if (dec.source === "email") {
           void updateEventStatusFn({
-            data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
+            data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
           }).catch((err) => {
-            console.error("Failed to update decision event status:", err);
+            console.error("Failed to update email event status:", err);
           });
-          if (dec.source === "email") {
-            void updateEventStatusFn({
-              data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
-            }).catch((err) => {
-              console.error("Failed to update email event status:", err);
-            });
-          } else if (dec.source === "meeting") {
-            void updateEventStatusFn({
-              data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
-            }).catch((err) => {
-              console.error("Failed to update meeting event status:", err);
-            });
-          }
+        } else if (dec.source === "meeting") {
+          void updateEventStatusFn({
+            data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
+          }).catch((err) => {
+            console.error("Failed to update meeting event status:", err);
+          });
         }
-        return next;
-      });
+      }
     },
-    [saveDecisionFn, masteryFn, updateEventStatusFn],
+    [state, saveDecisionFn, masteryFn, updateEventStatusFn],
   );
 
   const submitTailoring = useCallback(
