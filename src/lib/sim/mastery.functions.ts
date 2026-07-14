@@ -17,7 +17,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type MasteryUpdate = {
   topic: string;                 // canonical topic label (unique key)
-  score: number;                 // 0-100 for this activity
+  score?: number;                // 0-100 for this activity (derived from deltaXp when omitted)
   pmbokDomain?: string | null;
   pmbokPrinciple?: string | null;
   ecoDomain?: string | null;
