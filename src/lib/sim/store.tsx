@@ -100,7 +100,7 @@ type Ctx = {
   state: SimState;
   activeDecision: Decision | null;
   setActiveDecision: (id: string | null) => void;
-  submitDecision: (option: DecisionOption) => void;
+  submitDecision: (option: DecisionOption, decisionId?: string) => void;
   submitTailoring: (answers: TailoringAnswers, approach: DeliveryApproach) => void;
   markEmailRead: (id: string) => void;
   reset: () => void;
