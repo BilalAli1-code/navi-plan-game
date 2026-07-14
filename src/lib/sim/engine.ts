@@ -71,7 +71,7 @@ export function commitDecision(
     metrics,
     log: [...state.log, entry],
     xp: state.xp + xpDelta,
-    activeDecisionId: null,
+    activeDecisionId: decision.id,
     lastConsequence: option.consequence,
     emails: state.emails.map((e) =>
       e.unlocksDecisionId === decision.id ? { ...e, read: true } : e,
