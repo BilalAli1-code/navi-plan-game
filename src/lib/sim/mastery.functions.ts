@@ -23,6 +23,7 @@ export type MasteryUpdate = {
   ecoDomain?: string | null;
   competency?: string | null;
   difficulty?: "easy" | "medium" | "hard" | null;
+  deltaXp?: number;
 };
 
 const WINDOW = 10;
