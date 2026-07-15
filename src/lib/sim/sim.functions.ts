@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCaseAccess, requireRunAccess } from "@/lib/billing/entitlement.server";
 import type { Json } from "@/integrations/supabase/types";
 import type { SimState } from "./types";
 
@@ -48,6 +49,7 @@ export const loadRun = createServerFn({ method: "POST" })
     return { caseId: i.caseId };
   })
   .handler(async ({ data, context }) => {
+    await requireCaseAccess(context.supabase, context.userId, data.caseId);
     const { data: rows, error } = await context.supabase
       .from("simulation_runs")
       .select("id, state_snapshot, status")
@@ -71,6 +73,7 @@ export const saveRun = createServerFn({ method: "POST" })
     return { runId: i.runId ?? null, state: i.state };
   })
   .handler(async ({ data, context }) => {
+    await requireCaseAccess(context.supabase, context.userId, data.state.caseId);
     const row = { ...metricRow(data.state), user_id: context.userId };
     if (data.runId) {
       const { error } = await context.supabase
@@ -117,6 +120,7 @@ export const saveDecision = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { error } = await context.supabase.from("simulation_decisions").upsert(
       {
         run_id: data.runId,
@@ -145,6 +149,7 @@ export const setRunStatus = createServerFn({ method: "POST" })
     return { runId: i.runId, status: i.status };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const patch = {
       status: data.status,
       last_activity_at: new Date().toISOString(),

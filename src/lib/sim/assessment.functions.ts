@@ -21,6 +21,7 @@ export const getFinalAssessment = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "full_assessment");
     const { data: row } = await db
       .from("final_assessments")
       .select("*")
@@ -40,7 +41,6 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
     await requireFeature(db, context.userId, "full_assessment");
-
 
     const { data: existing } = await db
       .from("final_assessments")
@@ -146,7 +146,9 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
     try {
       report = await generateFinalReport(payload, run.case_id);
     } catch (err) {
-      throw new Error(`Assessment generation failed: ${err instanceof Error ? err.message : "unknown"}`);
+      throw new Error(
+        `Assessment generation failed: ${err instanceof Error ? err.message : "unknown"}`,
+      );
     }
 
     const row = {

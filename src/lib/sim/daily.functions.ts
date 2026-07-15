@@ -3,6 +3,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireRunAccess } from "@/lib/billing/entitlement.server";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { DAY_PLAN, DAILY_MINUTES, REQUIRED_ACTIVITIES, type DayActivityKey } from "./days";
 
@@ -44,6 +45,7 @@ export const listDailyProgress = createServerFn({ method: "POST" })
     return { runId: i.runId };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { data: existing, error } = await context.supabase
       .from("daily_progress")
       .select("*")
@@ -82,11 +84,13 @@ export const completeDayActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
     const i = input as { runId?: string; dayNumber?: number; activity?: DayActivityKey };
-    if (!i?.runId || !i?.dayNumber || !i?.activity) throw new Error("runId/dayNumber/activity required");
+    if (!i?.runId || !i?.dayNumber || !i?.activity)
+      throw new Error("runId/dayNumber/activity required");
     if (!REQUIRED_ACTIVITIES.includes(i.activity)) throw new Error("invalid activity");
     return { runId: i.runId, dayNumber: i.dayNumber, activity: i.activity };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { data: rows, error: fetchErr } = await context.supabase
       .from("daily_progress")
       .select("*")
@@ -115,7 +119,9 @@ export const completeDayActivity = createServerFn({ method: "POST" })
     flags[data.activity] = true;
     const completed = REQUIRED_ACTIVITIES.filter((a) => flags[a]).length;
     updated.completion_percentage = Math.round((completed / REQUIRED_ACTIVITIES.length) * 100);
-    updated.completed_minutes = Math.round((completed / REQUIRED_ACTIVITIES.length) * DAILY_MINUTES);
+    updated.completed_minutes = Math.round(
+      (completed / REQUIRED_ACTIVITIES.length) * DAILY_MINUTES,
+    );
     const allDone = completed === REQUIRED_ACTIVITIES.length;
     updated.status = allDone ? "completed" : "in_progress";
     if (row.started_at == null) updated.started_at = new Date().toISOString();
@@ -150,6 +156,7 @@ export const setCurrentDay = createServerFn({ method: "POST" })
     return { runId: i.runId, dayNumber: i.dayNumber };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { error } = await context.supabase
       .from("simulation_runs")
       .update({ current_day: data.dayNumber, last_activity_at: new Date().toISOString() })
@@ -182,6 +189,7 @@ export const saveReflection = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { error } = await context.supabase.from("daily_reflections").upsert(
       {
         run_id: data.runId,
@@ -206,6 +214,7 @@ export const getReflection = createServerFn({ method: "POST" })
     return { runId: i.runId, dayNumber: i.dayNumber };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { data: rows, error } = await context.supabase
       .from("daily_reflections")
       .select("*")

@@ -22,8 +22,6 @@ export const startPracticeSession = createServerFn({ method: "POST" })
     const db = context.supabase;
     await requireFeature(db, context.userId, "adaptive_practice");
 
-
-
     const { data: existing } = await db
       .from("practice_sessions")
       .select("*")
@@ -77,10 +75,15 @@ export const submitPracticeAnswer = createServerFn({ method: "POST" })
     const i = input as { sessionId?: string; questionId?: string; selectedOptionId?: string };
     if (!i?.sessionId || !i?.questionId || !i?.selectedOptionId)
       throw new Error("sessionId/questionId/selectedOptionId required");
-    return { sessionId: i.sessionId, questionId: i.questionId, selectedOptionId: i.selectedOptionId };
+    return {
+      sessionId: i.sessionId,
+      questionId: i.questionId,
+      selectedOptionId: i.selectedOptionId,
+    };
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "adaptive_practice");
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
@@ -146,6 +149,7 @@ export const completePracticeSession = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "adaptive_practice");
     const { data: session, error: sErr } = await db
       .from("practice_sessions")
       .select("*")
@@ -235,7 +239,8 @@ export const completePracticeSession = createServerFn({ method: "POST" })
       const attemptsN = prevAttempts + 1;
       const recent = [...prevRecent, score].slice(-10);
       const n = recent.length;
-      let num = 0, den = 0;
+      let num = 0,
+        den = 0;
       recent.forEach((s, i) => {
         const w = 1 + i * (2 / Math.max(n - 1, 1));
         num += s * w;
@@ -268,7 +273,7 @@ export const completePracticeSession = createServerFn({ method: "POST" })
             consecutive_wrong,
             mastery_score: masteryScore,
             is_mastered: isMastered,
-            mastered_at: isMastered ? existing?.mastered_at ?? now2 : null,
+            mastered_at: isMastered ? (existing?.mastered_at ?? now2) : null,
             is_development_area: (masteryScore < 40 && attemptsN >= 2) || consecutive_wrong >= 3,
             last_practiced_at: now2,
           },
@@ -359,6 +364,7 @@ export const getPracticeSession = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "adaptive_practice");
     const { data: rows } = await db
       .from("practice_sessions")
       .select("*")
