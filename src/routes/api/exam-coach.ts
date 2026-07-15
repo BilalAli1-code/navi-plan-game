@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { authenticateRequest, requireFeature } from "@/lib/billing/entitlement.server";
 
 type ReportContext = {
   overallPercent: number;
@@ -21,6 +22,10 @@ export const Route = createFileRoute("/api/exam-coach")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await authenticateRequest(request);
+        if (!auth) return new Response("Unauthorized", { status: 401 });
+        try { await requireFeature(auth.supabase, auth.userId, "ai_coach"); }
+        catch (r) { if (r instanceof Response) return r; throw r; }
         const body = (await request.json()) as CoachRequest;
         
         // Validate required fields
