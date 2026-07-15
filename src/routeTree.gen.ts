@@ -19,6 +19,7 @@ import { Route as ApiProcessStakeholderActionRouteImport } from './routes/api/pr
 import { Route as ApiMayaAskRouteImport } from './routes/api/maya-ask'
 import { Route as ApiExamCoachRouteImport } from './routes/api/exam-coach'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 import { Route as AuthenticatedPerformanceRouteImport } from './routes/_authenticated/performance'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -79,6 +80,11 @@ const ApiCoachRoute = ApiCoachRouteImport.update({
   path: '/api/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlayRoute = AuthenticatedPlayRouteImport.update({
   id: '/play',
   path: '/play',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/performance': typeof AuthenticatedPerformanceRoute
   '/play': typeof AuthenticatedPlayRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/performance': typeof AuthenticatedPerformanceRoute
   '/_authenticated/play': typeof AuthenticatedPlayRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/api/coach': typeof ApiCoachRoute
   '/api/exam-coach': typeof ApiExamCoachRoute
   '/api/maya-ask': typeof ApiMayaAskRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/performance'
     | '/play'
+    | '/team'
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/performance'
     | '/play'
+    | '/team'
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/performance'
     | '/_authenticated/play'
+    | '/_authenticated/team'
     | '/api/coach'
     | '/api/exam-coach'
     | '/api/maya-ask'
@@ -342,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/play': {
       id: '/_authenticated/play'
       path: '/play'
@@ -412,6 +431,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedPerformanceRoute: typeof AuthenticatedPerformanceRoute
   AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedExamHistoryRoute: typeof AuthenticatedExamHistoryRoute
   AuthenticatedExamSessionRoute: typeof AuthenticatedExamSessionRoute
   AuthenticatedSimCaseIdRoute: typeof AuthenticatedSimCaseIdRoute
@@ -423,6 +443,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedPerformanceRoute: AuthenticatedPerformanceRoute,
   AuthenticatedPlayRoute: AuthenticatedPlayRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedExamHistoryRoute: AuthenticatedExamHistoryRoute,
   AuthenticatedExamSessionRoute: AuthenticatedExamSessionRoute,
   AuthenticatedSimCaseIdRoute: AuthenticatedSimCaseIdRoute,

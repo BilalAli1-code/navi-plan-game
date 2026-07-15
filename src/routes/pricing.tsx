@@ -6,7 +6,6 @@ import { PaymentTestModeBanner } from '@/components/PaymentTestModeBanner';
 import { AppShell } from '@/components/app-shell';
 import { useSubscription } from '@/hooks/useSubscription';
 import { createPortalSession } from '@/utils/payments.functions';
-import { getStripeEnvironment } from '@/lib/stripe';
 import { toast } from 'sonner';
 import { Check, X, ArrowRight } from 'lucide-react';
 
@@ -110,7 +109,7 @@ function PricingPage() {
   const openPortal = async () => {
     try {
       const result = await createPortalSession({
-        data: { environment: getStripeEnvironment(), returnUrl: window.location.href },
+        data: { returnUrl: window.location.href },
       });
       if ('error' in result) throw new Error(result.error);
       window.open(result.url, '_blank');
