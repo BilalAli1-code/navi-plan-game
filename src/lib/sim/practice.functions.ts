@@ -5,6 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireFeature } from "@/lib/billing/entitlement.server";
 import type { Json } from "@/integrations/supabase/types";
 import type { PracticeQuestion } from "./practice.server";
 
@@ -19,6 +20,8 @@ export const startPracticeSession = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "adaptive_practice");
+
 
 
     const { data: existing } = await db

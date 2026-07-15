@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { type StripeEnv, createStripeClient, getStripeErrorMessage } from '@/lib/stripe.server';
+import { createStripeClient, getStripeErrorMessage } from '@/lib/stripe.server';
+import { resolveStripeEnv } from '@/lib/stripe.env.server';
+import { PRICE_LOOKUP_ALLOWLIST, priceMetaFor } from '@/lib/billing/entitlements';
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
@@ -40,44 +42,60 @@ async function resolveOrCreateCustomer(
 
 export const createCheckoutSession = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: {
-    priceId: string;
-    returnUrl: string;
-    environment: StripeEnv;
-  }) => {
+  .inputValidator((data: { priceId: string; returnUrl: string; seats?: number }) => {
     if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error('Invalid priceId');
-    return data;
+    if (!(data.priceId in PRICE_LOOKUP_ALLOWLIST)) throw new Error('Unknown plan');
+    if (typeof data.returnUrl !== 'string' || !/^https?:\/\//.test(data.returnUrl)) {
+      throw new Error('Invalid returnUrl');
+    }
+    if (data.seats != null && (!Number.isInteger(data.seats) || data.seats < 1 || data.seats > 50)) {
+      throw new Error('seats must be 1-50');
+    }
+    return { priceId: data.priceId, returnUrl: data.returnUrl, seats: data.seats };
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
-      const stripe = createStripeClient(data.environment);
+      const env = resolveStripeEnv();
+      const stripe = createStripeClient(env);
       const { userId, supabase } = context;
       const { data: userData } = await supabase.auth.getUser();
       const email = userData.user?.email ?? undefined;
 
+      const meta = priceMetaFor(data.priceId);
+      if (!meta) return { error: 'Unknown plan' };
+
+      // Seats: required (>=2) for team plans, ignored otherwise.
+      let quantity = 1;
+      if (meta.seatBased) {
+        quantity = Math.max(2, Math.min(50, data.seats ?? 2));
+      }
+
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      if (!prices.data.length) throw new Error('Price not found');
+      if (!prices.data.length) return { error: 'Price not configured in Stripe' };
       const stripePrice = prices.data[0];
       const isRecurring = stripePrice.type === 'recurring';
 
       const customerId = await resolveOrCreateCustomer(stripe, { email, userId });
 
-      const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: 1 }],
+      const sessionParams: any = {
+        line_items: [{ price: stripePrice.id, quantity }],
         mode: isRecurring ? 'subscription' : 'payment',
         ui_mode: 'embedded_page',
         return_url: data.returnUrl,
         customer: customerId,
-        metadata: { userId },
-        ...(isRecurring && {
-          subscription_data: {
-            metadata: { userId },
-            trial_period_days: 7,
-          },
-        }),
+        metadata: { userId, tier: meta.tier, plan: data.priceId },
         managed_payments: { enabled: true },
-      } as any);
+      };
 
+      if (isRecurring) {
+        sessionParams.subscription_data = {
+          metadata: { userId, tier: meta.tier, plan: data.priceId, seats: String(quantity) },
+          // Trial ONLY on Pro plans.
+          ...(meta.trialDays ? { trial_period_days: meta.trialDays } : {}),
+        };
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
       return { clientSecret: session.client_secret ?? '' };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
@@ -86,28 +104,81 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
 
 export const createPortalSession = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
+  .inputValidator((data: { returnUrl?: string }) => data ?? {})
   .handler(async ({ data, context }): Promise<PortalSessionResult> => {
     const { supabase, userId } = context;
+    const env = resolveStripeEnv();
 
     const { data: sub, error: subError } = await supabase
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', userId)
-      .eq('environment', data.environment)
+      .eq('environment', env)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (subError || !sub?.stripe_customer_id) return { error: 'No subscription found' };
 
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(env);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
-        ...(data.returnUrl && { return_url: data.returnUrl }),
+        ...(data?.returnUrl && { return_url: data.returnUrl }),
       });
       return { url: portal.url };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+/**
+ * Post-checkout verification. The return page calls this so we don't rely
+ * on the URL parameter alone to claim the user is subscribed.
+ */
+export const verifyCheckoutSession = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { sessionId: string }) => {
+    if (!data?.sessionId || !/^cs_[a-zA-Z0-9_]+$/.test(data.sessionId)) {
+      throw new Error('Invalid sessionId');
+    }
+    return { sessionId: data.sessionId };
+  })
+  .handler(async ({ data, context }): Promise<
+    | { ok: true; tier: string; planName: string; status: string }
+    | { ok: false; reason: string }
+  > => {
+    try {
+      const env = resolveStripeEnv();
+      const stripe = createStripeClient(env);
+      const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
+        expand: ['subscription', 'customer'],
+      });
+
+      // Must belong to the caller.
+      const customer = typeof session.customer === 'string'
+        ? await stripe.customers.retrieve(session.customer)
+        : session.customer;
+      const customerUserId =
+        customer && !('deleted' in customer && customer.deleted)
+          ? (customer as any).metadata?.userId
+          : undefined;
+      if (customerUserId !== context.userId) {
+        return { ok: false, reason: 'Session does not belong to current user' };
+      }
+
+      const sub: any = session.subscription;
+      const priceKey =
+        sub?.items?.data?.[0]?.price?.lookup_key
+        ?? session.metadata?.plan
+        ?? '';
+      const meta = priceMetaFor(priceKey);
+      const tier = meta?.tier ?? 'free';
+      const planName = meta?.displayName ?? priceKey ?? 'Plan';
+      const status = sub?.status ?? session.payment_status ?? 'unknown';
+      const ok = ['active', 'trialing', 'paid', 'complete'].includes(status)
+        || (sub && ['active', 'trialing'].includes(sub.status));
+      return ok ? { ok: true, tier, planName, status } : { ok: false, reason: `Status: ${status}` };
+    } catch (error) {
+      return { ok: false, reason: getStripeErrorMessage(error) };
     }
   });
