@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getStripeEnvironment } from '@/lib/stripe';
 
 export interface SubscriptionRow {
   id: string;
@@ -21,16 +20,13 @@ export function useSubscription() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  const env = (() => {
-    try { return getStripeEnvironment(); } catch { return 'sandbox' as const; }
-  })();
-
+  // Row filtering: we accept whatever env the webhook wrote for THIS user.
+  // The server decides which env is live; the client just displays whatever exists.
   const refetch = async (uid: string) => {
     const { data } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', uid)
-      .eq('environment', env)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

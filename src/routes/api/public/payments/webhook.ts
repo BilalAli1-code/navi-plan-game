@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { createClient } from '@supabase/supabase-js';
 import { type StripeEnv, verifyWebhook } from '@/lib/stripe.server';
+import { priceMetaFor } from '@/lib/billing/entitlements';
 
 let _supabase: any = null;
 function getSupabase(): any {
@@ -24,24 +25,14 @@ async function sendWelcomeEmail(email: string, displayName: string | null) {
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'ProjectSim <onboarding@resend.dev>',
         to: [email],
         subject: 'Welcome to ProjectSim Pro 🚀',
         html: `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:auto;padding:24px;">
           <h1 style="margin:0 0 12px;">Welcome${displayName ? `, ${displayName}` : ''}!</h1>
-          <p>Your 7-day free trial of <strong>ProjectSim Pro</strong> is active. You've unlocked:</p>
-          <ul>
-            <li>All PMBOK 6 & 7 scenarios</li>
-            <li>AI PMP coach on every decision</li>
-            <li>+${WELCOME_XP_BONUS} XP welcome bonus (already added)</li>
-          </ul>
-          <p><a href="https://projectsim.app/play" style="display:inline-block;padding:10px 18px;background:#22d3ee;color:#0b1020;border-radius:8px;text-decoration:none;font-weight:700;">Start your next run</a></p>
-          <p style="color:#64748b;font-size:12px;">Cancel anytime from your billing portal — access continues until the period ends.</p>
+          <p>Your ProjectSim Pro subscription is active.</p>
         </div>`,
       }),
     });
@@ -51,38 +42,27 @@ async function sendWelcomeEmail(email: string, displayName: string | null) {
   }
 }
 
-async function grantWelcomeBonus(userId: string, subscriptionId: string, env: StripeEnv) {
+async function grantWelcomeBonusTransactional(subscriptionId: string, env: StripeEnv) {
   const sb = getSupabase();
-  // Atomically claim the bonus so we only ever grant it once per subscription row.
-  const { data: claim, error: claimErr } = await sb
-    .from('subscriptions')
-    .update({ welcome_bonus_granted: true, updated_at: new Date().toISOString() })
-    .eq('stripe_subscription_id', subscriptionId)
-    .eq('environment', env)
-    .eq('welcome_bonus_granted', false)
-    .select('user_id')
-    .maybeSingle();
-  if (claimErr || !claim) return;
+  const { data, error } = await sb.rpc('grant_welcome_bonus', {
+    _subscription_id: subscriptionId,
+    _env: env,
+    _bonus: WELCOME_XP_BONUS,
+  });
+  if (error) throw new Error(`grant_welcome_bonus failed: ${error.message}`);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.granted || !row?.user_id) return;
 
-  const { data: profile } = await sb
-    .from('profiles')
-    .select('total_xp, display_name')
-    .eq('id', userId)
-    .maybeSingle();
-  const currentXp = profile?.total_xp ?? 0;
-  await sb
-    .from('profiles')
-    .update({ total_xp: currentXp + WELCOME_XP_BONUS, updated_at: new Date().toISOString() })
-    .eq('id', userId);
-
-  const { data: userRes } = await sb.auth.admin.getUserById(userId);
+  // Best-effort side-effect: email. Not transactional with XP.
+  const { data: userRes } = await sb.auth.admin.getUserById(row.user_id);
   const email = userRes?.user?.email;
-  if (email) await sendWelcomeEmail(email, profile?.display_name ?? null);
+  if (email) await sendWelcomeEmail(email, row.display_name ?? null);
 }
 
 function extractRow(subscription: any, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
-  const priceId = item?.price?.lookup_key
+  const priceId =
+    item?.price?.lookup_key
     || item?.price?.metadata?.lovable_external_id
     || item?.price?.id;
   const productId = item?.price?.product;
@@ -102,42 +82,126 @@ function extractRow(subscription: any, env: StripeEnv) {
   };
 }
 
-async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
-  const userId = subscription.metadata?.userId;
-  if (!userId) { console.error('No userId in subscription metadata'); return; }
-  await getSupabase().from('subscriptions').upsert(
-    { user_id: userId, ...extractRow(subscription, env) },
+async function resolveUserIdForSubscription(subscription: any): Promise<string | null> {
+  const meta = subscription.metadata?.userId;
+  if (meta) return meta;
+  const sb = getSupabase();
+  const { data } = await sb
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', subscription.id)
+    .maybeSingle();
+  return data?.user_id ?? null;
+}
+
+async function upsertTeamRow(subscription: any, env: StripeEnv, userId: string) {
+  const item = subscription.items?.data?.[0];
+  const seats = item?.quantity ?? Number(subscription.metadata?.seats ?? 1);
+  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const sb = getSupabase();
+  const { error } = await sb.from('team_subscriptions').upsert(
+    {
+      stripe_subscription_id: subscription.id,
+      owner_user_id: userId,
+      environment: env,
+      seats,
+      status: subscription.status,
+      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    },
     { onConflict: 'stripe_subscription_id' },
   );
-  if (subscription.status === 'active' || subscription.status === 'trialing') {
-    await grantWelcomeBonus(userId, subscription.id, env);
-  }
+  if (error) throw new Error(`team_subscriptions upsert failed: ${error.message}`);
 }
 
-async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
+async function revokeTeamMemberships(subscriptionId: string) {
+  const sb = getSupabase();
+  const { data: team } = await sb
+    .from('team_subscriptions')
+    .select('id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle();
+  if (!team?.id) return;
+  const { error } = await sb
+    .from('team_memberships')
+    .update({ status: 'revoked' })
+    .eq('team_id', team.id);
+  if (error) throw new Error(`team_memberships revoke failed: ${error.message}`);
+}
+
+async function safeUpsertSubscription(subscription: any, env: StripeEnv) {
+  const userId = await resolveUserIdForSubscription(subscription);
+  if (!userId) throw new Error(`No userId resolvable for subscription ${subscription.id}`);
   const row = extractRow(subscription, env);
-  await getSupabase()
+  const sb = getSupabase();
+  const { error } = await sb
     .from('subscriptions')
-    .update(row)
-    .eq('stripe_subscription_id', subscription.id)
-    .eq('environment', env);
-  // If trial converted to active (or was activated late), grant bonus.
-  if (subscription.status === 'active' || subscription.status === 'trialing') {
-    const userId = subscription.metadata?.userId;
-    if (userId) await grantWelcomeBonus(userId, subscription.id, env);
+    .upsert({ user_id: userId, ...row }, { onConflict: 'stripe_subscription_id' });
+  if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
+
+  // Team-side mirror
+  const priceKey = row.price_id;
+  const meta = priceMetaFor(priceKey);
+  if (meta?.tier === 'team' && subscription.status !== 'canceled') {
+    await upsertTeamRow(subscription, env, userId);
   }
+
+  // Trial → active or created active/trialing → welcome bonus (Pro only)
+  if (meta?.tier === 'pro' && (subscription.status === 'active' || subscription.status === 'trialing')) {
+    await grantWelcomeBonusTransactional(subscription.id, env);
+  }
+  return userId;
 }
 
-async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
-  await getSupabase()
+async function handleSubscriptionCreated(sub: any, env: StripeEnv) {
+  await safeUpsertSubscription(sub, env);
+}
+async function handleSubscriptionUpdated(sub: any, env: StripeEnv) {
+  await safeUpsertSubscription(sub, env);
+}
+async function handleSubscriptionDeleted(sub: any, env: StripeEnv) {
+  const sb = getSupabase();
+  const { error } = await sb
     .from('subscriptions')
     .update({ status: 'canceled', updated_at: new Date().toISOString() })
-    .eq('stripe_subscription_id', subscription.id)
+    .eq('stripe_subscription_id', sub.id)
     .eq('environment', env);
+  if (error) throw new Error(`subscriptions cancel failed: ${error.message}`);
+
+  const { error: tErr } = await sb
+    .from('team_subscriptions')
+    .update({ status: 'canceled', updated_at: new Date().toISOString() })
+    .eq('stripe_subscription_id', sub.id);
+  if (tErr) throw new Error(`team_subscriptions cancel failed: ${tErr.message}`);
+
+  await revokeTeamMemberships(sub.id);
+}
+
+async function claimEvent(eventId: string, eventType: string): Promise<boolean> {
+  const sb = getSupabase();
+  const { error } = await sb.from('webhook_events').insert({
+    event_id: eventId,
+    provider: 'stripe',
+    event_type: eventType,
+  });
+  if (!error) return true;
+  // Unique-violation = already processed
+  if ((error as any).code === '23505') return false;
+  throw new Error(`webhook_events insert failed: ${error.message}`);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
+  const anyEvent = event as any;
+  const eventId: string | undefined = anyEvent.id;
+  if (!eventId) throw new Error('Missing event id');
+
+  const fresh = await claimEvent(eventId, event.type);
+  if (!fresh) {
+    console.log('[webhook] duplicate event, skipping:', eventId, event.type);
+    return;
+  }
+
   switch (event.type) {
     case 'customer.subscription.created':
       await handleSubscriptionCreated(event.data.object, env);
@@ -149,7 +213,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       await handleSubscriptionDeleted(event.data.object, env);
       break;
     default:
-      console.log('Unhandled event:', event.type);
+      console.log('[webhook] unhandled event:', event.type);
   }
 }
 
@@ -166,8 +230,12 @@ export const Route = createFileRoute('/api/public/payments/webhook')({
           await handleWebhook(request, rawEnv);
           return Response.json({ received: true });
         } catch (e) {
-          console.error('Webhook error:', e);
-          return new Response('Webhook error', { status: 400 });
+          // Return 500 so Stripe retries. Idempotency table prevents dup work.
+          console.error('[webhook] error:', e);
+          return new Response(
+            e instanceof Error ? e.message : 'Webhook error',
+            { status: 500 },
+          );
         }
       },
     },
