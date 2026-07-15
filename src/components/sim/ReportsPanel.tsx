@@ -14,9 +14,145 @@ import {
   Smile,
   Sparkles,
 } from "lucide-react";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
+
+// ─── Metrics Radar Chart ─────────────────────────────────────────────────────
+
+function MetricsRadarChart() {
+  const { state } = useSim();
+  const m = state.metrics;
+
+  const data = [
+    { metric: "Health", value: Math.round(m.health), fullMark: 100 },
+    { metric: "Budget", value: Math.round(m.budget), fullMark: 100 },
+    { metric: "Schedule", value: Math.round(m.schedule), fullMark: 100 },
+    { metric: "Risk", value: Math.round(m.risk), fullMark: 100 },
+    { metric: "Morale", value: Math.round(m.morale), fullMark: 100 },
+    { metric: "Trust", value: Math.round(m.trust), fullMark: 100 },
+    { metric: "Quality", value: Math.round(m.quality), fullMark: 100 },
+    { metric: "Satisfact.", value: Math.round(m.satisfaction), fullMark: 100 },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <Activity className="h-4 w-4 text-accent" />
+        <span className="text-[13px] font-semibold text-foreground">Project Health Radar</span>
+      </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <PolarAngleAxis dataKey="metric" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} />
+          <Radar
+            name="Score"
+            dataKey="value"
+            stroke="hsl(var(--accent))"
+            fill="hsl(var(--accent))"
+            fillOpacity={0.2}
+            strokeWidth={1.5}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "hsl(var(--background))",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "8px",
+              fontSize: 11,
+            }}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ─── Decision Quality Chart ──────────────────────────────────────────────────
+
+function DecisionQualityChart() {
+  const { state } = useSim();
+
+  const qualityCounts = {
+    Excellent: state.log.filter((l) => l.quality === "excellent").length,
+    Good: state.log.filter((l) => l.quality === "good").length,
+    Risky: state.log.filter((l) => l.quality === "risky").length,
+    Poor: state.log.filter((l) => l.quality === "poor").length,
+  };
+
+  const data = Object.entries(qualityCounts).map(([name, value]) => ({ name, value }));
+  const colors: Record<string, string> = {
+    Excellent: "hsl(var(--accent))",
+    Good: "var(--color-success, #22c55e)",
+    Risky: "var(--color-warning, #f59e0b)",
+    Poor: "var(--color-destructive, #ef4444)",
+  };
+
+  if (state.log.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <FileText className="h-4 w-4 text-accent" />
+          <span className="text-[13px] font-semibold text-foreground">Decision Quality</span>
+        </div>
+        <div className="py-6 text-center text-[12px] text-muted-foreground">
+          Make decisions to see quality breakdown here.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <FileText className="h-4 w-4 text-accent" />
+        <span className="text-[13px] font-semibold text-foreground">Decision Quality</span>
+      </div>
+      <ResponsiveContainer width="100%" height={150}>
+        <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+          <XAxis
+            dataKey="name"
+            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "hsl(var(--background))",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "8px",
+              fontSize: 11,
+            }}
+          />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            {data.map((entry) => (
+              <Cell key={entry.name} fill={colors[entry.name] ?? "#6366f1"} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 // ─── Status Report Card ──────────────────────────────────────────────────────
 
@@ -371,6 +507,11 @@ export function ReportsPanel() {
       </div>
 
       <StatusReportCard />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <MetricsRadarChart />
+        <DecisionQualityChart />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <BudgetSummaryCard />
