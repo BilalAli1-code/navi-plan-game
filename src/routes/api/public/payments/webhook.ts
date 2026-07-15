@@ -138,7 +138,9 @@ function validateStripeSubscriptionPrice(subscription: Stripe.Subscription) {
   const price = item?.price;
   const lookupKey = price?.lookup_key;
   if (!lookupKey || !(lookupKey in PRICE_LOOKUP_ALLOWLIST)) {
-    throw new Error(`Unapproved Stripe price lookup key for subscription ${subscription.id}`);
+    throw new Error(
+      `Unapproved Stripe price lookup key '${lookupKey ?? "missing"}' for subscription ${subscription.id}`,
+    );
   }
   if (price?.type !== "recurring") {
     throw new Error(`Non-recurring Stripe price rejected for subscription ${subscription.id}`);
@@ -253,7 +255,7 @@ async function claimEvent(eventId: string, eventType: string): Promise<EventClai
   if (latestError) throw new Error(`webhook_events recheck failed: ${latestError.message}`);
   if (latest?.processing_state === "completed") return "completed";
   if (latest?.processing_state === "pending") return "pending";
-  throw new Error(`webhook_events insert failed: ${error.message}`);
+  throw new Error(`Failed to insert webhook event after retry check: ${error.message}`);
 }
 
 async function markEventCompleted(eventId: string) {

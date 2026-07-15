@@ -77,7 +77,7 @@ export const FEATURE_MIN_TIER: Record<Feature, Tier> = {
 };
 
 /** Free-tier learners are limited to this single starter case. */
-export const FREE_TIER_ALLOWED_CASES = new Set<string>(["software"]);
+export const FREE_TIER_ALLOWED_CASES = new Set<string>(["software", "software-startup-mvp"]);
 
 export function tierRank(tier: Tier): number {
   return TIER_RANK[tier] ?? 0;
