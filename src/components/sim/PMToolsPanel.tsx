@@ -28,6 +28,22 @@ import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
 import { getDay, TOTAL_DAYS } from "@/lib/sim/days";
 
+// ─── Shared thresholds ────────────────────────────────────────────────────────
+
+/** Budget health score at which project is considered healthy (vs. baseline of 80) */
+const BUDGET_HEALTHY_BASELINE = 85;
+/** Budget health score used for closing-phase calculations */
+const BUDGET_CLOSING_BASELINE = 90;
+
+/** Cumulative % of total budget consumed by phase (planned) */
+const BUDGET_PCT_INIT_PLAN = 12;
+const BUDGET_PCT_INIT_ACTUAL = 11;
+const BUDGET_PCT_PLAN_PLAN = 22;
+const BUDGET_PCT_PLAN_ACTUAL = 20;
+const BUDGET_PCT_EXEC_PLAN = 55;
+const BUDGET_PCT_MON_PLAN = 75;
+const BUDGET_PCT_CLOSE_PLAN = 95;
+
 // ─── Gantt Timeline ───────────────────────────────────────────────────────────
 
 function GanttTimeline() {
@@ -599,11 +615,40 @@ function BudgetDashboard() {
 
   // Build budget data points per phase
   const budgetData = [
-    { phase: "Init", planned: 12, actual: currentPhaseIdx >= 1 ? 11 : null },
-    { phase: "Plan", planned: 22, actual: currentPhaseIdx >= 2 ? 20 : null },
-    { phase: "Exec", planned: 55, actual: currentPhaseIdx >= 3 ? Math.round(55 * (state.metrics.budget / 85)) : null },
-    { phase: "Mon", planned: 75, actual: currentPhaseIdx >= 4 ? Math.round(75 * (state.metrics.budget / 85)) : null },
-    { phase: "Close", planned: 95, actual: currentPhaseIdx >= 5 ? Math.round(95 * (state.metrics.budget / 90)) : null },
+    {
+      phase: "Init",
+      planned: BUDGET_PCT_INIT_PLAN,
+      actual: currentPhaseIdx >= 1 ? BUDGET_PCT_INIT_ACTUAL : null,
+    },
+    {
+      phase: "Plan",
+      planned: BUDGET_PCT_PLAN_PLAN,
+      actual: currentPhaseIdx >= 2 ? BUDGET_PCT_PLAN_ACTUAL : null,
+    },
+    {
+      phase: "Exec",
+      planned: BUDGET_PCT_EXEC_PLAN,
+      actual:
+        currentPhaseIdx >= 3
+          ? Math.round(BUDGET_PCT_EXEC_PLAN * (state.metrics.budget / BUDGET_HEALTHY_BASELINE))
+          : null,
+    },
+    {
+      phase: "Mon",
+      planned: BUDGET_PCT_MON_PLAN,
+      actual:
+        currentPhaseIdx >= 4
+          ? Math.round(BUDGET_PCT_MON_PLAN * (state.metrics.budget / BUDGET_HEALTHY_BASELINE))
+          : null,
+    },
+    {
+      phase: "Close",
+      planned: 95,
+      actual:
+        currentPhaseIdx >= 5
+          ? Math.round(95 * (state.metrics.budget / BUDGET_CLOSING_BASELINE))
+          : null,
+    },
   ];
 
   const spentPct = Math.round(100 - state.metrics.budget);
@@ -673,19 +718,55 @@ function BudgetDashboard() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="phase" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <XAxis
+              dataKey="phase"
+              tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
-              contentStyle={{ background: "hsl(var(--background))", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: 11 }}
+              contentStyle={{
+                background: "hsl(var(--background))",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "8px",
+                fontSize: 11,
+              }}
               labelStyle={{ color: "rgba(255,255,255,0.7)" }}
             />
-            <Area type="monotone" dataKey="planned" stroke="#6366f1" strokeWidth={2} fill="url(#colorPlanned)" name="Planned" connectNulls />
-            <Area type="monotone" dataKey="actual" stroke="#22c55e" strokeWidth={2} fill="url(#colorActual)" name="Actual" connectNulls />
+            <Area
+              type="monotone"
+              dataKey="planned"
+              stroke="#6366f1"
+              strokeWidth={2}
+              fill="url(#colorPlanned)"
+              name="Planned"
+              connectNulls
+            />
+            <Area
+              type="monotone"
+              dataKey="actual"
+              stroke="#22c55e"
+              strokeWidth={2}
+              fill="url(#colorActual)"
+              name="Actual"
+              connectNulls
+            />
           </AreaChart>
         </ResponsiveContainer>
         <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
-          <div className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-[#6366f1]" />Planned</div>
-          <div className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-[#22c55e]" />Actual</div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-4 rounded-full bg-[#6366f1]" />
+            Planned
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-4 rounded-full bg-[#22c55e]" />
+            Actual
+          </div>
         </div>
       </div>
 

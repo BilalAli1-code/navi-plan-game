@@ -222,7 +222,7 @@ export function MayaFloating() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Proactive advisory notifications — fired once per threshold crossing
+  // Proactive advisory notifications — re-fires if metric recovers then degrades again
   const firedAlerts = useRef(new Set<string>());
   useEffect(() => {
     const m = state.metrics;
@@ -230,36 +230,52 @@ export function MayaFloating() {
       {
         key: `risk-${Math.round(m.risk / 10) * 10}`,
         trigger: m.risk < 55 && m.risk > 0,
+        recover: m.risk >= 65, // clear key when metric recovers
+        recoverKey: `risk-`,
         message: `⚠ Maya: Risk posture at ${Math.round(m.risk)}%. Activate your contingency plans now.`,
         type: "warning" as const,
       },
       {
         key: `budget-${Math.round(m.budget / 10) * 10}`,
         trigger: m.budget < 65 && m.budget > 0,
+        recover: m.budget >= 75,
+        recoverKey: `budget-`,
         message: `💸 Maya: Budget health is ${Math.round(m.budget)}%. Prepare a variance analysis for your sponsor.`,
         type: "warning" as const,
       },
       {
         key: `morale-${Math.round(m.morale / 10) * 10}`,
         trigger: m.morale < 60 && m.morale > 0,
+        recover: m.morale >= 70,
+        recoverKey: `morale-`,
         message: `😟 Maya: Team morale dropped to ${Math.round(m.morale)}%. Schedule a team check-in.`,
         type: "warning" as const,
       },
       {
         key: `trust-${Math.round(m.trust / 10) * 10}`,
         trigger: m.trust < 55 && m.trust > 0,
+        recover: m.trust >= 65,
+        recoverKey: `trust-`,
         message: `🤝 Maya: Stakeholder trust at ${Math.round(m.trust)}%. Send a proactive status update.`,
         type: "warning" as const,
       },
       {
         key: `phase-${state.phase}`,
         trigger: state.phase !== "Tailoring" && state.phase !== "Complete",
+        recover: false,
+        recoverKey: "",
         message: `📋 Maya: You've entered ${state.phase}. ${c.projectName} — stay focused on your critical path.`,
         type: "info" as const,
       },
     ];
 
-    proactive.forEach(({ key, trigger, message, type }) => {
+    proactive.forEach(({ key, trigger, recover, recoverKey, message, type }) => {
+      // Clear stale keys when metric recovers so future degradation re-fires
+      if (recover && recoverKey) {
+        for (const fired of firedAlerts.current) {
+          if (fired.startsWith(recoverKey)) firedAlerts.current.delete(fired);
+        }
+      }
       if (trigger && !firedAlerts.current.has(key)) {
         firedAlerts.current.add(key);
         setTimeout(() => {

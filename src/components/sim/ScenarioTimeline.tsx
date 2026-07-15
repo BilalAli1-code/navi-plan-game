@@ -1,5 +1,13 @@
 import { motion } from "framer-motion";
-import { Clock, Mail, CalendarDays, AlertTriangle, Zap, ChevronRight, MessageSquare } from "lucide-react";
+import {
+  Clock,
+  Mail,
+  CalendarDays,
+  AlertTriangle,
+  Zap,
+  ChevronRight,
+  MessageSquare,
+} from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { getDay } from "@/lib/sim/days";
@@ -65,23 +73,6 @@ function getPhaseNarrative(phase: string, projectName: string): string {
     Complete: `Project closed. Well done.`,
   };
   return narratives[phase] ?? "Manage your project effectively.";
-}
-
-// Rich scenario event narratives for different situations
-function buildNarrative(type: string, title: string, from?: string): string {
-  const emailNarratives = [
-    `${from} has sent you an update that requires your immediate attention.`,
-    `${from} flagged a concern in their latest message — review and respond promptly.`,
-    `New message from ${from} with action items for this sprint.`,
-  ];
-  const meetingNarratives = [
-    `You have a scheduled check-in — review the agenda and prepare your status update.`,
-    `This meeting was requested after yesterday's issues. Come prepared with data.`,
-    `Attendees are expecting decisions from you in this session.`,
-  ];
-  if (type === "email") return emailNarratives[Math.floor(Math.random() * emailNarratives.length)];
-  if (type === "meeting") return meetingNarratives[Math.floor(Math.random() * meetingNarratives.length)];
-  return "";
 }
 
 // Generate scenario events from simulation state
@@ -166,7 +157,8 @@ function buildScenarioEvents(
       time: `${dayLabel} 11:30 AM`,
       type: "alert",
       title: `Risk posture critical — ${Math.round(state.metrics.risk)}% health`,
-      narrative: "Two unmitigated risks are now in the red zone. Your PMO requires a Risk Response Plan update today.",
+      narrative:
+        "Two unmitigated risks are now in the red zone. Your PMO requires a Risk Response Plan update today.",
       priority: "urgent",
       actionTab: "tools",
     });
@@ -177,7 +169,8 @@ function buildScenarioEvents(
       time: `${dayLabel} 2:00 PM`,
       type: "alert",
       title: "Team morale concern — engineers reported stress",
-      narrative: "Two team members flagged workload concerns in this morning's stand-up. Addressing this now prevents attrition.",
+      narrative:
+        "Two team members flagged workload concerns in this morning's stand-up. Addressing this now prevents attrition.",
       priority: "urgent",
       actionTab: "stakeholders",
     });
@@ -188,7 +181,8 @@ function buildScenarioEvents(
       time: `${dayLabel} 3:30 PM`,
       type: "alert",
       title: `Budget variance — ${caseRef.sponsor.split(",")[0]} requesting update`,
-      narrative: "Your sponsor has asked for a variance explanation in writing before the next steering committee.",
+      narrative:
+        "Your sponsor has asked for a variance explanation in writing before the next steering committee.",
       priority: "urgent",
       actionTab: "reports",
     });
@@ -202,7 +196,8 @@ function buildScenarioEvents(
       time: `${dayLabel} 4:15 PM`,
       type: "milestone",
       title: `${pendingDecisions.length} decision${pendingDecisions.length > 1 ? "s" : ""} awaiting your action`,
-      narrative: "These decisions will directly impact project health. Review your inbox and respond before end of day.",
+      narrative:
+        "These decisions will directly impact project health. Review your inbox and respond before end of day.",
       priority: "normal",
       actionTab: "inbox",
     });
@@ -295,12 +290,16 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="text-[10px] text-muted-foreground tabular-nums">{ev.time}</span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {ev.time}
+                    </span>
                     {ev.from && (
                       <span className="text-[10px] text-foreground/60">from {ev.from}</span>
                     )}
                   </div>
-                  <div className="mt-0.5 text-[12px] font-medium text-foreground/90">{ev.title}</div>
+                  <div className="mt-0.5 text-[12px] font-medium text-foreground/90">
+                    {ev.title}
+                  </div>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5">
@@ -339,4 +338,3 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
     </div>
   );
 }
-

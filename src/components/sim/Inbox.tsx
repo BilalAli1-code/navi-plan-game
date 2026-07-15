@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { Mail, Circle, Reply, Star, Archive, AlertCircle, ChevronDown, Search, Filter } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Mail, Reply, Star, Archive, AlertCircle, Search } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
@@ -13,13 +13,16 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
   const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
   const active = state.emails.find((e) => e.id === openId) ?? null;
 
+  // Pre-compute stake lookup map to avoid O(n*m) in filter/render
+  const stakeMap = useMemo(() => new Map(stakes.map((s) => [s.id, s])), [stakes]);
+
+  function findStake(id: string) {
+    return stakeMap.get(id) ?? stakes[0];
+  }
+
   function open(id: string) {
     setOpenId(id);
     markEmailRead(id);
-  }
-
-  function findStake(id: string) {
-    return stakes.find((s) => s.id === id) ?? stakes[0];
   }
 
   const isImportant = (subject: string) =>
@@ -28,18 +31,31 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
     subject.toLowerCase().includes("escalat") ||
     subject.toLowerCase().includes("blocked");
 
-  const filteredEmails = state.emails.filter((e) => {
-    if (search && !e.subject.toLowerCase().includes(search.toLowerCase()) &&
-      !findStake(e.from).name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filter === "unread" && e.read) return false;
-    if (filter === "important" && !isImportant(e.subject)) return false;
-    return true;
-  });
+  const filteredEmails = useMemo(
+    () =>
+      state.emails.filter((e) => {
+        if (
+          search &&
+          !e.subject.toLowerCase().includes(search.toLowerCase()) &&
+          !(findStake(e.from)?.name ?? "").toLowerCase().includes(search.toLowerCase())
+        )
+          return false;
+        if (filter === "unread" && e.read) return false;
+        if (filter === "important" && !isImportant(e.subject)) return false;
+        return true;
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.emails, search, filter, stakes],
+  );
 
   const unreadCount = state.emails.filter((e) => !e.read).length;
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(280px,340px)_1fr]" style={{ minHeight: "520px" }}>
+    <div
+      className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(280px,340px)_1fr]"
+      style={{ minHeight: "520px" }}
+    >
       {/* ─── Email list panel ───────────────────────────────────────── */}
       <div className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
         {/* Toolbar */}
@@ -177,7 +193,9 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
           <>
             {/* Email header */}
             <div className="border-b border-white/10 px-5 py-4">
-              <h3 className="text-[17px] font-bold text-foreground leading-snug">{active.subject}</h3>
+              <h3 className="text-[17px] font-bold text-foreground leading-snug">
+                {active.subject}
+              </h3>
               <div className="mt-2 flex items-center gap-3">
                 <div
                   className={cn(
@@ -258,4 +276,3 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
     </div>
   );
 }
-

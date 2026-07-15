@@ -58,10 +58,7 @@ function MetricsRadarChart() {
       <ResponsiveContainer width="100%" height={220}>
         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
-          <PolarAngleAxis
-            dataKey="metric"
-            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }}
-          />
+          <PolarAngleAxis dataKey="metric" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} />
           <Radar
             name="Score"
             dataKey="value"
@@ -127,10 +124,24 @@ function DecisionQualityChart() {
       <ResponsiveContainer width="100%" height={150}>
         <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-          <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
           <Tooltip
-            contentStyle={{ background: "hsl(var(--background))", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: 11 }}
+            contentStyle={{
+              background: "hsl(var(--background))",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "8px",
+              fontSize: 11,
+            }}
           />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
             {data.map((entry) => (

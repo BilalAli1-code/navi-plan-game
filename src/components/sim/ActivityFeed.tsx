@@ -25,6 +25,7 @@ type FeedEvent = {
   title: string;
   body?: string;
   time: string;
+  sortKey: number; // epoch ms for chronological sorting
   category: "decision" | "email" | "phase" | "metric" | "xp" | "meeting";
   color: string;
   urgent?: boolean;
@@ -58,6 +59,7 @@ export function ActivityFeed() {
     "Complete",
   ];
   const currentPhaseIdx = phaseOrder.indexOf(state.phase);
+  const now = Date.now();
   for (let i = 0; i <= Math.min(currentPhaseIdx, 5); i++) {
     const ph = phaseOrder[i];
     events.push({
@@ -66,6 +68,7 @@ export function ActivityFeed() {
       title: `${ph} phase ${i < currentPhaseIdx ? "completed" : "started"}`,
       body: i === 0 ? `Delivery approach: ${state.approach ?? "not yet selected"}` : undefined,
       time: `Day ${Math.min(i + 1, 7)}`,
+      sortKey: now - (currentPhaseIdx - i) * 86_400_000,
       category: "phase",
       color: i < currentPhaseIdx ? "text-[color:var(--color-success)]" : "text-accent",
     });
@@ -81,6 +84,7 @@ export function ActivityFeed() {
       title: `Decision: ${dec?.title ?? l.decisionId}`,
       body: `${l.quality} · ${l.correct ? "PMI-aligned" : "not aligned"} · ${l.atPhase}`,
       time: timeAgo(l.timestamp),
+      sortKey: l.timestamp,
       category: "decision",
       color:
         q === "excellent"
@@ -105,6 +109,7 @@ export function ActivityFeed() {
         title: `Email read: ${email.subject}`,
         body: `From ${sender?.name ?? "Unknown"}`,
         time: email.receivedAt,
+        sortKey: now - 3_600_000,
         category: "email",
         color: "text-blue-400",
       });
@@ -118,6 +123,7 @@ export function ActivityFeed() {
       title: "25 XP earned",
       body: "First excellent decision!",
       time: "Earlier",
+      sortKey: now - 7_200_000,
       category: "xp",
       color: "text-accent",
     });
@@ -129,6 +135,7 @@ export function ActivityFeed() {
       title: "100 XP milestone reached",
       body: "PM Associate tier unlocked",
       time: "Earlier",
+      sortKey: now - 7_100_000,
       category: "xp",
       color: "text-accent",
     });
@@ -142,6 +149,7 @@ export function ActivityFeed() {
       title: "Risk posture alert",
       body: `Risk score dropped to ${Math.round(state.metrics.risk)}% — review risk register`,
       time: "Recent",
+      sortKey: now,
       category: "metric",
       color: "text-[color:var(--color-destructive)]",
       urgent: true,
@@ -154,6 +162,7 @@ export function ActivityFeed() {
       title: "Team morale warning",
       body: `Morale at ${Math.round(state.metrics.morale)}% — team engagement needed`,
       time: "Recent",
+      sortKey: now,
       category: "metric",
       color: "text-[color:var(--color-warning)]",
       urgent: true,
@@ -166,6 +175,7 @@ export function ActivityFeed() {
       title: "Budget variance detected",
       body: `Budget health at ${Math.round(state.metrics.budget)}% — report needed`,
       time: "Recent",
+      sortKey: now,
       category: "metric",
       color: "text-[color:var(--color-destructive)]",
       urgent: true,
@@ -180,18 +190,17 @@ export function ActivityFeed() {
       title: mtg.title,
       body: `${mtg.attendees.length} attendees · ${mtg.agenda.length} agenda items`,
       time: mtg.time,
+      sortKey: now - 1_800_000,
       category: "meeting",
       color: "text-purple-400",
     });
   });
 
-  // Sort by recency (decisions + alerts first, then others)
+  // Sort: urgent items first within each recency bucket, then by timestamp descending
   const sorted = events.sort((a, b) => {
     if (a.urgent && !b.urgent) return -1;
     if (b.urgent && !a.urgent) return 1;
-    if (a.category === "decision" && b.category !== "decision") return -1;
-    if (b.category === "decision" && a.category !== "decision") return 1;
-    return 0;
+    return b.sortKey - a.sortKey;
   });
 
   const filtered = sorted.filter((ev) => {
@@ -225,7 +234,9 @@ export function ActivityFeed() {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-accent" />
-          <span className="text-[13px] font-semibold text-foreground">Activity & Notifications</span>
+          <span className="text-[13px] font-semibold text-foreground">
+            Activity & Notifications
+          </span>
         </div>
         {urgentCount > 0 && (
           <span className="flex items-center gap-1 rounded-full bg-[color:var(--color-destructive)]/15 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--color-destructive)]">
@@ -307,4 +318,3 @@ export function ActivityFeed() {
     </div>
   );
 }
-

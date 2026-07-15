@@ -13,43 +13,41 @@ type XPEvent = {
 // Celebrate XP gains with a brief animated overlay + toast
 export function XPCelebration() {
   const { state } = useSim();
-  const prevXp = useRef(state.xp);
+  const prevXp = useRef(0);
   const [events, setEvents] = useState<XPEvent[]>([]);
 
-  useEffect(() => {
-    const gain = state.xp - prevXp.current;
-    if (gain > 0) {
-      const label =
-        gain >= 25 ? "Excellent decision!" : gain >= 15 ? "Good decision!" : "XP gained";
-      const id = `xp-${Date.now()}`;
-      setEvents((prev) => [...prev, { id, amount: gain, label, ts: Date.now() }]);
-      // Auto-remove after 3s
-      setTimeout(() => {
-        setEvents((prev) => prev.filter((e) => e.id !== id));
-      }, 3000);
-    }
-    prevXp.current = state.xp;
-  }, [state.xp]);
-
-  // XP milestone badges
   const milestones = [
     { xp: 50, label: "PM Associate", icon: "🎯" },
     { xp: 100, label: "PM Professional", icon: "⭐" },
     { xp: 200, label: "PM Expert", icon: "🏆" },
     { xp: 300, label: "PM Master", icon: "🌟" },
   ];
-  const prevXpVal = useRef(state.xp);
   const [milestone, setMilestone] = useState<(typeof milestones)[0] | null>(null);
 
   useEffect(() => {
-    const prev = prevXpVal.current;
+    const prev = prevXp.current;
     const curr = state.xp;
-    const hit = milestones.find((m) => prev < m.xp && curr >= m.xp);
-    if (hit) {
-      setMilestone(hit);
-      setTimeout(() => setMilestone(null), 4000);
+    const gain = curr - prev;
+
+    if (gain > 0) {
+      const label =
+        gain >= 25 ? "Excellent decision!" : gain >= 15 ? "Good decision!" : "XP gained";
+      const id = `xp-${Date.now()}`;
+      setEvents((evts) => [...evts, { id, amount: gain, label, ts: Date.now() }]);
+      // Auto-remove after 3s
+      setTimeout(() => {
+        setEvents((evts) => evts.filter((e) => e.id !== id));
+      }, 3000);
+
+      // Check for milestone crossing
+      const hit = milestones.find((m) => prev < m.xp && curr >= m.xp);
+      if (hit) {
+        setMilestone(hit);
+        setTimeout(() => setMilestone(null), 4000);
+      }
     }
-    prevXpVal.current = curr;
+
+    prevXp.current = curr;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.xp]);
 

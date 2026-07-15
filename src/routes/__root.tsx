@@ -93,8 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "ProjectSim — PMBOK Training Simulator" },
       {
         property: "og:description",
-        content:
-          "Manage a simulated project from Initiation to Closing with an AI PMP coach.",
+        content: "Manage a simulated project from Initiation to Closing with an AI PMP coach.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
