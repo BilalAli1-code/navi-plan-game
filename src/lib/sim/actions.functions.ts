@@ -14,6 +14,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireRunAccess } from "@/lib/billing/entitlement.server";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { stakeholdersFor } from "./cases";
 import { findConflict, findRisk } from "./risks";
@@ -37,7 +38,14 @@ function applyDelta(m: ProjectMetrics, d: MetricImpact): ProjectMetrics {
     satisfaction: clamp(m.satisfaction + (d.satisfaction ?? 0)),
   };
   next.health = Math.round(
-    (next.budget + next.schedule + next.risk + next.morale + next.trust + next.quality + next.satisfaction) / 7,
+    (next.budget +
+      next.schedule +
+      next.risk +
+      next.morale +
+      next.trust +
+      next.quality +
+      next.satisfaction) /
+      7,
   );
   return next;
 }
@@ -53,7 +61,8 @@ function computeMastery(
 ): { mastery: number; recent: number[] } {
   const recent = [...prevRecent, incoming].slice(-WINDOW);
   const n = recent.length;
-  let num = 0, den = 0;
+  let num = 0,
+    den = 0;
   recent.forEach((s, i) => {
     const w = 1 + i * (2 / Math.max(n - 1, 1));
     num += s * w;
@@ -80,6 +89,7 @@ export const processAction = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
     const action = data.action;
+    await requireRunAccess(db, context.userId, action.runId);
 
     // 2. Load trusted run.
     const { data: run, error: runErr } = await db
@@ -93,16 +103,20 @@ export const processAction = createServerFn({ method: "POST" })
     const snapshot = (run.state_snapshot ?? {}) as Partial<SimState>;
     const caseId = (snapshot.caseId ?? run.case_id) as string;
     const metrics = (snapshot.metrics ?? {
-      health: 75, budget: 80, schedule: 80, risk: 65,
-      morale: 75, trust: 70, quality: 75, satisfaction: 70,
+      health: 75,
+      budget: 80,
+      schedule: 80,
+      risk: 65,
+      morale: 75,
+      trust: 70,
+      quality: 75,
+      satisfaction: 70,
     }) as ProjectMetrics;
 
     // 3. Resolve subject + compute outcome.
     let outcome;
     if (action.actionType === "stakeholder_interaction") {
-      const stakeholder = stakeholdersFor(caseId).find(
-        (s) => s.id === action.stakeholderId,
-      );
+      const stakeholder = stakeholdersFor(caseId).find((s) => s.id === action.stakeholderId);
       if (!stakeholder) throw new Error(`unknown stakeholder ${action.stakeholderId}`);
       outcome = computeActionOutcome({
         input: action,
@@ -131,10 +145,7 @@ export const processAction = createServerFn({ method: "POST" })
           ? `conflict:${action.conflictId}`
           : outcome.actionKey;
 
-    if (
-      action.actionType === "risk_response" ||
-      action.actionType === "conflict_management"
-    ) {
+    if (action.actionType === "risk_response" || action.actionType === "conflict_management") {
       const { data: existing } = await db
         .from("simulation_actions")
         .select("id")
@@ -221,36 +232,38 @@ export const processAction = createServerFn({ method: "POST" })
       const successful = prevSuccess + ((u.score ?? 0) >= 75 ? 1 : 0);
       const consecutive_correct = (u.score ?? 0) >= 75 ? prevStreakOK + 1 : 0;
       const consecutive_wrong = (u.score ?? 0) < 40 ? prevStreakBad + 1 : 0;
-      const { mastery, recent } = computeMastery(prevRecent, (u.score ?? 0), attempts, u.difficulty ?? null);
+      const { mastery, recent } = computeMastery(
+        prevRecent,
+        u.score ?? 0,
+        attempts,
+        u.difficulty ?? null,
+      );
       const is_mastered = mastery >= 85 && attempts >= 3 && consecutive_correct >= 3;
-      const is_development_area =
-        (mastery < 40 && attempts >= 2) || consecutive_wrong >= 3;
+      const is_development_area = (mastery < 40 && attempts >= 2) || consecutive_wrong >= 3;
 
-      const { error: masErr } = await db
-        .from("learner_mastery")
-        .upsert(
-          {
-            user_id: context.userId,
-            topic: u.topic,
-            pmbok_domain: u.pmbokDomain ?? existing?.pmbok_domain ?? null,
-            pmbok_principle: u.pmbokPrinciple ?? existing?.pmbok_principle ?? null,
-            eco_domain: u.ecoDomain ?? existing?.eco_domain ?? null,
-            competency: u.competency ?? existing?.competency ?? null,
-            difficulty: u.difficulty ?? existing?.difficulty ?? null,
-            attempts,
-            successful_decisions: successful,
-            total_score: prevTotal + (u.score ?? 0),
-            recent_scores: recent,
-            consecutive_correct,
-            consecutive_wrong,
-            mastery_score: mastery,
-            is_mastered,
-            mastered_at: is_mastered ? existing?.mastered_at ?? now : null,
-            is_development_area,
-            last_practiced_at: now,
-          },
-          { onConflict: "user_id,topic" },
-        );
+      const { error: masErr } = await db.from("learner_mastery").upsert(
+        {
+          user_id: context.userId,
+          topic: u.topic,
+          pmbok_domain: u.pmbokDomain ?? existing?.pmbok_domain ?? null,
+          pmbok_principle: u.pmbokPrinciple ?? existing?.pmbok_principle ?? null,
+          eco_domain: u.ecoDomain ?? existing?.eco_domain ?? null,
+          competency: u.competency ?? existing?.competency ?? null,
+          difficulty: u.difficulty ?? existing?.difficulty ?? null,
+          attempts,
+          successful_decisions: successful,
+          total_score: prevTotal + (u.score ?? 0),
+          recent_scores: recent,
+          consecutive_correct,
+          consecutive_wrong,
+          mastery_score: mastery,
+          is_mastered,
+          mastered_at: is_mastered ? (existing?.mastered_at ?? now) : null,
+          is_development_area,
+          last_practiced_at: now,
+        },
+        { onConflict: "user_id,topic" },
+      );
       if (masErr) throw new Error(masErr.message);
     }
 
@@ -297,6 +310,7 @@ export const listActions = createServerFn({ method: "POST" })
     return { runId: i.runId };
   })
   .handler(async ({ data, context }) => {
+    await requireRunAccess(context.supabase, context.userId, data.runId);
     const { data: rows, error } = await context.supabase
       .from("simulation_actions")
       .select("*")

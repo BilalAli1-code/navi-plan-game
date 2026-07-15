@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireRunAccess } from "@/lib/billing/entitlement.server";
 import type { Json, Tables } from "@/integrations/supabase/types";
 
 export type EventType =
@@ -21,13 +22,7 @@ export type EventType =
   | "practice"
   | "mentor_review";
 
-export type EventStatus =
-  | "locked"
-  | "available"
-  | "viewed"
-  | "responded"
-  | "completed"
-  | "expired";
+export type EventStatus = "locked" | "available" | "viewed" | "responded" | "completed" | "expired";
 
 export type EventInput = {
   eventKey: string;
@@ -55,6 +50,7 @@ export const syncEvents = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireRunAccess(db, context.userId, data.runId);
 
     // Load existing to avoid clobbering user-progressed statuses.
     const { data: existing } = await db
@@ -70,7 +66,12 @@ export const syncEvents = createServerFn({ method: "POST" })
       const prior = priorStatus.get(e.eventKey);
       // Never regress a status. Order: locked < available < viewed < responded < completed
       const rank: Record<string, number> = {
-        locked: 0, available: 1, viewed: 2, responded: 3, completed: 4, expired: 5,
+        locked: 0,
+        available: 1,
+        viewed: 2,
+        responded: 3,
+        completed: 4,
+        expired: 5,
       };
       const desired = e.status ?? "available";
       const status = prior && (rank[prior] ?? 0) > (rank[desired] ?? 0) ? prior : desired;
@@ -104,12 +105,12 @@ export const updateEventStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
     const i = input as { runId?: string; eventKey?: string; status?: EventStatus };
-    if (!i?.runId || !i?.eventKey || !i?.status)
-      throw new Error("runId/eventKey/status required");
+    if (!i?.runId || !i?.eventKey || !i?.status) throw new Error("runId/eventKey/status required");
     return { runId: i.runId, eventKey: i.eventKey, status: i.status };
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireRunAccess(db, context.userId, data.runId);
     const now = new Date().toISOString();
     const patch: Partial<Tables<"simulation_events">> = { status: data.status };
     if (data.status === "viewed") patch.viewed_at = now;
@@ -126,7 +127,12 @@ export const updateEventStatus = createServerFn({ method: "POST" })
       .eq("event_key", data.eventKey)
       .maybeSingle();
     const rank: Record<string, number> = {
-      locked: 0, available: 1, viewed: 2, responded: 3, completed: 4, expired: 5,
+      locked: 0,
+      available: 1,
+      viewed: 2,
+      responded: 3,
+      completed: 4,
+      expired: 5,
     };
     if (cur && (rank[cur.status] ?? 0) > (rank[data.status] ?? 0)) {
       return { ok: true as const, skipped: true };
@@ -151,6 +157,7 @@ export const listEvents = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireRunAccess(db, context.userId, data.runId);
     const { data: rows, error } = await db
       .from("simulation_events")
       .select("*")

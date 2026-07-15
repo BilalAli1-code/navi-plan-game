@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireFeature } from "@/lib/billing/entitlement.server";
 import type { Json } from "@/integrations/supabase/types";
 import type { ExamReport } from "./types";
 
@@ -14,6 +15,7 @@ export const saveExamReport = createServerFn({ method: "POST" })
     return i;
   })
   .handler(async ({ data, context }) => {
+    await requireFeature(context.supabase, context.userId, "exam_history");
     const r = data.report;
     const { error } = await context.supabase.from("exam_reports").upsert(
       {
@@ -58,13 +60,19 @@ export type StoredExamReport = {
   weakest_topics: string[];
   strongest_topics: string[];
   domain_scores: Array<{ domain: string; correct: number; total: number; percent: number }>;
-  knowledge_area_scores: Array<{ knowledgeArea: string; correct: number; total: number; percent: number }>;
+  knowledge_area_scores: Array<{
+    knowledgeArea: string;
+    correct: number;
+    total: number;
+    percent: number;
+  }>;
   completed_at: string;
 };
 
 export const listExamReports = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<StoredExamReport[]> => {
+    await requireFeature(context.supabase, context.userId, "exam_history");
     const { data, error } = await context.supabase
       .from("exam_reports")
       .select(
