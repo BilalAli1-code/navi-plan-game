@@ -829,13 +829,141 @@ export type Database = {
         }
         Relationships: []
       }
+      team_memberships: {
+        Row: {
+          accepted_at: string | null
+          id: string
+          invite_token: string
+          invited_at: string
+          invited_email: string
+          role: string
+          status: string
+          team_id: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          invited_email: string
+          role?: string
+          status?: string
+          team_id: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          invited_email?: string
+          role?: string
+          status?: string
+          team_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          environment: string
+          id: string
+          owner_user_id: string
+          seats: number
+          status: string
+          stripe_subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          owner_user_id: string
+          seats?: number
+          status?: string
+          stripe_subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          owner_user_id?: string
+          seats?: number
+          status?: string
+          stripe_subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          provider: string
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          provider?: string
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          provider?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invite: {
+        Args: { _token: string }
+        Returns: {
+          accepted: boolean
+          team_id: string
+        }[]
+      }
+      grant_welcome_bonus: {
+        Args: { _bonus: number; _env: string; _subscription_id: string }
+        Returns: {
+          display_name: string
+          granted: boolean
+          user_id: string
+        }[]
+      }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_owner: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_has_active_team: {
+        Args: { _env: string; _user_id: string }
         Returns: boolean
       }
     }
