@@ -31,9 +31,23 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Check if user is already signed in
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/play" });
+      if (data.session) {
+        navigate({ to: "/play" });
+      }
     });
+
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        navigate({ to: "/play" });
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   async function submit(e: React.FormEvent) {
@@ -52,9 +66,13 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created. Check your inbox to confirm your email, then sign in.");
         setMode("signin");
+        setEmail("");
+        setPassword("");
+        setName("");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        toast.success("Signed in successfully!");
         navigate({ to: "/play" });
       }
     } catch (err) {
@@ -67,16 +85,23 @@ function AuthPage() {
 
   async function signInGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error(result.error.message ?? "Google sign-in failed");
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(result.error.message ?? "Google sign-in failed");
+        setLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      // If no redirect happened, navigate manually
+      navigate({ to: "/play" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Google sign-in failed";
+      toast.error(msg);
       setLoading(false);
-      return;
     }
-    if (result.redirected) return;
-    navigate({ to: "/play" });
   }
 
   return (
@@ -115,25 +140,55 @@ function AuthPage() {
           {mode === "signup" && (
             <div>
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="mt-1 bg-background/40" />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className="mt-1 bg-background/40"
+              />
             </div>
           )}
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-background/40" />
+            <Input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 bg-background/40"
+            />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-background/40" />
+            <Input
+              id="password"
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 bg-background/40"
+            />
           </div>
-          <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </Button>
         </form>
 
         <button
           type="button"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          onClick={() => {
+            setMode(mode === "signin" ? "signup" : "signin");
+            setEmail("");
+            setPassword("");
+            setName("");
+          }}
           className="mt-5 w-full text-center text-sm text-muted-foreground transition hover:text-foreground"
         >
           {mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
