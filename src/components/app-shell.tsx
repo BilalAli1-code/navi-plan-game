@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { UserMenu } from "./user-menu";
 
 type NavItem = { to: string; label: string; hash?: string };
 
@@ -95,11 +96,15 @@ export function AppShell({ children, variant = "marketing", hideFooter }: AppShe
                 </Link>
               </Button>
             )}
-            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link to={signedIn ? "/exam" : "/auth"}>
-                {signedIn ? "Take exam" : "Start free"}
-              </Link>
-            </Button>
+            {signedIn ? (
+              <UserMenu />
+            ) : (
+              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link to="/auth">
+                  {variant === "app" ? "Sign in" : "Start free"}
+                </Link>
+              </Button>
+            )}
           </div>
 
           <button
@@ -139,11 +144,15 @@ export function AppShell({ children, variant = "marketing", hideFooter }: AppShe
                     {signedIn ? "Open app" : "Sign in"}
                   </Link>
                 </Button>
-                <Button asChild className="flex-1 bg-primary text-primary-foreground">
-                  <Link to={signedIn ? "/exam" : "/auth"}>
-                    {signedIn ? "Take exam" : "Start"}
-                  </Link>
-                </Button>
+                {signedIn ? (
+                  <UserMenu onSignOut={() => setOpen(false)} />
+                ) : (
+                  <Button asChild className="flex-1 bg-primary text-primary-foreground">
+                    <Link to="/auth">
+                      Start
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
