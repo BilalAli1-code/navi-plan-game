@@ -153,6 +153,45 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   ].indexOf(state.phase);
   const allTabs = navGroups.flatMap((g) => g.items);
 
+  if (hydrating) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="mx-auto flex min-h-screen max-w-[1800px] animate-pulse gap-0 lg:gap-4 lg:p-4">
+          {/* Sidebar skeleton */}
+          <aside className="hidden w-[220px] shrink-0 lg:block">
+            <div className="sticky top-4 rounded-3xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+              <div className="h-7 w-3/4 rounded-xl bg-white/[0.05]" />
+              <div className="h-16 rounded-xl bg-white/[0.05]" />
+              {[1,2,3,4,5,6,7,8,9,10,11,12].map((i) => (
+                <div key={i} className="h-8 rounded-xl bg-white/[0.04]" />
+              ))}
+            </div>
+          </aside>
+          {/* Content skeleton */}
+          <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 lg:p-0">
+            <div className="h-16 rounded-2xl border border-white/10 bg-white/[0.02]" />
+            <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="h-28 rounded-2xl bg-white/[0.04]" />
+                ))}
+              </div>
+              <div className="h-48 rounded-2xl bg-white/[0.04]" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-36 rounded-2xl bg-white/[0.04]" />
+                <div className="h-36 rounded-2xl bg-white/[0.04]" />
+              </div>
+            </div>
+          </div>
+          {/* Right panel skeleton */}
+          <aside className="hidden w-[340px] shrink-0 xl:block">
+            <div className="sticky top-4 h-[500px] rounded-3xl border border-white/10 bg-white/[0.02]" />
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen max-w-[1800px] gap-0 lg:gap-4 lg:p-4">

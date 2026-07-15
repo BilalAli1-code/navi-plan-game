@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { SimProvider, useSim } from "@/lib/sim/store";
 import { WorkplaceShell } from "@/components/sim/WorkplaceShell";
 import { MayaFloating } from "@/components/sim/MayaFloating";
+import { XPCelebration } from "@/components/sim/XPCelebration";
 import { listCases, getCaseRef } from "@/lib/sim/cases";
 import { Sparkles, Send } from "lucide-react";
 
@@ -39,8 +40,12 @@ function SimRoute() {
     <SimProvider caseId={caseId}>
       {/* WorkplaceShell renders the left nav + content area + right Maya panel slot */}
       <WorkplaceShell mayaSlot={<MayaSidePanel />} />
-      {/* MayaFloating is a persistent floating widget outside the shell layout */}
-      <MayaFloating />
+      {/* MayaFloating: floating advisor for non-xl screens only (xl+ shows MayaSidePanel instead) */}
+      <div className="xl:hidden">
+        <MayaFloating />
+      </div>
+      {/* XP celebration overlay — always active during simulation */}
+      <XPCelebration />
     </SimProvider>
   );
 }

@@ -11,6 +11,18 @@ import {
   TrendingUp,
   AlertTriangle,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
@@ -569,6 +581,128 @@ function TeamWorkload() {
   );
 }
 
+// ─── Budget Dashboard ─────────────────────────────────────────────────────────
+
+function BudgetDashboard() {
+  const { state } = useSim();
+  const c = getCaseRef(state.caseId);
+  const phaseOrder = [
+    "Tailoring",
+    "Initiation",
+    "Planning",
+    "Execution",
+    "Monitoring",
+    "Closing",
+    "Complete",
+  ];
+  const currentPhaseIdx = Math.max(0, phaseOrder.indexOf(state.phase));
+
+  // Build budget data points per phase
+  const budgetData = [
+    { phase: "Init", planned: 12, actual: currentPhaseIdx >= 1 ? 11 : null },
+    { phase: "Plan", planned: 22, actual: currentPhaseIdx >= 2 ? 20 : null },
+    { phase: "Exec", planned: 55, actual: currentPhaseIdx >= 3 ? Math.round(55 * (state.metrics.budget / 85)) : null },
+    { phase: "Mon", planned: 75, actual: currentPhaseIdx >= 4 ? Math.round(75 * (state.metrics.budget / 85)) : null },
+    { phase: "Close", planned: 95, actual: currentPhaseIdx >= 5 ? Math.round(95 * (state.metrics.budget / 90)) : null },
+  ];
+
+  const spentPct = Math.round(100 - state.metrics.budget);
+  const variance = state.metrics.budget - 75;
+
+  const kpis = [
+    {
+      label: "Budget Health",
+      value: `${Math.round(state.metrics.budget)}%`,
+      color:
+        state.metrics.budget >= 70
+          ? "text-[color:var(--color-success)]"
+          : state.metrics.budget >= 50
+            ? "text-[color:var(--color-warning)]"
+            : "text-[color:var(--color-destructive)]",
+    },
+    {
+      label: "CPI (Est.)",
+      value: (state.metrics.budget / 75).toFixed(2),
+      color:
+        state.metrics.budget >= 70
+          ? "text-[color:var(--color-success)]"
+          : "text-[color:var(--color-warning)]",
+    },
+    {
+      label: "Variance",
+      value: `${variance >= 0 ? "+" : ""}${Math.round(variance)}%`,
+      color:
+        variance >= 0
+          ? "text-[color:var(--color-success)]"
+          : "text-[color:var(--color-destructive)]",
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="mb-3 text-[12px] font-semibold text-foreground">Budget Dashboard</div>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-3 gap-2">
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-center"
+          >
+            <div className={cn("text-[20px] font-bold tabular-nums", k.color)}>{k.value}</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Budget trend chart */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+        <div className="mb-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+          Planned vs Actual Spend (%)
+        </div>
+        <ResponsiveContainer width="100%" height={160}>
+          <AreaChart data={budgetData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <defs>
+              <linearGradient id="colorPlanned" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <XAxis dataKey="phase" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: "hsl(var(--background))", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: 11 }}
+              labelStyle={{ color: "rgba(255,255,255,0.7)" }}
+            />
+            <Area type="monotone" dataKey="planned" stroke="#6366f1" strokeWidth={2} fill="url(#colorPlanned)" name="Planned" connectNulls />
+            <Area type="monotone" dataKey="actual" stroke="#22c55e" strokeWidth={2} fill="url(#colorActual)" name="Actual" connectNulls />
+          </AreaChart>
+        </ResponsiveContainer>
+        <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-[#6366f1]" />Planned</div>
+          <div className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-[#22c55e]" />Actual</div>
+        </div>
+      </div>
+
+      {/* Budget alerts */}
+      {state.metrics.budget < 65 && (
+        <div className="rounded-xl border border-[color:var(--color-destructive)]/30 bg-[color:var(--color-destructive)]/[0.06] px-4 py-3 text-[12px] text-[color:var(--color-destructive)]">
+          <div className="font-semibold">⚠ Budget Variance Alert</div>
+          <div className="mt-0.5 text-[11px] opacity-80">
+            Budget health is {Math.round(state.metrics.budget)}% — below 65% threshold. Prepare a
+            variance report for your sponsor.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main PMToolsPanel ────────────────────────────────────────────────────────
 
 type PMTab = "gantt" | "risks" | "stakeholders" | "budget" | "milestones" | "workload";
@@ -577,6 +711,7 @@ const PM_TABS: { id: PMTab; label: string; icon: React.ReactNode }[] = [
   { id: "gantt", label: "Timeline", icon: <BarChart2 className="h-3.5 w-3.5" /> },
   { id: "risks", label: "Risk Map", icon: <ShieldAlert className="h-3.5 w-3.5" /> },
   { id: "stakeholders", label: "Stakeholders", icon: <Users className="h-3.5 w-3.5" /> },
+  { id: "budget", label: "Budget", icon: <DollarSign className="h-3.5 w-3.5" /> },
   { id: "milestones", label: "Milestones", icon: <CheckSquare className="h-3.5 w-3.5" /> },
   { id: "workload", label: "Workload", icon: <Activity className="h-3.5 w-3.5" /> },
 ];
@@ -615,6 +750,7 @@ export function PMToolsPanel() {
         {activeTab === "gantt" && <GanttTimeline />}
         {activeTab === "risks" && <RiskHeatMap />}
         {activeTab === "stakeholders" && <StakeholderMatrix />}
+        {activeTab === "budget" && <BudgetDashboard />}
         {activeTab === "milestones" && <MilestoneTracker />}
         {activeTab === "workload" && <TeamWorkload />}
       </div>

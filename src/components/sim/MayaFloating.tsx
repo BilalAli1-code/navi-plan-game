@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -14,6 +14,7 @@ import {
   DollarSign,
   BookOpen,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
@@ -220,6 +221,57 @@ export function MayaFloating() {
   const [q, setQ] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Proactive advisory notifications — fired once per threshold crossing
+  const firedAlerts = useRef(new Set<string>());
+  useEffect(() => {
+    const m = state.metrics;
+    const proactive = [
+      {
+        key: `risk-${Math.round(m.risk / 10) * 10}`,
+        trigger: m.risk < 55 && m.risk > 0,
+        message: `⚠ Maya: Risk posture at ${Math.round(m.risk)}%. Activate your contingency plans now.`,
+        type: "warning" as const,
+      },
+      {
+        key: `budget-${Math.round(m.budget / 10) * 10}`,
+        trigger: m.budget < 65 && m.budget > 0,
+        message: `💸 Maya: Budget health is ${Math.round(m.budget)}%. Prepare a variance analysis for your sponsor.`,
+        type: "warning" as const,
+      },
+      {
+        key: `morale-${Math.round(m.morale / 10) * 10}`,
+        trigger: m.morale < 60 && m.morale > 0,
+        message: `😟 Maya: Team morale dropped to ${Math.round(m.morale)}%. Schedule a team check-in.`,
+        type: "warning" as const,
+      },
+      {
+        key: `trust-${Math.round(m.trust / 10) * 10}`,
+        trigger: m.trust < 55 && m.trust > 0,
+        message: `🤝 Maya: Stakeholder trust at ${Math.round(m.trust)}%. Send a proactive status update.`,
+        type: "warning" as const,
+      },
+      {
+        key: `phase-${state.phase}`,
+        trigger: state.phase !== "Tailoring" && state.phase !== "Complete",
+        message: `📋 Maya: You've entered ${state.phase}. ${c.projectName} — stay focused on your critical path.`,
+        type: "info" as const,
+      },
+    ];
+
+    proactive.forEach(({ key, trigger, message, type }) => {
+      if (trigger && !firedAlerts.current.has(key)) {
+        firedAlerts.current.add(key);
+        setTimeout(() => {
+          if (type === "warning") {
+            toast.warning(message, { duration: 5000 });
+          } else {
+            toast.info(message, { duration: 4000 });
+          }
+        }, 1200);
+      }
+    });
+  }, [state.metrics, state.phase, c.projectName]);
 
   const advisories = buildAdvisories(state, c);
   const urgentCount = advisories.filter((a) => a.type === "warning").length;
