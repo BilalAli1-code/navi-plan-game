@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SimProvider, useSim } from "@/lib/sim/store";
 import { WorkplaceShell } from "@/components/sim/WorkplaceShell";
+import { MayaFloating } from "@/components/sim/MayaFloating";
 import { listCases, getCaseRef } from "@/lib/sim/cases";
 import { Sparkles, Send } from "lucide-react";
 
@@ -36,7 +37,10 @@ function SimRoute() {
 
   return (
     <SimProvider caseId={caseId}>
+      {/* WorkplaceShell renders the left nav + content area + right Maya panel slot */}
       <WorkplaceShell mayaSlot={<MayaSidePanel />} />
+      {/* MayaFloating is a persistent floating widget outside the shell layout */}
+      <MayaFloating />
     </SimProvider>
   );
 }
@@ -98,7 +102,9 @@ function MayaSidePanel() {
   return (
     <div className="sticky top-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
       <div className="mb-3 flex items-center gap-2">
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground font-bold">M</div>
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground font-bold">
+          M
+        </div>
         <div>
           <div className="text-[14px] font-semibold text-foreground">Maya</div>
           <div className="text-[11px] text-muted-foreground">Senior PM · Your PMP coach</div>
