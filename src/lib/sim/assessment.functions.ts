@@ -6,6 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireFeature } from "@/lib/billing/entitlement.server";
 import type { Json } from "@/integrations/supabase/types";
 import { generateFinalReport, type FinalReport } from "./assessment.server";
 
@@ -38,6 +39,8 @@ export const generateFinalAssessment = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
+    await requireFeature(db, context.userId, "full_assessment");
+
 
     const { data: existing } = await db
       .from("final_assessments")
