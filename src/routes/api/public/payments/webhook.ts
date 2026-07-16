@@ -71,12 +71,28 @@ function extractRow(subscription: Stripe.Subscription, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
   const priceId =
     item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id || item?.price?.id;
-  const productId = item?.price?.product;
-  const periodStart = item?.current_period_start ?? subscription.current_period_start;
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const price = item?.price;
+  const productId =
+    typeof price?.product === "string"
+      ? price.product
+      : (price?.product as { id?: string } | undefined)?.id ?? null;
+  const subAny = subscription as unknown as {
+    current_period_start?: number;
+    current_period_end?: number;
+  };
+  const itemAny = item as unknown as {
+    current_period_start?: number;
+    current_period_end?: number;
+  } | undefined;
+  const periodStart = itemAny?.current_period_start ?? subAny.current_period_start;
+  const periodEnd = itemAny?.current_period_end ?? subAny.current_period_end;
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id ?? null;
   return {
     stripe_subscription_id: subscription.id,
-    stripe_customer_id: subscription.customer,
+    stripe_customer_id: customerId,
     product_id: productId,
     price_id: priceId,
     status: normalizeSubscriptionStatus(subscription.status),
