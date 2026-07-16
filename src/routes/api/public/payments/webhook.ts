@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
   normalizeSubscriptionStatus,
@@ -8,12 +9,15 @@ import {
   priceMetaFor,
 } from "@/lib/billing/entitlements";
 
-type SupabaseClientLike = ReturnType<typeof createClient>;
+type SupabaseClientLike = ReturnType<typeof createClient<Database>>;
 
 let _supabase: SupabaseClientLike | null = null;
 function getSupabase(): SupabaseClientLike {
   if (!_supabase) {
-    _supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    _supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
   }
   return _supabase;
 }
