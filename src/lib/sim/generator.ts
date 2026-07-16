@@ -538,9 +538,22 @@ const PHASE_DECISIONS: DecisionTpl[] = [
   },
 ];
 
+import {
+  CUSTOMER_PORTAL_CASE_ID,
+  customerPortalDecisions,
+  customerPortalEmails,
+  customerPortalMeetings,
+  customerPortalDocuments,
+} from "./casepacks/customer-portal";
+
 export function generateDecisions(industry: IndustryCaseRef): Decision[] {
-  return PHASE_DECISIONS.map((tpl) => d(tpl, industry));
+  const base = PHASE_DECISIONS.map((tpl) => d(tpl, industry));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalDecisions];
+  }
+  return base;
 }
+
 
 // -------- Emails --------
 export function generateEmails(industry: IndustryCaseRef, decisions: Decision[]): Email[] {
