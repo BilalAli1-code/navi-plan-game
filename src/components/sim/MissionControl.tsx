@@ -35,6 +35,7 @@ function KPICard({
   trend,
   color,
   sub,
+  onClick,
 }: {
   label: string;
   value: number;
@@ -42,6 +43,7 @@ function KPICard({
   trend?: "up" | "down" | "flat";
   color: "success" | "warning" | "destructive" | "accent";
   sub?: string;
+  onClick?: () => void;
 }) {
   const colorMap = {
     success: {
@@ -73,10 +75,19 @@ function KPICard({
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("rounded-2xl border p-4", c.bg, c.border)}
+      whileHover={onClick ? { y: -2 } : undefined}
+      className={cn(
+        "w-full text-left rounded-2xl border p-4 transition",
+        c.bg,
+        c.border,
+        onClick ? "cursor-pointer hover:brightness-110" : "cursor-default",
+      )}
     >
       <div className="flex items-start justify-between">
         <div className={cn("grid h-9 w-9 place-items-center rounded-xl", c.iconBg, c.text)}>
@@ -94,7 +105,7 @@ function KPICard({
       </motion.div>
       <div className="mt-0.5 text-[12px] font-medium text-foreground/80">{label}</div>
       {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
-    </motion.div>
+    </motion.button>
   );
 }
 
