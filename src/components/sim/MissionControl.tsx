@@ -514,7 +514,7 @@ function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
 
 // ─── Decision Log Summary ────────────────────────────────────────────────────
 
-function DecisionSummary() {
+function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const correct = state.log.filter((l) => l.correct).length;
   const total = state.log.length;
