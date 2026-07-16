@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { authenticateRequest, requireFeature } from "@/lib/billing/entitlement.server";
 
 type CoachRequest = {
   phase: string;
@@ -15,10 +14,6 @@ export const Route = createFileRoute("/api/coach")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const auth = await authenticateRequest(request);
-        if (!auth) return new Response("Unauthorized", { status: 401 });
-        try { await requireFeature(auth.supabase, auth.userId, "ai_coach"); }
-        catch (r) { if (r instanceof Response) return r; throw r; }
         const body = (await request.json()) as CoachRequest;
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
