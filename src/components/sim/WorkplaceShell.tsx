@@ -362,12 +362,16 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
           <main className="min-h-[540px] rounded-2xl border border-white/10 bg-white/[0.02] p-4 lg:rounded-3xl lg:p-5">
             {state.phase === "Complete" ? (
               <CompleteView />
-            ) : state.phase === "Tailoring" && tab !== "program" ? (
+            ) : tab === "tailoring" ||
+              (state.phase === "Tailoring" && tab !== "mission" && tab !== "program") ? (
               <TailoringWorkshop
                 recommendedApproach={c.recommendedApproach}
                 industryName={c.industry}
                 projectName={c.projectName}
-                onSubmit={submitTailoring}
+                onSubmit={async (approach) => {
+                  await submitTailoring(approach);
+                  setTab("mission");
+                }}
               />
             ) : (
               <AnimatePresence mode="wait">
