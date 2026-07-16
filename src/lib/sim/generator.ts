@@ -538,15 +538,30 @@ const PHASE_DECISIONS: DecisionTpl[] = [
   },
 ];
 
+import {
+  CUSTOMER_PORTAL_CASE_ID,
+  customerPortalDecisions,
+  customerPortalEmails,
+  customerPortalMeetings,
+  customerPortalDocuments,
+} from "./casepacks/customer-portal";
+
 export function generateDecisions(industry: IndustryCaseRef): Decision[] {
-  return PHASE_DECISIONS.map((tpl) => d(tpl, industry));
+  const base = PHASE_DECISIONS.map((tpl) => d(tpl, industry));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalDecisions];
+  }
+  return base;
 }
+
 
 // -------- Emails --------
 export function generateEmails(industry: IndustryCaseRef, decisions: Decision[]): Email[] {
   const now = Date.now();
-  const emailDecisions = decisions.filter((d) => d.source === "email");
-  return emailDecisions.map((dec, i) => ({
+  const emailDecisions = decisions.filter(
+    (d) => d.source === "email" && !d.id.startsWith("cp-"),
+  );
+  const base: Email[] = emailDecisions.map((dec, i) => ({
     id: `${industry.id}-email-${i}`,
     from: i % 2 === 0 ? "sponsor" : "customer",
     subject: dec.title,
@@ -556,13 +571,19 @@ export function generateEmails(industry: IndustryCaseRef, decisions: Decision[])
     read: false,
     unlocksDecisionId: dec.id,
   }));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalEmails(now)];
+  }
+  return base;
 }
 
 // -------- Meetings --------
 export function generateMeetings(industry: IndustryCaseRef, decisions: Decision[]): Meeting[] {
   const now = Date.now();
-  const meets = decisions.filter((d) => d.source === "meeting");
-  return meets.map((dec, i) => ({
+  const meets = decisions.filter(
+    (d) => d.source === "meeting" && !d.id.startsWith("cp-"),
+  );
+  const base: Meeting[] = meets.map((dec, i) => ({
     id: `${industry.id}-mtg-${i}`,
     title: dec.title,
     time: new Date(now + i * 86_400_000).toISOString(),
@@ -571,12 +592,17 @@ export function generateMeetings(industry: IndustryCaseRef, decisions: Decision[
     transcript: `**Agenda:** ${dec.title}\n\n${dec.situation}\n\n> The room turns to you for a decision.`,
     unlocksDecisionId: dec.id,
   }));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalMeetings(now)];
+  }
+  return base;
 }
+
 
 // -------- Documents --------
 export function generateDocuments(industry: IndustryCaseRef): SimDocument[] {
   const now = new Date().toISOString();
-  return [
+  const base: SimDocument[] = [
     {
       id: `${industry.id}-doc-bc`,
       title: `${industry.projectName} — Business Case`,
@@ -620,4 +646,16 @@ export function generateDocuments(industry: IndustryCaseRef): SimDocument[] {
       markdown: `# Stakeholder Register\n\n| Name | Role | Power | Interest | Strategy |\n|---|---|---|---|---|\n| Elena Voss | Executive Sponsor | H | H | Manage Closely |\n| Marcus Reid | Primary Customer | M | H | Keep Informed |\n| Priya Anand | Vendor PM | M | M | Keep Satisfied |\n| Jordan Blake | Delivery Lead | L | H | Keep Informed |\n| Amina Osei | Risk & Compliance | H | M | Keep Satisfied |`,
     },
   ];
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    // Case pack replaces the generic charter/stakes/risk with portal-specific
+    // versions while preserving the base BC/RAID for continuity.
+    const pack = customerPortalDocuments(now);
+    const packKinds = new Set(pack.map((p) => p.kind));
+    const filtered = base.filter(
+      (d) => !(packKinds.has(d.kind) && ["Charter", "Risk Register", "Stakeholder Register"].includes(d.kind)),
+    );
+    return [...filtered, ...pack];
+  }
+  return base;
 }
+
