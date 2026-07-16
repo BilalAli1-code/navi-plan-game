@@ -37,6 +37,7 @@ import { PMToolsPanel } from "./PMToolsPanel";
 
 type Tab =
   | "mission"
+  | "tailoring"
   | "program"
   | "dashboard"
   | "mastery"
