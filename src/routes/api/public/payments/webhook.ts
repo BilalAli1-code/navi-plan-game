@@ -121,7 +121,9 @@ async function resolveUserIdForSubscription(
 async function upsertTeamRow(subscription: Stripe.Subscription, env: StripeEnv, userId: string) {
   const item = subscription.items?.data?.[0];
   const seats = item?.quantity ?? Number(subscription.metadata?.seats ?? 1);
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const itemAny = item as unknown as { current_period_end?: number } | undefined;
+  const subAny = subscription as unknown as { current_period_end?: number };
+  const periodEnd = itemAny?.current_period_end ?? subAny.current_period_end;
   const sb = getSupabase();
   const { error } = await sb.from("team_subscriptions").upsert(
     {
