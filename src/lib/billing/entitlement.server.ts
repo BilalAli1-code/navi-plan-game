@@ -104,7 +104,7 @@ export async function resolveUserTier(
 export async function hasActivePremiumSubscription(
   supabase: SB,
   userId: string,
-  env: string,
+  env: import("../stripe.server").StripeEnv = resolveStripeEnv(),
   tier: PaidTier,
 ): Promise<boolean> {
   const currentTier = await resolveUserTier(supabase, userId, env);

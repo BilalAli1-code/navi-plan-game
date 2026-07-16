@@ -911,20 +911,32 @@ export type Database = {
       }
       webhook_events: {
         Row: {
+          attempted_at: string | null
+          completed_at: string | null
+          error_message: string | null
           event_id: string
           event_type: string
+          processing_state: string
           provider: string
           received_at: string
         }
         Insert: {
+          attempted_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
           event_id: string
           event_type: string
+          processing_state?: string
           provider?: string
           received_at?: string
         }
         Update: {
+          attempted_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
           event_id?: string
           event_type?: string
+          processing_state?: string
           provider?: string
           received_at?: string
         }

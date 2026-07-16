@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
   normalizeSubscriptionStatus,
@@ -8,12 +9,15 @@ import {
   priceMetaFor,
 } from "@/lib/billing/entitlements";
 
-type SupabaseClientLike = ReturnType<typeof createClient>;
+type SupabaseClientLike = ReturnType<typeof createClient<Database>>;
 
 let _supabase: SupabaseClientLike | null = null;
 function getSupabase(): SupabaseClientLike {
   if (!_supabase) {
-    _supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    _supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
   }
   return _supabase;
 }
@@ -67,12 +71,28 @@ function extractRow(subscription: Stripe.Subscription, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
   const priceId =
     item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id || item?.price?.id;
-  const productId = item?.price?.product;
-  const periodStart = item?.current_period_start ?? subscription.current_period_start;
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const price = item?.price;
+  const productId =
+    typeof price?.product === "string"
+      ? price.product
+      : (price?.product as { id?: string } | undefined)?.id ?? null;
+  const subAny = subscription as unknown as {
+    current_period_start?: number;
+    current_period_end?: number;
+  };
+  const itemAny = item as unknown as {
+    current_period_start?: number;
+    current_period_end?: number;
+  } | undefined;
+  const periodStart = itemAny?.current_period_start ?? subAny.current_period_start;
+  const periodEnd = itemAny?.current_period_end ?? subAny.current_period_end;
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id ?? null;
   return {
     stripe_subscription_id: subscription.id,
-    stripe_customer_id: subscription.customer,
+    stripe_customer_id: customerId,
     product_id: productId,
     price_id: priceId,
     status: normalizeSubscriptionStatus(subscription.status),
@@ -101,7 +121,9 @@ async function resolveUserIdForSubscription(
 async function upsertTeamRow(subscription: Stripe.Subscription, env: StripeEnv, userId: string) {
   const item = subscription.items?.data?.[0];
   const seats = item?.quantity ?? Number(subscription.metadata?.seats ?? 1);
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const itemAny = item as unknown as { current_period_end?: number } | undefined;
+  const subAny = subscription as unknown as { current_period_end?: number };
+  const periodEnd = itemAny?.current_period_end ?? subAny.current_period_end;
   const sb = getSupabase();
   const { error } = await sb.from("team_subscriptions").upsert(
     {
@@ -161,7 +183,7 @@ async function safeUpsertSubscription(subscription: Stripe.Subscription, env: St
   const sb = getSupabase();
   const { error } = await sb
     .from("subscriptions")
-    .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
+    .upsert({ user_id: userId, ...row } as never, { onConflict: "stripe_subscription_id" });
   if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
 
   // Team-side mirror

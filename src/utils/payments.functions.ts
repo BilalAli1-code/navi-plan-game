@@ -191,11 +191,15 @@ export const verifyCheckoutSession = createServerFn({ method: "POST" })
         const tier = meta?.tier ?? "free";
         const planName = meta?.displayName ?? priceKey ?? "Plan";
         const status = sub?.status ?? "canceled";
+        const periodEnd =
+          sub?.items?.data?.[0]?.current_period_end ??
+          (sub as unknown as { current_period_end?: number } | null)?.current_period_end ??
+          null;
         const ok =
           !!sub &&
           isActiveStatus(
             status,
-            sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+            periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
           );
         return ok
           ? { ok: true, tier, planName, status }
