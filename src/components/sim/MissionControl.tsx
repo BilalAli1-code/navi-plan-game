@@ -35,6 +35,7 @@ function KPICard({
   trend,
   color,
   sub,
+  onClick,
 }: {
   label: string;
   value: number;
@@ -42,6 +43,7 @@ function KPICard({
   trend?: "up" | "down" | "flat";
   color: "success" | "warning" | "destructive" | "accent";
   sub?: string;
+  onClick?: () => void;
 }) {
   const colorMap = {
     success: {
@@ -73,10 +75,19 @@ function KPICard({
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("rounded-2xl border p-4", c.bg, c.border)}
+      whileHover={onClick ? { y: -2 } : undefined}
+      className={cn(
+        "w-full text-left rounded-2xl border p-4 transition",
+        c.bg,
+        c.border,
+        onClick ? "cursor-pointer hover:brightness-110" : "cursor-default",
+      )}
     >
       <div className="flex items-start justify-between">
         <div className={cn("grid h-9 w-9 place-items-center rounded-xl", c.iconBg, c.text)}>
@@ -94,7 +105,7 @@ function KPICard({
       </motion.div>
       <div className="mt-0.5 text-[12px] font-medium text-foreground/80">{label}</div>
       {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
-    </motion.div>
+    </motion.button>
   );
 }
 
@@ -220,12 +231,18 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
 
 // ─── Stakeholder Health Row ──────────────────────────────────────────────────
 
-function StakeholderHealthRow() {
+function StakeholderHealthRow({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const stakes = stakeholdersFor(state.caseId);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div
+      className={cn(
+        "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
+        onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
+      )}
+      onClick={onOpenTab ? () => onOpenTab("stakeholders") : undefined}
+    >
       <div className="mb-3 flex items-center gap-2">
         <HeartHandshake className="h-4 w-4 text-accent" />
         <span className="text-[13px] font-semibold text-foreground">Stakeholder Health</span>
@@ -424,7 +441,7 @@ function AIRecommendationsPanel() {
 
 // ─── XP & Achievements ───────────────────────────────────────────────────────
 
-function XPAchievements() {
+function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state, days } = useSim();
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
@@ -456,7 +473,13 @@ function XPAchievements() {
   ];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div
+      className={cn(
+        "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
+        onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
+      )}
+      onClick={onOpenTab ? () => onOpenTab("mastery") : undefined}
+    >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-accent" />
@@ -491,7 +514,7 @@ function XPAchievements() {
 
 // ─── Decision Log Summary ────────────────────────────────────────────────────
 
-function DecisionSummary() {
+function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const correct = state.log.filter((l) => l.correct).length;
   const total = state.log.length;
@@ -500,7 +523,13 @@ function DecisionSummary() {
   const recent = state.log.slice(-3).reverse();
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div
+      className={cn(
+        "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
+        onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
+      )}
+      onClick={onOpenTab ? () => onOpenTab("activity") : undefined}
+    >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-accent" />
@@ -607,6 +636,8 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
   const scheduleColor = m.schedule >= 70 ? "success" : m.schedule >= 50 ? "warning" : "destructive";
   const riskColor = m.risk >= 60 ? "success" : m.risk >= 45 ? "warning" : "destructive";
 
+  const showTailoringCTA = state.phase === "Tailoring" && !state.approach;
+
   return (
     <div className="space-y-5">
       {/* Executive header */}
@@ -622,6 +653,40 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         </div>
       </div>
 
+      {/* Tailoring CTA — shown until an approach is chosen */}
+      {showTailoringCTA && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/15 to-accent/[0.04] p-5"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-accent">
+                <Sparkles className="h-3.5 w-3.5" />
+                Start here
+              </div>
+              <h3 className="mt-1 text-[16px] font-bold text-foreground">
+                Choose your delivery approach
+              </h3>
+              <p className="mt-1 max-w-xl text-[12px] text-foreground/75">
+                Before your inbox, meetings, and decisions unlock, tailor the project approach to
+                fit the context. Your choice will drive every metric on this page.
+              </p>
+            </div>
+            {onOpenTab && (
+              <button
+                onClick={() => onOpenTab("tailoring")}
+                className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-accent-foreground transition hover:opacity-90"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Open Tailoring Workshop
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KPICard
@@ -631,6 +696,7 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
           color={healthColor}
           trend={m.health >= 70 ? "up" : m.health >= 50 ? "flat" : "down"}
           sub="overall composite"
+          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
         />
         <KPICard
           label="Budget"
@@ -639,6 +705,7 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
           color={budgetColor}
           trend={m.budget >= 70 ? "up" : m.budget >= 50 ? "flat" : "down"}
           sub="vs. baseline"
+          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
         />
         <KPICard
           label="Schedule"
@@ -647,6 +714,7 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
           color={scheduleColor}
           trend={m.schedule >= 70 ? "up" : m.schedule >= 50 ? "flat" : "down"}
           sub="on-time score"
+          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
         />
         <KPICard
           label="Risk Posture"
@@ -655,6 +723,7 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
           color={riskColor}
           trend={m.risk >= 60 ? "up" : m.risk >= 45 ? "flat" : "down"}
           sub="higher = safer"
+          onClick={onOpenTab ? () => onOpenTab("tools") : undefined}
         />
       </div>
 
@@ -663,7 +732,13 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
 
       {/* Secondary metrics */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div
+          className={cn(
+            "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
+            onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
+          )}
+          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
+        >
           <div className="mb-3 flex items-center gap-2">
             <Smile className="h-4 w-4 text-accent" />
             <span className="text-[13px] font-semibold text-foreground">Soft Metrics</span>
@@ -682,12 +757,12 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       {/* Main content grid */}
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <AIRecommendationsPanel />
-        <StakeholderHealthRow />
+        <StakeholderHealthRow onOpenTab={onOpenTab} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <DecisionSummary />
-        <XPAchievements />
+        <DecisionSummary onOpenTab={onOpenTab} />
+        <XPAchievements onOpenTab={onOpenTab} />
       </div>
     </div>
   );
