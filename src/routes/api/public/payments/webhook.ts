@@ -183,7 +183,7 @@ async function safeUpsertSubscription(subscription: Stripe.Subscription, env: St
   const sb = getSupabase();
   const { error } = await sb
     .from("subscriptions")
-    .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
+    .upsert({ user_id: userId, ...row } as never, { onConflict: "stripe_subscription_id" });
   if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
 
   // Team-side mirror
