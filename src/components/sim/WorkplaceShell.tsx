@@ -368,8 +368,8 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                 recommendedApproach={c.recommendedApproach}
                 industryName={c.industry}
                 projectName={c.projectName}
-                onSubmit={async (approach) => {
-                  await submitTailoring(approach);
+                onSubmit={(answers, approach) => {
+                  submitTailoring(answers, approach);
                   setTab("mission");
                 }}
               />
