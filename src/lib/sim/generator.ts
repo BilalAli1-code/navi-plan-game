@@ -602,7 +602,7 @@ export function generateMeetings(industry: IndustryCaseRef, decisions: Decision[
 // -------- Documents --------
 export function generateDocuments(industry: IndustryCaseRef): SimDocument[] {
   const now = new Date().toISOString();
-  return [
+  const base: SimDocument[] = [
     {
       id: `${industry.id}-doc-bc`,
       title: `${industry.projectName} — Business Case`,
@@ -646,4 +646,16 @@ export function generateDocuments(industry: IndustryCaseRef): SimDocument[] {
       markdown: `# Stakeholder Register\n\n| Name | Role | Power | Interest | Strategy |\n|---|---|---|---|---|\n| Elena Voss | Executive Sponsor | H | H | Manage Closely |\n| Marcus Reid | Primary Customer | M | H | Keep Informed |\n| Priya Anand | Vendor PM | M | M | Keep Satisfied |\n| Jordan Blake | Delivery Lead | L | H | Keep Informed |\n| Amina Osei | Risk & Compliance | H | M | Keep Satisfied |`,
     },
   ];
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    // Case pack replaces the generic charter/stakes/risk with portal-specific
+    // versions while preserving the base BC/RAID for continuity.
+    const pack = customerPortalDocuments(now);
+    const packKinds = new Set(pack.map((p) => p.kind));
+    const filtered = base.filter(
+      (d) => !(packKinds.has(d.kind) && ["Charter", "Risk Register", "Stakeholder Register"].includes(d.kind)),
+    );
+    return [...filtered, ...pack];
+  }
+  return base;
 }
+
