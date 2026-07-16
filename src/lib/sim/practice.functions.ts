@@ -364,7 +364,14 @@ export const getPracticeSession = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const db = context.supabase;
-    await requireFeature(db, context.userId, "adaptive_practice");
+    try {
+      await requireFeature(db, context.userId, "adaptive_practice");
+    } catch (e) {
+      if (e instanceof Response) {
+        return { session: null, attempts: [], locked: true as const };
+      }
+      throw e;
+    }
     const { data: rows } = await db
       .from("practice_sessions")
       .select("*")
