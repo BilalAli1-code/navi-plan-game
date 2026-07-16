@@ -105,13 +105,10 @@ const ROLE_OVERRIDES: Record<string, Partial<Record<string, Partial<Stakeholder>
 
 export function stakeholdersFor(caseId: string): Stakeholder[] {
   if (caseId === "software") {
-    // Customer Portal case ships with a full cross-functional cast.
-    // Import lazily to avoid a circular import with the generator.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { customerPortalStakeholders } = require("./casepacks/customer-portal") as typeof import("./casepacks/customer-portal");
     return customerPortalStakeholders;
   }
   const overrides = ROLE_OVERRIDES[caseId] ?? {};
   return BASE_STAKES.map((s) => ({ ...s, ...(overrides[s.id] ?? {}) }));
 }
+
 
