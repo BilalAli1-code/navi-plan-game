@@ -231,7 +231,7 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
 
 // ─── Stakeholder Health Row ──────────────────────────────────────────────────
 
-function StakeholderHealthRow() {
+function StakeholderHealthRow({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const stakes = stakeholdersFor(state.caseId);
 
