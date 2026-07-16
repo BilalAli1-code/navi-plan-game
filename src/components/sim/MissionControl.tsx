@@ -523,7 +523,13 @@ function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const recent = state.log.slice(-3).reverse();
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div
+      className={cn(
+        "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
+        onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
+      )}
+      onClick={onOpenTab ? () => onOpenTab("activity") : undefined}
+    >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-accent" />
