@@ -558,8 +558,10 @@ export function generateDecisions(industry: IndustryCaseRef): Decision[] {
 // -------- Emails --------
 export function generateEmails(industry: IndustryCaseRef, decisions: Decision[]): Email[] {
   const now = Date.now();
-  const emailDecisions = decisions.filter((d) => d.source === "email");
-  return emailDecisions.map((dec, i) => ({
+  const emailDecisions = decisions.filter(
+    (d) => d.source === "email" && !d.id.startsWith("cp-"),
+  );
+  const base: Email[] = emailDecisions.map((dec, i) => ({
     id: `${industry.id}-email-${i}`,
     from: i % 2 === 0 ? "sponsor" : "customer",
     subject: dec.title,
@@ -569,13 +571,19 @@ export function generateEmails(industry: IndustryCaseRef, decisions: Decision[])
     read: false,
     unlocksDecisionId: dec.id,
   }));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalEmails(now)];
+  }
+  return base;
 }
 
 // -------- Meetings --------
 export function generateMeetings(industry: IndustryCaseRef, decisions: Decision[]): Meeting[] {
   const now = Date.now();
-  const meets = decisions.filter((d) => d.source === "meeting");
-  return meets.map((dec, i) => ({
+  const meets = decisions.filter(
+    (d) => d.source === "meeting" && !d.id.startsWith("cp-"),
+  );
+  const base: Meeting[] = meets.map((dec, i) => ({
     id: `${industry.id}-mtg-${i}`,
     title: dec.title,
     time: new Date(now + i * 86_400_000).toISOString(),
@@ -584,7 +592,12 @@ export function generateMeetings(industry: IndustryCaseRef, decisions: Decision[
     transcript: `**Agenda:** ${dec.title}\n\n${dec.situation}\n\n> The room turns to you for a decision.`,
     unlocksDecisionId: dec.id,
   }));
+  if (industry.id === CUSTOMER_PORTAL_CASE_ID) {
+    return [...base, ...customerPortalMeetings(now)];
+  }
+  return base;
 }
+
 
 // -------- Documents --------
 export function generateDocuments(industry: IndustryCaseRef): SimDocument[] {
