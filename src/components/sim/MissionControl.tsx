@@ -441,7 +441,7 @@ function AIRecommendationsPanel() {
 
 // ─── XP & Achievements ───────────────────────────────────────────────────────
 
-function XPAchievements() {
+function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state, days } = useSim();
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
