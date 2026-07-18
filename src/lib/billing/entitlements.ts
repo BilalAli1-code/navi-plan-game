@@ -69,7 +69,7 @@ export const FEATURE_MIN_TIER: Record<Feature, Tier> = {
   basic_sim: "free",
   all_scenarios: "pro",
   ai_coach: "free",
-  adaptive_practice: "pro",
+  adaptive_practice: "free",
   full_assessment: "pro",
   exam_history: "pro",
   analytics_export: "team",
