@@ -84,7 +84,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
 
   const navGroups: NavGroup[] = [
     {
-      label: "Overview",
+      label: "Workspace",
       items: [
         {
           id: "mission",
@@ -92,32 +92,26 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
           icon: LayoutDashboard,
           badge: urgentAlerts > 0 ? urgentAlerts : undefined,
         },
-        // Tailoring tab hidden — approach auto-selected for now
-
-        { id: "program", label: "Program", icon: Target },
-        { id: "dashboard", label: "Metrics", icon: Activity },
-        { id: "mastery", label: "Mastery", icon: Sparkles },
-      ],
-    },
-    {
-      label: "Workplace",
-      items: [
         { id: "inbox", label: "Inbox", icon: Mail, badge: unread || undefined },
-        { id: "chat", label: "Chat", icon: MessageSquare },
-        { id: "meetings", label: "Meetings", icon: CalendarDays },
+        { id: "chat", label: "Team Chat", icon: MessageSquare },
+        { id: "meetings", label: "Calendar", icon: CalendarDays },
         { id: "documents", label: "Documents", icon: FileText },
+        { id: "stakeholders", label: "Stakeholders", icon: Users },
+        { id: "tools", label: "PM Tools", icon: Briefcase },
+        { id: "activity", label: "Notifications", icon: Bell },
       ],
     },
     {
-      label: "Management",
+      label: "Learning",
       items: [
-        { id: "stakeholders", label: "Stakeholders", icon: Users },
-        { id: "reports", label: "Reports", icon: BarChart2 },
-        { id: "activity", label: "Activity", icon: Bell },
-        { id: "tools", label: "PM Tools", icon: Briefcase },
+        { id: "program", label: "Program", icon: Target },
+        { id: "dashboard", label: "Project Metrics", icon: Activity },
+        { id: "mastery", label: "PMBOK Mastery", icon: Sparkles },
+        { id: "reports", label: "Executive Reports", icon: BarChart2 },
       ],
     },
   ];
+
 
   const currentDayRow = days.find((d) => d.day_number === state.currentDay);
   useEffect(() => {
