@@ -54,11 +54,12 @@ function bootstrap(caseId: string): SimState {
   const decisions = generateDecisions(c);
   return {
     caseId,
-    phase: "Tailoring",
+    phase: "Initiation",
     metrics: INITIAL_METRICS,
     tailoring: null,
     tailoringScore: null,
-    approach: null,
+    approach: c.recommendedApproach,
+
     emails: generateEmails(c, decisions),
     meetings: generateMeetings(c, decisions),
     documents: generateDocuments(c),
