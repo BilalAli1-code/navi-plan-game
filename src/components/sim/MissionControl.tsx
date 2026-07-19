@@ -25,6 +25,9 @@ import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { getDay, TOTAL_DAYS, TOTAL_MINUTES } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { ScenarioTimeline } from "./ScenarioTimeline";
+import { DayBriefing } from "./DayBriefing";
+import { RiskResponsePanel } from "./RiskResponsePanel";
+import { ConflictPanel } from "./ConflictPanel";
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 
