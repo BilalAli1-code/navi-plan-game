@@ -160,8 +160,63 @@ export const customerPortalStakeholders: Stakeholder[] = [
 // ---------- Decisions (added per phase; brand-specific to the portal) ----------
 // Every decision uses PMBOK 6/7/8 vocabulary and reinforces principles.
 export const customerPortalDecisions: Decision[] = [
+  // ================== Day 1 · KICKOFF (Tailoring phase) ==================
+  {
+    id: "cp-kickoff-tone",
+    phase: "Tailoring",
+    ecoDomain: "People",
+    ecoTask: "P-1.2 Lead a team",
+    pmbokDomain: "Team · Leadership",
+    title: "Set the tone at the kickoff meeting",
+    situation:
+      "You're 9:15am into your first day. Elena (Sponsor) opens the kickoff with an aggressive pitch — 'this must ship in 9 months, board is watching.' Nadia (Product) is energized. Jordan (Dev Lead) is already looking uneasy at the ambition. The room turns to you: how do you set the tone for this project?",
+    source: "meeting",
+    options: [
+      {
+        id: "A",
+        label:
+          "Acknowledge the ambition, frame the project around outcomes (CSAT, cost-per-ticket) not just the date, and commit to bringing back a tailored plan with honest trade-offs within a week.",
+        rationale:
+          "PMBOK 7 principles: Stewardship + Value. Leaders anchor on outcomes and honesty, not on hero commitments in the first hour.",
+        impact: { trust: 6, morale: 6, satisfaction: 2 },
+        quality: "excellent",
+        consequence:
+          "Elena visibly relaxes. Jordan sends a private thank-you note after the meeting. You've earned the room without over-promising.",
+        pmiPrinciple: "Stewardship — honest, outcome-focused leadership from day one.",
+      },
+      {
+        id: "B",
+        label:
+          "Match Elena's energy — commit to the 9-month date on the spot and promise the team will 'find a way'.",
+        rationale:
+          "Anchors the project on a date before analysis; sets a hero-culture tone the team can't sustain.",
+        impact: { trust: -4, morale: -8, risk: -6 },
+        quality: "poor",
+        consequence:
+          "Two engineers roll their eyes. Jordan quietly starts polishing his résumé.",
+        pmiPrinciple: "Never commit without analysis — especially not in front of the team.",
+      },
+      {
+        id: "C",
+        label:
+          "Stay quiet, take notes, and say you'll circulate 'the plan' after the meeting.",
+        rationale:
+          "Absence of leadership in the first hour reads as absence of leadership for the whole project.",
+        impact: { trust: -4, morale: -2 },
+        quality: "risky",
+        consequence:
+          "The room leaves uncertain who is actually leading this project.",
+        pmiPrinciple: "Presence and framing are the PM's job in kickoff.",
+      },
+    ],
+    correctOptionId: "A",
+    examTip:
+      "Kickoff tone answers almost always favor outcomes + honesty + a commitment to bring back a tailored plan — never a hero commitment to the date on day one.",
+  },
+
   // ================== Day 2 · INITIATION ==================
   {
+
     id: "cp-init-benefits",
     phase: "Initiation",
     ecoDomain: "Business Environment",
