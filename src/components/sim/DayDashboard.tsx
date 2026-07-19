@@ -103,8 +103,10 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         })}
       </div>
 
-      {/* Morning briefing + story hook — reusable across all 7 days */}
-      <DayBriefing onOpenTab={onOpenTab} />
+      {/* XP, Levels & Achievements — learning progression */}
+      <XPAchievements onOpenTab={onOpenTab as (tab: string) => void} />
+
+
 
       {/* Today's activities */}
 
