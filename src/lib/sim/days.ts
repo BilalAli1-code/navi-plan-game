@@ -58,6 +58,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Select and justify a delivery approach",
       "Review PMBOK tailoring concepts",
     ],
+    briefing:
+      "Monday morning, 8:15. You just joined as the project manager. Your inbox already has a welcome note from the sponsor, an intro from the vendor, and a message from a pilot customer. In an hour you'll walk into the project kickoff meeting — the sponsor sets ambitious goals, the product owner is excited, and engineering already looks cautious. Your first job is not to solve anything: it is to listen, tailor your approach to the context, and set the tone as a leader.",
+    storyHook:
+      "As the day winds down a late email lands from your sponsor — a competitor just announced an AI-powered self-service portal, and the exec team wants your impact assessment tomorrow. The project just got sharper teeth.",
   },
   {
     day: 2,
@@ -70,6 +74,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Engage with the sponsor",
       "Develop or review the project charter",
     ],
+    briefing:
+      "The competitor announcement changes everything. The sponsor wants a quick impact read, the customer team wants to be involved, and Finance wants budget visibility. Today is about turning noise into structure — a signed charter, a real stakeholder register, and clear governance.",
+    storyHook:
+      "Engineering drops a technical constraint that blows up one of your kickoff assumptions. Tomorrow's planning session just got harder.",
   },
   {
     day: 3,
@@ -82,6 +90,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Create risk and stakeholder strategies",
       "Make key planning decisions",
     ],
+    briefing:
+      "Scope pressure is now real. Product wants more features, engineering pushes back, finance reminds you about the budget, security raises new compliance concerns. There is no perfect plan — only trade-offs you can defend.",
+    storyHook:
+      "A key team member resigns and a vendor flags a delay. Tomorrow you stop planning and start leading humans through the mess.",
   },
   {
     day: 4,
@@ -94,6 +106,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Respond to early stakeholder and vendor events",
       "Address team or resource issues",
     ],
+    briefing:
+      "Plans are meeting reality. Standups are drifting, demos expose usability issues, and stakeholders are pulling in different directions. Today is about servant leadership and disciplined communication.",
+    storyHook:
+      "A critical test fails overnight. Execs are already asking questions before you've had coffee.",
   },
   {
     day: 5,
@@ -105,6 +121,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Respond to change requests",
       "Make corrective or preventive decisions",
     ],
+    briefing:
+      "Numbers are talking. EVM, defect trends, risk heatmaps — read them like a leader, not an accountant. Change requests are landing; decide with data, not fear.",
+    storyHook:
+      "A steering committee is called for tomorrow. Recovery — or a very hard conversation — is on the agenda.",
   },
   {
     day: 6,
@@ -117,6 +137,10 @@ export const DAY_PLAN: DayDefinition[] = [
       "Apply leadership, negotiation, and conflict skills",
       "Develop a recovery strategy",
     ],
+    briefing:
+      "This is the day leadership is tested. Options over panic. Facts over blame. Recovery plans that stakeholders can actually believe.",
+    storyHook:
+      "The sponsor signs off on the recovery plan. Cutover starts tomorrow — go/no-go, then launch.",
   },
   {
     day: 7,
@@ -129,7 +153,12 @@ export const DAY_PLAN: DayDefinition[] = [
       "Receive final AI mentor assessment",
       "Generate a personalized development plan",
     ],
+    briefing:
+      "Launch day. Whether it goes smoothly or rocky depends on choices you made all week. Own the outcome, run a real closure, hand off benefits, and step back to reflect.",
+    storyHook:
+      "Maya delivers your final executive-style performance review — the story of the leader you became this week.",
   },
+
 ];
 
 export const REQUIRED_ACTIVITIES: DayActivityKey[] = [
