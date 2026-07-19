@@ -17,6 +17,8 @@ import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
+import { DayBriefing } from "./DayBriefing";
+
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
   const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
@@ -101,7 +103,11 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         })}
       </div>
 
+      {/* Morning briefing + story hook — reusable across all 7 days */}
+      <DayBriefing onOpenTab={onOpenTab} />
+
       {/* Today's activities */}
+
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <div className="mb-2 flex items-baseline justify-between">
           <div className="text-[12px] font-semibold text-foreground">Today's activities (~60 min)</div>

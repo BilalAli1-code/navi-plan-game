@@ -160,8 +160,63 @@ export const customerPortalStakeholders: Stakeholder[] = [
 // ---------- Decisions (added per phase; brand-specific to the portal) ----------
 // Every decision uses PMBOK 6/7/8 vocabulary and reinforces principles.
 export const customerPortalDecisions: Decision[] = [
+  // ================== Day 1 · KICKOFF (Tailoring phase) ==================
+  {
+    id: "cp-kickoff-tone",
+    phase: "Tailoring",
+    ecoDomain: "People",
+    ecoTask: "P-1.2 Lead a team",
+    pmbokDomain: "Team · Leadership",
+    title: "Set the tone at the kickoff meeting",
+    situation:
+      "You're 9:15am into your first day. Elena (Sponsor) opens the kickoff with an aggressive pitch — 'this must ship in 9 months, board is watching.' Nadia (Product) is energized. Jordan (Dev Lead) is already looking uneasy at the ambition. The room turns to you: how do you set the tone for this project?",
+    source: "meeting",
+    options: [
+      {
+        id: "A",
+        label:
+          "Acknowledge the ambition, frame the project around outcomes (CSAT, cost-per-ticket) not just the date, and commit to bringing back a tailored plan with honest trade-offs within a week.",
+        rationale:
+          "PMBOK 7 principles: Stewardship + Value. Leaders anchor on outcomes and honesty, not on hero commitments in the first hour.",
+        impact: { trust: 6, morale: 6, satisfaction: 2 },
+        quality: "excellent",
+        consequence:
+          "Elena visibly relaxes. Jordan sends a private thank-you note after the meeting. You've earned the room without over-promising.",
+        pmiPrinciple: "Stewardship — honest, outcome-focused leadership from day one.",
+      },
+      {
+        id: "B",
+        label:
+          "Match Elena's energy — commit to the 9-month date on the spot and promise the team will 'find a way'.",
+        rationale:
+          "Anchors the project on a date before analysis; sets a hero-culture tone the team can't sustain.",
+        impact: { trust: -4, morale: -8, risk: -6 },
+        quality: "poor",
+        consequence:
+          "Two engineers roll their eyes. Jordan quietly starts polishing his résumé.",
+        pmiPrinciple: "Never commit without analysis — especially not in front of the team.",
+      },
+      {
+        id: "C",
+        label:
+          "Stay quiet, take notes, and say you'll circulate 'the plan' after the meeting.",
+        rationale:
+          "Absence of leadership in the first hour reads as absence of leadership for the whole project.",
+        impact: { trust: -4, morale: -2 },
+        quality: "risky",
+        consequence:
+          "The room leaves uncertain who is actually leading this project.",
+        pmiPrinciple: "Presence and framing are the PM's job in kickoff.",
+      },
+    ],
+    correctOptionId: "A",
+    examTip:
+      "Kickoff tone answers almost always favor outcomes + honesty + a commitment to bring back a tailored plan — never a hero commitment to the date on day one.",
+  },
+
   // ================== Day 2 · INITIATION ==================
   {
+
     id: "cp-init-benefits",
     phase: "Initiation",
     ecoDomain: "Business Environment",
@@ -714,7 +769,19 @@ export function customerPortalEmails(now: number): Email[] {
       receivedAt: new Date(now - 2 * 3600_000).toISOString(),
       read: false,
     },
+    // Day-1 cliffhanger: arrives late in the day — competitor announcement.
+    {
+      id: "cp-email-competitor-cliffhanger",
+      from: "sponsor",
+      subject: "URGENT — competitor just launched an AI self-service portal",
+      preview:
+        "Board saw the news 20 minutes ago. I need your impact read by tomorrow morning…",
+      body: "Just saw the wire — our biggest competitor announced an AI-powered self-service portal, 'available today.' The board is asking me if we're moving fast enough. I need a one-page impact read on my desk by tomorrow morning: do we accelerate, absorb AI into our scope, or hold the line and differentiate on quality?\n\nDon't panic. Think it through. But move.\n\n— Elena",
+      receivedAt: new Date(now - 0.5 * 3600_000).toISOString(),
+      read: false,
+    },
   );
+
 
   return emails;
 }
@@ -727,19 +794,28 @@ export function customerPortalMeetings(now: number): Meeting[] {
       title: d.title,
       time: new Date(now + i * 86_400_000).toISOString(),
       attendees:
-        d.id === "cp-init-benefits"
-          ? ["sponsor", "finance", "cs-director"]
-          : d.id === "cp-plan-mvp"
-            ? ["product-owner", "cs-director", "sponsor", "vendor"]
-            : d.id === "cp-exec-integration-slip"
-              ? ["it-manager", "vendor", "architect"]
-              : d.id === "cp-uat-defects"
-                ? ["qa-lead", "sponsor", "product-owner", "customer"]
-                : ["sponsor", "cs-director", "finance"],
-      agenda: [d.title, "Context & data", "Options", "Decision", "Actions & owners"],
-      transcript: `**Agenda:** ${d.title}\n\n${d.situation}\n\n> The room turns to you for a decision.`,
+        d.id === "cp-kickoff-tone"
+          ? ["sponsor", "product-owner", "team-lead", "cs-director", "architect", "ux"]
+          : d.id === "cp-init-benefits"
+            ? ["sponsor", "finance", "cs-director"]
+            : d.id === "cp-plan-mvp"
+              ? ["product-owner", "cs-director", "sponsor", "vendor"]
+              : d.id === "cp-exec-integration-slip"
+                ? ["it-manager", "vendor", "architect"]
+                : d.id === "cp-uat-defects"
+                  ? ["qa-lead", "sponsor", "product-owner", "customer"]
+                  : ["sponsor", "cs-director", "finance"],
+      agenda:
+        d.id === "cp-kickoff-tone"
+          ? ["Welcome & introductions", "Business context & goals", "Roles & governance", "Tone-setting", "Next 7 days"]
+          : [d.title, "Context & data", "Options", "Decision", "Actions & owners"],
+      transcript:
+        d.id === "cp-kickoff-tone"
+          ? `**Kickoff — ${d.title}**\n\nElena opens: *"Board is watching CSAT and cost-per-ticket. Nine months, no drama."*\n\nNadia jumps in: *"We can do it — if we protect MVP scope from day one."*\n\nJordan (Dev Lead) quietly: *"We can commit to a discovery sprint. Not to the date. Not today."*\n\n${d.situation}\n\n> The room turns to you.`
+          : `**Agenda:** ${d.title}\n\n${d.situation}\n\n> The room turns to you for a decision.`,
       unlocksDecisionId: d.id,
     }));
+
 
   meetings.push({
     id: "cp-mtg-go-no-go",
