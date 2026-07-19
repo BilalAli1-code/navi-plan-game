@@ -794,19 +794,28 @@ export function customerPortalMeetings(now: number): Meeting[] {
       title: d.title,
       time: new Date(now + i * 86_400_000).toISOString(),
       attendees:
-        d.id === "cp-init-benefits"
-          ? ["sponsor", "finance", "cs-director"]
-          : d.id === "cp-plan-mvp"
-            ? ["product-owner", "cs-director", "sponsor", "vendor"]
-            : d.id === "cp-exec-integration-slip"
-              ? ["it-manager", "vendor", "architect"]
-              : d.id === "cp-uat-defects"
-                ? ["qa-lead", "sponsor", "product-owner", "customer"]
-                : ["sponsor", "cs-director", "finance"],
-      agenda: [d.title, "Context & data", "Options", "Decision", "Actions & owners"],
-      transcript: `**Agenda:** ${d.title}\n\n${d.situation}\n\n> The room turns to you for a decision.`,
+        d.id === "cp-kickoff-tone"
+          ? ["sponsor", "product-owner", "team-lead", "cs-director", "architect", "ux"]
+          : d.id === "cp-init-benefits"
+            ? ["sponsor", "finance", "cs-director"]
+            : d.id === "cp-plan-mvp"
+              ? ["product-owner", "cs-director", "sponsor", "vendor"]
+              : d.id === "cp-exec-integration-slip"
+                ? ["it-manager", "vendor", "architect"]
+                : d.id === "cp-uat-defects"
+                  ? ["qa-lead", "sponsor", "product-owner", "customer"]
+                  : ["sponsor", "cs-director", "finance"],
+      agenda:
+        d.id === "cp-kickoff-tone"
+          ? ["Welcome & introductions", "Business context & goals", "Roles & governance", "Tone-setting", "Next 7 days"]
+          : [d.title, "Context & data", "Options", "Decision", "Actions & owners"],
+      transcript:
+        d.id === "cp-kickoff-tone"
+          ? `**Kickoff — ${d.title}**\n\nElena opens: *"Board is watching CSAT and cost-per-ticket. Nine months, no drama."*\n\nNadia jumps in: *"We can do it — if we protect MVP scope from day one."*\n\nJordan (Dev Lead) quietly: *"We can commit to a discovery sprint. Not to the date. Not today."*\n\n${d.situation}\n\n> The room turns to you.`
+          : `**Agenda:** ${d.title}\n\n${d.situation}\n\n> The room turns to you for a decision.`,
       unlocksDecisionId: d.id,
     }));
+
 
   meetings.push({
     id: "cp-mtg-go-no-go",
