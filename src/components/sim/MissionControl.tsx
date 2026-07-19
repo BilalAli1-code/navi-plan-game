@@ -695,6 +695,9 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         />
       </div>
 
+      {/* Morning briefing — story context for today's project work */}
+      <DayBriefing onOpenTab={onOpenTab as (tab: string) => void} />
+
       {/* Scenario timeline */}
       <ScenarioTimeline onOpenTab={onOpenTab} />
 
@@ -728,10 +731,12 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         <StakeholderHealthRow onOpenTab={onOpenTab} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <DecisionSummary onOpenTab={onOpenTab} />
-        <XPAchievements onOpenTab={onOpenTab} />
-      </div>
+      {/* Active project engine actions: risks & team conflicts */}
+      <RiskResponsePanel dayNumber={state.currentDay} />
+      <ConflictPanel dayNumber={state.currentDay} />
+
+      {/* Recent decisions activity */}
+      <DecisionSummary onOpenTab={onOpenTab} />
     </div>
   );
 }
