@@ -769,7 +769,19 @@ export function customerPortalEmails(now: number): Email[] {
       receivedAt: new Date(now - 2 * 3600_000).toISOString(),
       read: false,
     },
+    // Day-1 cliffhanger: arrives late in the day — competitor announcement.
+    {
+      id: "cp-email-competitor-cliffhanger",
+      from: "sponsor",
+      subject: "URGENT — competitor just launched an AI self-service portal",
+      preview:
+        "Board saw the news 20 minutes ago. I need your impact read by tomorrow morning…",
+      body: "Just saw the wire — our biggest competitor announced an AI-powered self-service portal, 'available today.' The board is asking me if we're moving fast enough. I need a one-page impact read on my desk by tomorrow morning: do we accelerate, absorb AI into our scope, or hold the line and differentiate on quality?\n\nDon't panic. Think it through. But move.\n\n— Elena",
+      receivedAt: new Date(now - 0.5 * 3600_000).toISOString(),
+      read: false,
+    },
   );
+
 
   return emails;
 }
