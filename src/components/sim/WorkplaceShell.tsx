@@ -92,9 +92,8 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
           icon: LayoutDashboard,
           badge: urgentAlerts > 0 ? urgentAlerts : undefined,
         },
-        ...(state.phase === "Tailoring"
-          ? [{ id: "tailoring" as Tab, label: "Tailoring", icon: Sparkles }]
-          : []),
+        // Tailoring tab hidden — approach auto-selected for now
+
         { id: "program", label: "Program", icon: Target },
         { id: "dashboard", label: "Metrics", icon: Activity },
         { id: "mastery", label: "Mastery", icon: Sparkles },
@@ -362,18 +361,8 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
           <main className="min-h-[540px] rounded-2xl border border-white/10 bg-white/[0.02] p-4 lg:rounded-3xl lg:p-5">
             {state.phase === "Complete" ? (
               <CompleteView />
-            ) : tab === "tailoring" ||
-              (state.phase === "Tailoring" && tab !== "mission" && tab !== "program") ? (
-              <TailoringWorkshop
-                recommendedApproach={c.recommendedApproach}
-                industryName={c.industry}
-                projectName={c.projectName}
-                onSubmit={(answers, approach) => {
-                  submitTailoring(answers, approach);
-                  setTab("mission");
-                }}
-              />
             ) : (
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={tab}

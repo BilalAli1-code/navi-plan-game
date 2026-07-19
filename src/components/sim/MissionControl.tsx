@@ -636,8 +636,6 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
   const scheduleColor = m.schedule >= 70 ? "success" : m.schedule >= 50 ? "warning" : "destructive";
   const riskColor = m.risk >= 60 ? "success" : m.risk >= 45 ? "warning" : "destructive";
 
-  const showTailoringCTA = state.phase === "Tailoring" && !state.approach;
-
   return (
     <div className="space-y-5">
       {/* Executive header */}
@@ -653,39 +651,6 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         </div>
       </div>
 
-      {/* Tailoring CTA — shown until an approach is chosen */}
-      {showTailoringCTA && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/15 to-accent/[0.04] p-5"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-accent">
-                <Sparkles className="h-3.5 w-3.5" />
-                Start here
-              </div>
-              <h3 className="mt-1 text-[16px] font-bold text-foreground">
-                Choose your delivery approach
-              </h3>
-              <p className="mt-1 max-w-xl text-[12px] text-foreground/75">
-                Before your inbox, meetings, and decisions unlock, tailor the project approach to
-                fit the context. Your choice will drive every metric on this page.
-              </p>
-            </div>
-            {onOpenTab && (
-              <button
-                onClick={() => onOpenTab("tailoring")}
-                className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12px] font-semibold text-accent-foreground transition hover:opacity-90"
-              >
-                <Zap className="h-3.5 w-3.5" />
-                Open Tailoring Workshop
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
