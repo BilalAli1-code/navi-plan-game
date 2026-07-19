@@ -25,6 +25,9 @@ import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { getDay, TOTAL_DAYS, TOTAL_MINUTES } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { ScenarioTimeline } from "./ScenarioTimeline";
+import { DayBriefing } from "./DayBriefing";
+import { RiskResponsePanel } from "./RiskResponsePanel";
+import { ConflictPanel } from "./ConflictPanel";
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 
@@ -441,7 +444,7 @@ function AIRecommendationsPanel() {
 
 // ─── XP & Achievements ───────────────────────────────────────────────────────
 
-function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state, days } = useSim();
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
@@ -692,6 +695,9 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         />
       </div>
 
+      {/* Morning briefing — story context for today's project work */}
+      <DayBriefing onOpenTab={onOpenTab as (tab: string) => void} />
+
       {/* Scenario timeline */}
       <ScenarioTimeline onOpenTab={onOpenTab} />
 
@@ -725,10 +731,12 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         <StakeholderHealthRow onOpenTab={onOpenTab} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <DecisionSummary onOpenTab={onOpenTab} />
-        <XPAchievements onOpenTab={onOpenTab} />
-      </div>
+      {/* Active project engine actions: risks & team conflicts */}
+      <RiskResponsePanel dayNumber={state.currentDay} />
+      <ConflictPanel dayNumber={state.currentDay} />
+
+      {/* Recent decisions activity */}
+      <DecisionSummary onOpenTab={onOpenTab} />
     </div>
   );
 }

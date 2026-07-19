@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
 import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
-import { RiskResponsePanel } from "./RiskResponsePanel";
-import { ConflictPanel } from "./ConflictPanel";
-import { DayBriefing } from "./DayBriefing";
+import { XPAchievements } from "./MissionControl";
+
+
 
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
@@ -103,8 +103,10 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         })}
       </div>
 
-      {/* Morning briefing + story hook — reusable across all 7 days */}
-      <DayBriefing onOpenTab={onOpenTab} />
+      {/* XP, Levels & Achievements — learning progression */}
+      <XPAchievements onOpenTab={onOpenTab as (tab: string) => void} />
+
+
 
       {/* Today's activities */}
 
@@ -201,13 +203,9 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         </div>
       )}
 
-      {/* First-class engine actions: risk & conflict */}
-      <RiskResponsePanel dayNumber={state.currentDay} />
-      <ConflictPanel dayNumber={state.currentDay} />
-
-
       {/* Day 7: final assessment */}
       {state.currentDay === 7 && runId && <FinalAssessment runId={runId} />}
+
 
       {/* Reflection */}
       <ReflectionCard
