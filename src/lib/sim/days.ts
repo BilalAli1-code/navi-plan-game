@@ -39,7 +39,12 @@ export type DayDefinition = {
   phase: SimPhase;
   focus: string;
   objectives: string[];
+  /** Morning briefing narrative — sets the tone and story of the day. */
+  briefing: string;
+  /** End-of-day cliffhanger / story hook — pushes into the next day. */
+  storyHook: string;
 };
+
 
 export const DAY_PLAN: DayDefinition[] = [
   {
