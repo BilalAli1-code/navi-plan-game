@@ -17,6 +17,8 @@ import { PracticePanel } from "./PracticePanel";
 import { FinalAssessment } from "./FinalAssessment";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
+import { DayBriefing } from "./DayBriefing";
+
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
   const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
