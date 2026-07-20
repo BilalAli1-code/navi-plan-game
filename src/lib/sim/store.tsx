@@ -33,6 +33,9 @@ import type { EventInput } from "./events.functions";
 import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
+import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
+import { toast } from "sonner";
+
 import type {
   Decision,
   DecisionOption,
@@ -131,7 +134,11 @@ type Ctx = {
     what_would_change: string | null;
     key_learning: string | null;
   } | null>;
+  // Proactive Maya coaching queue (Blueprint §11.2)
+  mayaNudges: MayaNudge[];
+  dismissNudge: (id: string) => void;
 };
+
 
 const SimContext = createContext<Ctx | null>(null);
 
@@ -141,11 +148,14 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const [hydrating, setHydrating] = useState(true);
   const [runId, setRunId] = useState<string | null>(null);
   const [days, setDays] = useState<DailyProgressRow[]>([]);
+  const [mayaNudges, setMayaNudges] = useState<MayaNudge[]>([]);
+  const firedNudgeIds = useRef<Set<string>>(new Set());
   const runIdRef = useRef<string | null>(null);
   const pendingRef = useRef<SimState | null>(null);
   const savingRef = useRef(false);
   const lastDecisionKeyRef = useRef<string | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const loadRunFn = useServerFn(loadRun);
   const saveRunFn = useServerFn(saveRun);
@@ -236,6 +246,25 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
+  // Re-run chapter gates whenever the learner opens a new chapter so
+  // newly-eligible events unlock (Blueprint §7.3).
+  useEffect(() => {
+    const rid = runIdRef.current;
+    if (!rid || hydrating) return;
+    void syncEventsFn({
+      data: {
+        runId: rid,
+        events: applyChapterGates(
+          eventsFromState(state),
+          Math.max(1, Math.min(7, state.currentDay ?? 1)),
+          state.decisions,
+        ),
+      },
+    }).catch((err) => console.error("Failed to re-gate events:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentDay, hydrating]);
+
+
   // Persist: on every state change, mirror to localStorage (always) and push to
   // Supabase (queued — coalesces rapid updates). One flight at a time.
   useEffect(() => {
@@ -262,12 +291,21 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (wasNew) {
         setRunId(res.runId);
         void refreshDays(res.runId);
-        // First time we have a runId — publish generator content as events.
+        // First time we have a runId — publish generator content as events,
+        // gated by the learner's current chapter (Blueprint §7.3).
         void syncEventsFn({
-          data: { runId: res.runId, events: eventsFromState(next) },
+          data: {
+            runId: res.runId,
+            events: applyChapterGates(
+              eventsFromState(next),
+              Math.max(1, Math.min(7, next.currentDay ?? 1)),
+              next.decisions,
+            ),
+          },
         }).catch((err) => {
           console.error("Failed to sync events:", err);
         });
+
       }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -310,6 +348,24 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
       const next = commitDecision(state, dec, option);
       setState(next);
+
+      // Maya trigger dispatcher (Blueprint §11.2) — proactive coaching moments.
+      const nudges = evaluateMayaTriggers({
+        decision: dec,
+        option,
+        prevState: state,
+        nextState: next,
+        currentChapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+      });
+      for (const n of nudges) {
+        if (firedNudgeIds.current.has(n.id)) continue;
+        firedNudgeIds.current.add(n.id);
+        setMayaNudges((q) => [...q, n]);
+        const msg = `Maya: ${n.message}`;
+        if (n.severity === "warning") toast.warning(msg, { duration: 6000 });
+        else toast.info(msg, { duration: 6000 });
+      }
+
 
       const rid = runIdRef.current;
       if (rid) {
@@ -599,7 +655,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     goToDay,
     saveDayReflection,
     loadDayReflection,
+    mayaNudges,
+    dismissNudge: (id: string) => setMayaNudges((q) => q.filter((n) => n.id !== id)),
   };
+
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>;
 }
