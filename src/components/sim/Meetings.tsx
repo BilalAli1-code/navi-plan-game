@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Users, CheckCircle2 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
 import { visibleMeetings } from "@/lib/sim/visibility";
@@ -11,8 +11,17 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
   const stakes = stakeholdersFor(state.caseId);
   // Chapter-gated: only surface meetings whose gating chapter has opened.
   const meetings = useMemo(() => visibleMeetings(state), [state]);
+  const answered = useMemo(
+    () => new Set(state.log.map((l) => l.decisionId)),
+    [state.log],
+  );
+  const isCompleted = (m: (typeof meetings)[number]) =>
+    !!m.unlocksDecisionId && answered.has(m.unlocksDecisionId);
+  const upcoming = meetings.filter((m) => !isCompleted(m));
+  const past = meetings.filter((m) => isCompleted(m));
   const [openId, setOpenId] = useState<string | null>(meetings[0]?.id ?? null);
   const active = meetings.find((m) => m.id === openId) ?? null;
+  const activeDone = active ? isCompleted(active) : false;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(280px,340px)_1fr]">
@@ -27,27 +36,25 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
               No meetings scheduled for this chapter yet.
             </li>
           )}
-          {meetings.map((m) => (
-            <li key={m.id}>
-              <button
-                onClick={() => setOpenId(m.id)}
-                className={cn(
-                  "flex w-full flex-col gap-1 border-b border-white/5 px-4 py-3 text-left transition",
-                  openId === m.id ? "bg-white/[0.06]" : "hover:bg-white/[0.03]",
-                )}
-              >
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  {new Date(m.time).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                </div>
-                <div className="text-[13px] font-semibold text-foreground">{m.title}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {m.attendees.length} attendees
-                </div>
-              </button>
+          {upcoming.length > 0 && (
+            <li className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Upcoming
             </li>
+          )}
+          {upcoming.map((m) => (
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} />
+          ))}
+          {past.length > 0 && (
+            <li className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Completed
+            </li>
+          )}
+          {past.map((m) => (
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} done />
           ))}
         </ul>
       </div>
+
 
       <motion.div
         key={active?.id}
@@ -98,12 +105,21 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </div>
 
             {active.unlocksDecisionId && (
-              <button
-                onClick={() => onOpenDecision(active.unlocksDecisionId!)}
-                className="mt-6 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground hover:opacity-90"
-              >
-                Make the decision →
-              </button>
+              activeDone ? (
+                <button
+                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                  className="mt-6 flex items-center gap-2 rounded-full border border-[color:var(--color-success)]/30 bg-[color:var(--color-success)]/10 px-5 py-2.5 text-[13px] font-semibold text-[color:var(--color-success)]"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Decision recorded — review
+                </button>
+              ) : (
+                <button
+                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                  className="mt-6 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground hover:opacity-90"
+                >
+                  Make the decision →
+                </button>
+              )
             )}
           </>
         ) : (
@@ -115,3 +131,51 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
     </div>
   );
 }
+
+function MeetingRow({
+  meeting: m,
+  openId,
+  onSelect,
+  done,
+}: {
+  meeting: {
+    id: string;
+    title: string;
+    time: string;
+    attendees: string[];
+  };
+  openId: string | null;
+  onSelect: (id: string) => void;
+  done?: boolean;
+}) {
+  return (
+    <li>
+      <button
+        onClick={() => onSelect(m.id)}
+        className={cn(
+          "flex w-full flex-col gap-1 border-b border-white/5 px-4 py-3 text-left transition",
+          openId === m.id ? "bg-white/[0.06]" : "hover:bg-white/[0.03]",
+          done && "opacity-70",
+        )}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {new Date(m.time).toLocaleDateString(undefined, {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
+          </div>
+          {done && (
+            <span className="rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold text-[color:var(--color-success)]">
+              ✓ Done
+            </span>
+          )}
+        </div>
+        <div className="text-[13px] font-semibold text-foreground">{m.title}</div>
+        <div className="text-[11px] text-muted-foreground">{m.attendees.length} attendees</div>
+      </button>
+    </li>
+  );
+}
+

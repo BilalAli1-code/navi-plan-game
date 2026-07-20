@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Mail, Reply, Star, Archive, AlertCircle, Search } from "lucide-react";
+import { Mail, Reply, Star, Archive, AlertCircle, Search, CheckCircle2 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
 import { visibleEmails } from "@/lib/sim/visibility";
@@ -12,9 +12,17 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
   // Only surface emails whose gated chapter has opened. Future-chapter
   // messages stay hidden until the learner reaches that day.
   const emails = useMemo(() => visibleEmails(state), [state]);
+  // Derive completion from the single source of truth (decision log).
+  const answered = useMemo(
+    () => new Set(state.log.map((l) => l.decisionId)),
+    [state.log],
+  );
+  const isCompleted = (e: (typeof emails)[number]) =>
+    e.unlocksDecisionId ? answered.has(e.unlocksDecisionId) : e.read;
   const [openId, setOpenId] = useState<string | null>(emails[0]?.id ?? null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "important" | "completed">("all");
+
   const active = emails.find((e) => e.id === openId) ?? null;
 
   // Pre-compute stake lookup map to avoid O(n*m) in filter/render
@@ -44,15 +52,21 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
           !(findStake(e.from)?.name ?? "").toLowerCase().includes(search.toLowerCase())
         )
           return false;
-        if (filter === "unread" && e.read) return false;
+        const done = isCompleted(e);
+        if (filter === "unread" && (e.read || done)) return false;
         if (filter === "important" && !isImportant(e.subject)) return false;
+        if (filter === "completed" && !done) return false;
+        // By default hide completed items so they don't compete for attention;
+        // they remain reviewable under the Completed filter.
+        if (filter === "all" && done) return false;
         return true;
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [emails, search, filter, stakes],
+    [emails, search, filter, stakes, answered],
   );
 
-  const unreadCount = emails.filter((e) => !e.read).length;
+  const unreadCount = emails.filter((e) => !e.read && !isCompleted(e)).length;
+
 
   return (
     <div
@@ -86,7 +100,7 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
           </div>
           {/* Filter tabs */}
           <div className="mt-2 flex gap-0.5">
-            {(["all", "unread", "important"] as const).map((f) => (
+            {(["all", "unread", "important", "completed"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -101,6 +115,7 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
               </button>
             ))}
           </div>
+
         </div>
 
         {/* Email list */}
@@ -167,15 +182,22 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
                       <span className="flex-1 truncate text-[10px] text-muted-foreground/70">
                         {e.preview}
                       </span>
-                      {urgent && (
+                      {urgent && !isCompleted(e) && (
                         <AlertCircle className="h-3 w-3 shrink-0 text-[color:var(--color-destructive)]" />
                       )}
-                      {e.unlocksDecisionId && (
-                        <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
-                          Action
+                      {isCompleted(e) ? (
+                        <span className="shrink-0 rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold text-[color:var(--color-success)]">
+                          ✓ Done
                         </span>
+                      ) : (
+                        e.unlocksDecisionId && (
+                          <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
+                            Action
+                          </span>
+                        )
                       )}
                     </div>
+
                   </div>
                 </button>
               </li>
@@ -252,20 +274,32 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
               </div>
             </div>
 
-            {/* Action CTA */}
+            {/* Action CTA — hidden once the required decision is submitted */}
             {active.unlocksDecisionId && (
               <div className="border-t border-white/10 px-5 py-4">
-                <div className="mb-2 text-[11px] text-muted-foreground">
-                  This message requires a decision from you:
-                </div>
-                <button
-                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
-                  className="w-full rounded-xl bg-accent px-5 py-3 text-[13px] font-semibold text-accent-foreground transition hover:opacity-90"
-                >
-                  Respond with a decision →
-                </button>
+                {answered.has(active.unlocksDecisionId) ? (
+                  <button
+                    onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-success)]/30 bg-[color:var(--color-success)]/10 px-5 py-3 text-[13px] font-semibold text-[color:var(--color-success)]"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Decision recorded — review
+                  </button>
+                ) : (
+                  <>
+                    <div className="mb-2 text-[11px] text-muted-foreground">
+                      This message requires a decision from you:
+                    </div>
+                    <button
+                      onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                      className="w-full rounded-xl bg-accent px-5 py-3 text-[13px] font-semibold text-accent-foreground transition hover:opacity-90"
+                    >
+                      Respond with a decision →
+                    </button>
+                  </>
+                )}
               </div>
             )}
+
           </>
         ) : (
           <div className="grid flex-1 place-items-center text-center text-muted-foreground">

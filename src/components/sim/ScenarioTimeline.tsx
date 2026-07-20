@@ -23,7 +23,9 @@ type ScenarioEvent = {
   priority: "urgent" | "normal" | "info";
   actionTab?: string;
   read?: boolean;
+  completed?: boolean;
 };
+
 
 const TYPE_ICON = {
   email: Mail,
@@ -95,10 +97,23 @@ function buildScenarioEvents(
     priority: "info",
   });
 
-  // Unread emails → scenario narrative cards
-  const unreadEmails = state.emails.filter((e) => !e.read);
+  // Completion is derived from the single source of truth: state.log for
+  // decisions, and email.read for informational messages. Items whose action
+  // has been fulfilled surface in the "Completed" section, never as pending.
+  const answeredDecisionIds = new Set(state.log.map((l) => l.decisionId));
+  const isEmailDone = (email: (typeof state.emails)[number]) =>
+    email.unlocksDecisionId
+      ? answeredDecisionIds.has(email.unlocksDecisionId)
+      : email.read;
+  const isMeetingDone = (mtg: (typeof state.meetings)[number]) =>
+    !!mtg.unlocksDecisionId && answeredDecisionIds.has(mtg.unlocksDecisionId);
+
+  // Emails → show unread first, completed at the bottom in their own section.
   const times = ["8:15 AM", "8:47 AM", "9:12 AM", "9:38 AM"];
-  unreadEmails.slice(0, 3).forEach((email, idx) => {
+  const pendingEmails = state.emails.filter((e) => !isEmailDone(e));
+  const completedEmails = state.emails.filter((e) => isEmailDone(e));
+
+  pendingEmails.slice(0, 3).forEach((email, idx) => {
     const sender = stakes.find((s) => s.id === email.from);
     const isUrgent =
       email.subject.toLowerCase().includes("urgent") ||
@@ -107,7 +122,6 @@ function buildScenarioEvents(
       email.subject.toLowerCase().includes("concern") ||
       email.subject.toLowerCase().includes("blocked");
 
-    // Generate a rich narrative for urgent emails
     let narrative: string | undefined;
     if (isUrgent) {
       const urgentNarratives = [
@@ -131,9 +145,10 @@ function buildScenarioEvents(
     });
   });
 
-  // Upcoming meetings with narrative context
-  const upcomingMeetings = state.meetings.slice(0, 2);
-  upcomingMeetings.forEach((mtg, i) => {
+  // Upcoming meetings — hide any whose required decision has been made.
+  const pendingMeetings = state.meetings.filter((m) => !isMeetingDone(m));
+  const completedMeetings = state.meetings.filter((m) => isMeetingDone(m));
+  pendingMeetings.slice(0, 2).forEach((mtg, i) => {
     const meetingTime = i === 0 ? "10:00 AM" : "2:00 PM";
     events.push({
       id: `mtg-${mtg.id}`,
@@ -188,20 +203,46 @@ function buildScenarioEvents(
     });
   }
 
-  // Decisions pending — workplace action prompt
-  const pendingDecisions = state.emails.filter((e) => e.unlocksDecisionId && !e.read);
-  if (pendingDecisions.length > 0) {
+  // Decisions pending — count only those whose source email is still open.
+  const pendingDecisionEmails = pendingEmails.filter((e) => e.unlocksDecisionId);
+  if (pendingDecisionEmails.length > 0) {
     events.push({
       id: "pending-decisions",
       time: `${dayLabel} 4:15 PM`,
       type: "milestone",
-      title: `${pendingDecisions.length} decision${pendingDecisions.length > 1 ? "s" : ""} awaiting your action`,
+      title: `${pendingDecisionEmails.length} decision${pendingDecisionEmails.length > 1 ? "s" : ""} awaiting your action`,
       narrative:
         "These decisions will directly impact project health. Review your inbox and respond before end of day.",
       priority: "normal",
       actionTab: "inbox",
     });
   }
+
+  // Completed items (single derived section, deduped from the active feed).
+  completedEmails.slice(0, 4).forEach((email) => {
+    const sender = stakes.find((s) => s.id === email.from);
+    events.push({
+      id: `done-email-${email.id}`,
+      time: `${dayLabel}`,
+      type: "email",
+      title: email.subject,
+      from: sender?.name ?? "Unknown",
+      priority: "info",
+      actionTab: "inbox",
+      completed: true,
+    });
+  });
+  completedMeetings.slice(0, 3).forEach((mtg) => {
+    events.push({
+      id: `done-mtg-${mtg.id}`,
+      time: `${dayLabel}`,
+      type: "meeting",
+      title: mtg.title,
+      priority: "info",
+      actionTab: "meetings",
+      completed: true,
+    });
+  });
 
   // Phase milestone
   if (state.phase !== "Tailoring" && state.phase !== "Complete") {
@@ -225,12 +266,14 @@ function buildScenarioEvents(
     }
   }
 
-  return events.slice(0, 8);
+  return events.slice(0, 14);
 }
 
-type EventCategory = "action" | "message" | "meeting" | "update";
+
+type EventCategory = "action" | "message" | "meeting" | "update" | "completed";
 
 function categorize(ev: ScenarioEvent): EventCategory {
+  if (ev.completed) return "completed";
   if (ev.type === "alert" || (ev.type === "milestone" && ev.priority !== "info")) return "action";
   if (ev.type === "email" || ev.type === "chat") return "message";
   if (ev.type === "meeting") return "meeting";
@@ -242,9 +285,11 @@ const CATEGORY_META: Record<EventCategory, { label: string; hint: string }> = {
   message: { label: "New messages", hint: "Unread from stakeholders" },
   meeting: { label: "Meetings & events", hint: "On today's calendar" },
   update: { label: "Project updates", hint: "For your awareness" },
+  completed: { label: "Completed", hint: "Already handled" },
 };
 
-const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update"];
+const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update", "completed"];
+
 
 export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
@@ -257,7 +302,9 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
     message: [],
     meeting: [],
     update: [],
+    completed: [],
   };
+
   for (const ev of events) grouped[categorize(ev)].push(ev);
 
   const urgentCount = events.filter((e) => e.priority === "urgent").length;
@@ -345,7 +392,12 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
-                        {ev.priority === "urgent" && (
+                        {ev.completed && (
+                          <span className="rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--color-success)]">
+                            ✓ Done
+                          </span>
+                        )}
+                        {!ev.completed && ev.priority === "urgent" && (
                           <span
                             className={cn(
                               "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
@@ -359,6 +411,7 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
                       </div>
+
                     </motion.div>
                   );
                 })}

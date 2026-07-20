@@ -350,7 +350,15 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       lastDecisionKeyRef.current = dec.id;
 
       const next = commitDecision(state, dec, option);
+      // Cascade completion: mark the source email as read so it disappears
+      // from unread/pending surfaces everywhere at once.
+      if (dec.source === "email") {
+        next.emails = next.emails.map((e) =>
+          e.unlocksDecisionId === dec.id ? { ...e, read: true } : e,
+        );
+      }
       setState(next);
+
 
       // Maya trigger dispatcher (Blueprint §11.2) — proactive coaching moments.
       const nudges = evaluateMayaTriggers({
