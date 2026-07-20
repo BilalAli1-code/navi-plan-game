@@ -22,7 +22,12 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
           Meetings
         </div>
         <ul>
-          {state.meetings.map((m) => (
+          {meetings.length === 0 && (
+            <li className="px-4 py-8 text-center text-[12px] text-muted-foreground">
+              No meetings scheduled for this chapter yet.
+            </li>
+          )}
+          {meetings.map((m) => (
             <li key={m.id}>
               <button
                 onClick={() => setOpenId(m.id)}
