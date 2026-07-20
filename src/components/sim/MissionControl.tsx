@@ -22,6 +22,7 @@ import { ScenarioTimeline } from "./ScenarioTimeline";
 import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
+import { StakeholderPulse } from "./StakeholderPulse";
 
 
 // (MetricBar removed — Soft Metrics moved out of Mission Control)
