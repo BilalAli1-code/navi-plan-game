@@ -21,6 +21,8 @@ import {
 } from "./daily.functions";
 import { applyMasteryUpdates } from "./mastery.functions";
 import { syncEvents, updateEventStatus } from "./events.functions";
+import { recordScoreSample } from "./scoring.functions";
+import { qualityToScore } from "./scoring";
 import {
   decisionMasteryDelta,
   tailoringMasteryDelta,
