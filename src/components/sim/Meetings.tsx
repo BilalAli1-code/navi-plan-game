@@ -1,15 +1,18 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarDays, Users } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
+import { visibleMeetings } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => void }) {
   const { state } = useSim();
   const stakes = stakeholdersFor(state.caseId);
-  const [openId, setOpenId] = useState<string | null>(state.meetings[0]?.id ?? null);
-  const active = state.meetings.find((m) => m.id === openId) ?? null;
+  // Chapter-gated: only surface meetings whose gating chapter has opened.
+  const meetings = useMemo(() => visibleMeetings(state), [state]);
+  const [openId, setOpenId] = useState<string | null>(meetings[0]?.id ?? null);
+  const active = meetings.find((m) => m.id === openId) ?? null;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(280px,340px)_1fr]">
@@ -19,7 +22,12 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
           Meetings
         </div>
         <ul>
-          {state.meetings.map((m) => (
+          {meetings.length === 0 && (
+            <li className="px-4 py-8 text-center text-[12px] text-muted-foreground">
+              No meetings scheduled for this chapter yet.
+            </li>
+          )}
+          {meetings.map((m) => (
             <li key={m.id}>
               <button
                 onClick={() => setOpenId(m.id)}

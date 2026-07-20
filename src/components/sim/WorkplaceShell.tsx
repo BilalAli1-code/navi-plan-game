@@ -19,6 +19,7 @@ import {
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
+import { visibleEmails } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 import { Inbox } from "./Inbox";
 import { Meetings } from "./Meetings";
@@ -76,7 +77,10 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   const [tab, setTab] = useState<Tab>("mission");
   const navigate = useNavigate();
 
-  const unread = state.emails.filter((e) => !e.read).length;
+  // Chapter-gated: only count emails available in the current chapter so the
+  // sidebar badge stays honest with what the Inbox actually shows.
+  const gatedEmails = visibleEmails(state);
+  const unread = gatedEmails.filter((e) => !e.read).length;
   const urgentAlerts =
     (state.metrics.risk < 55 ? 1 : 0) +
     (state.metrics.morale < 60 ? 1 : 0) +

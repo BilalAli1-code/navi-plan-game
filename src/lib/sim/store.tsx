@@ -34,7 +34,7 @@ import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
-import { toast } from "sonner";
+
 
 import type {
   Decision,
@@ -247,8 +247,11 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   }, [caseId]);
 
   // Re-run chapter gates whenever the learner opens a new chapter so
-  // newly-eligible events unlock (Blueprint §7.3).
+  // newly-eligible events unlock (Blueprint §7.3). Also clear stale Maya
+  // nudges from the prior chapter so coaching stays contextual.
   useEffect(() => {
+    setMayaNudges([]);
+    firedNudgeIds.current = new Set();
     const rid = runIdRef.current;
     if (!rid || hydrating) return;
     void syncEventsFn({
@@ -361,10 +364,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (firedNudgeIds.current.has(n.id)) continue;
         firedNudgeIds.current.add(n.id);
         setMayaNudges((q) => [...q, n]);
-        const msg = `Maya: ${n.message}`;
-        if (n.severity === "warning") toast.warning(msg, { duration: 6000 });
-        else toast.info(msg, { duration: 6000 });
+        // Nudges surface inside the Maya panel; no toast — keeps the UI quiet.
       }
+
 
 
       const rid = runIdRef.current;
