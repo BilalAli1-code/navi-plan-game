@@ -37,7 +37,7 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
 
   const filteredEmails = useMemo(
     () =>
-      state.emails.filter((e) => {
+      emails.filter((e) => {
         if (
           search &&
           !e.subject.toLowerCase().includes(search.toLowerCase()) &&
@@ -49,11 +49,10 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
         return true;
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.emails, search, filter, stakes],
+    [emails, search, filter, stakes],
   );
 
-  const unreadCount = state.emails.filter((e) => !e.read).length;
+  const unreadCount = emails.filter((e) => !e.read).length;
 
   return (
     <div
