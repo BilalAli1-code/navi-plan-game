@@ -1,130 +1,50 @@
+# Aligning ProjectSim with the Blueprint & Content Bible
 
-# ProjectSim billing & entitlement hardening
+The two docs (~3,300 lines) define a much richer simulation than what is currently implemented. The current code has the right *shape* (7 days, generic engine, casepack for Customer Portal, mastery/actions/events) but is missing the **chapter contract**, **in-world time**, **chapter gating**, **persistent stakeholder memory/commitments**, **separate communication vs decision-quality scoring**, and **context-aware Maya triggers** that the Blueprint requires. Trying to build all of that plus new Bible content in a single pass will produce shallow, unreliable changes.
 
-## 1. Entitlements model (server-authoritative)
+I propose landing this in **three focused phases**. Each phase is self-contained, ships working code, passes typecheck/build/tests, and preserves auth/billing/entitlements/other cases.
 
-New file `src/lib/billing/entitlements.ts`:
-- `Tier = 'free' | 'starter' | 'pro' | 'team'`
-- `PRICE_LOOKUP_ALLOWLIST = { starter_monthly, starter_yearly, pro_monthly, pro_yearly, team_monthly, team_yearly }` mapped to `{ tier, seats }`.
-- `FEATURE_TIERS`: `basic_sim: free+`, `all_scenarios | ai_coach | adaptive_practice | full_assessment: pro+`, `analytics_export | history_export: team+`.
-- `tierRank(tier)` + `hasFeature(tier, feature)`.
+## Phase 1 — Chapter model, gating, and in-world time (foundational)
 
-New server helper `src/lib/billing/entitlement.server.ts`:
-- `resolveUserTier(supabase, userId, env)`: reads latest `subscriptions` row for user in env, maps `price_id` (lookup key) → tier via allowlist, checks `isActiveNow(status, current_period_end)`. Also checks `team_memberships` — user gets `team` if they're an accepted member of an active team subscription.
-- `requireFeature(supabase, userId, env, feature)`: throws 403 if not entitled.
+Reusable engine changes only, no new business content. This is what everything else depends on.
 
-Wire `requireFeature` into every premium server fn:
-- `src/lib/sim/practice.functions.ts` (adaptive_practice)
-- `src/lib/sim/assessment.functions.ts` (full_assessment)
-- `src/routes/api/coach.ts`, `exam-coach.ts`, `maya-ask.ts`, `sim-stakeholder.ts`, `process-stakeholder-action.ts` (ai_coach)
-- `src/lib/sim/sim.functions.ts` (all_scenarios — allow free tier only for the 1 starter case id)
-- `src/lib/sim/mastery.functions.ts` analytics reads (analytics_export for team-only export fn)
+- Rename the runtime concept from "Day" to **Chapter** in generic engine types (keep `day_number` DB columns; add a compatibility alias). Chapters ≠ calendar days (Blueprint §4.4, §8).
+- Extend `DayDefinition` → `ChapterDefinition` with a **Chapter Contract** (Blueprint §7.2): `openingCondition`, `requiredActivities[]`, `keyDecisions[]`, `requiredOutputs[]`, `scoringEmphasis[]`, `advanceRule`.
+- Add `SimState.inWorldDate` and `chapterInWorldSpan` so simulated time advances per chapter independently of learner time (Blueprint §8.3).
+- Implement **configuration-driven chapter completion** in `daily.functions.ts`: a chapter closes only when its contract's `advanceRule` (required activities done + required decisions made + required outputs produced) is satisfied. No hard-coded per-case logic in the engine.
+- Add **event gating** to `generator.ts` / a new `event-orchestrator.ts`: each seeded email/meeting/decision/risk carries `{chapter, requiresState?, requiresPriorDecision?}` and is only injected when its gate is satisfied (Blueprint §11.3).
 
-## 2. Remove client control over environment
+Deliverables: engine types, chapter registry, gating helpers, migration adding `in_world_date` + `chapter_state` JSON to `simulation_runs`, unit tests for `canAdvanceChapter` and `isEventEligible`.
 
-- Delete `environment` from `createCheckoutSession` / `createPortalSession` input.
-- Add `src/lib/stripe.env.server.ts`: `resolveStripeEnv()` returns `'live'` when `process.env.NODE_ENV === 'production'` AND `STRIPE_LIVE_API_KEY` is set, else `'sandbox'`.
-- All server fns call `resolveStripeEnv()` internally.
-- `src/hooks/useSubscription.ts` / `StripeEmbeddedCheckout.tsx`: drop `getStripeEnvironment()` from payload; keep it only for local publishable-key selection & subscription row filtering (that's fine — still deterministic from build).
+## Phase 2 — Stakeholder persistence, memory, commitments, scoring split
 
-## 3. Allowlist Stripe price lookup keys
+- Add `stakeholder_memories` and `stakeholder_commitments` tables (Blueprint §10). Wire read/write into `stakeholder-engine.ts` and `actions.engine.ts` so every interaction can create/close a memory or commitment.
+- Extend `Stakeholder` state (trust / satisfaction / engagement / alignment — Blueprint §9.4) and apply deterministic deltas from action outcomes.
+- Split scoring into **communication quality** and **decision quality** (Blueprint §12.3, §13). Store both on `simulation_actions` and roll up into `daily_progress` / `learner_mastery`.
+- Add a lightweight rubric evaluator (server function) used by chat / negotiation / escalation panels; AI is used to score text, deterministic rules own the state (Blueprint §12.4, §15).
 
-`createCheckoutSession` rejects any `priceId` not in `PRICE_LOOKUP_ALLOWLIST`.
-Return typed error `{ error: 'Invalid plan' }` before hitting Stripe.
+Deliverables: 2 tables + policies + grants, engine updates, updates to `ChatPanel`, `NegotiationPanel`, `EscalationPanel` to display the two scores, tests for commitment lifecycle.
 
-## 4. Verify Checkout Session on return page
+## Phase 3 — Customer Portal (Project Horizon) content + Maya triggers
 
-New server fn `verifyCheckoutSession({ sessionId })`:
-- `requireSupabaseAuth`
-- Retrieves session, verifies `session.customer` matches a customer with `metadata.userId === context.userId`, verifies `payment_status === 'paid'` or subscription status active/trialing.
-- Returns `{ ok, tier, planName }`.
+- Rewrite `casepacks/customer-portal.ts` to match the Bible verbatim: NorthStar Digital Solutions facts, 14 stakeholders with Bible-defined initial state, KPIs from §3.3, MVP scope from §5, and **all 7 chapters** using the new Chapter Contract with the Bible's opening conditions, proactive activity, required activities, key decisions, required outputs, cliffhangers, and persistent consequences.
+- Seed proactive events per chapter (emails, meetings, escalations) with gates.
+- Wire Maya's context payload to include: current chapter, unresolved commitments, degraded stakeholder relationships, recent decision quality, and last coaching level (Blueprint §14.3). Add trigger rules (§14.4) — silent by default, coaches on struggle/misalignment.
 
-`src/routes/checkout.return.tsx`:
-- Calls `verifyCheckoutSession` on mount, shows loading → success/failure.
-- Only shows "You're on Pro" after verification succeeds.
+Deliverables: new casepack, seeded proactive events, Maya context builder, smoke tests that Chapter 1 → Chapter 2 progression works end-to-end.
 
-## 5. Webhook: throw on DB failure
+## Cross-cutting rules I will follow
 
-`src/routes/api/public/payments/webhook.ts`:
-- Every `.upsert / .update / .insert` — check `error`, throw. Currently swallowed.
-- Wrap `handleWebhook` so any thrown DB error returns HTTP 500 → Stripe retries.
+- Preserve auth, billing, entitlements, RLS, other business cases, and all currently working UI. No changes to `client.ts`, `client.server.ts`, `auth-middleware.ts`, `auth-attacher.ts`, generated `types.ts`, or `.env`.
+- No hard-coded case logic in engine files. All case specifics live in `casepacks/*` and are consumed via the generic Chapter Contract.
+- Reuse existing components (`DayDashboard`, `ChatPanel`, `MissionControl`, `Stakeholders`, `RiskResponsePanel`, `ConflictPanel`) — extend them, don't replace them.
+- Every new `public.*` table gets `GRANT` + RLS + policies in the same migration.
+- After each phase: `npx tsc --noEmit`, `npm run build`, `bunx vitest run`, and a Playwright smoke of the sim route.
 
-## 6. Webhook idempotency
+## Ask before I start
 
-New migration: `webhook_events` table (`event_id text PRIMARY KEY, type text, received_at timestamptz`).
-Handler:
-- Insert `event.id` first; on unique-violation, return `{ received: true, duplicate: true }` (Stripe treats 200 as done).
-- Only proceed to switch after successful insert.
+1. **Do you want me to execute Phase 1 now** (engine foundation + gating + tests, ~1 large turn) and then check in before Phase 2/3? That's the only way to keep quality high on a change this size.
+2. **Are the current DB columns (`day_number`, `daily_progress`) OK to keep as-is** while I add a compatibility `chapter_number` alias, or do you want a rename migration (breaking for any existing rows)?
+3. **Any Bible sections I should treat as "must ship in Phase 3" vs "nice to have"** (e.g. all 7 chapters vs Chapters 1–3 fully wired + 4–7 stubbed)?
 
-## 7. Safe upserts for subscription updates
-
-- Replace `.update()` in `subscription.updated`/`deleted` with `.upsert({ user_id, ... }, { onConflict: 'stripe_subscription_id' })` so an out-of-order `updated`-before-`created` still lands the row.
-- Extract `userId` from `subscription.metadata.userId`; if absent on update, look it up from existing row via `select user_id`.
-
-## 8. Welcome bonus transactional
-
-New Postgres RPC `grant_welcome_bonus(_subscription_id text, _env text, _bonus int)` — updates `subscriptions.welcome_bonus_granted` and increments `profiles.total_xp` inside a single function (SECURITY DEFINER). Handler calls RPC, returns claimed user_id. Email send stays outside the DB.
-
-## 9. Trial only on Pro
-
-Currently every recurring plan gets `trial_period_days: 7`. Change to only pass `trial_period_days` when tier === `'pro'`. Starter and Team charge immediately.
-
-## 10. Team seats
-
-Migration:
-- `team_subscriptions (id, subscription_id text unique, owner_user_id, seats int, created_at)`
-- `team_memberships (id, team_id fk, user_id fk auth.users, role text check owner|member, status text check invited|accepted, invited_email text, invited_at, accepted_at)`
-- GRANT + RLS: members read own team; owner manages memberships.
-- RPC `accept_team_invite(_token uuid)`.
-
-Checkout:
-- Team price ids accept `quantity` (seats) in the checkout call, min 2 max 50; passed to Stripe line item + stored on `team_subscriptions.seats` via webhook.
-
-Webhook:
-- On `subscription.created` where price maps to team tier: upsert `team_subscriptions` row with owner + seats.
-- On `subscription.updated` with quantity change: update `seats`.
-- On `subscription.deleted`: cascade `team_memberships.status='revoked'`.
-
-UI: new `src/routes/_authenticated/team.tsx` — list members, invite by email (creates `team_memberships(status=invited)`), remove seat. Invites emailed via existing Resend path.
-
-Entitlement resolution counts owner + accepted members ≤ seats.
-
-## 11. Tests (Playwright + Stripe test clocks)
-
-`tests/billing.spec.ts` runs against `localhost:8080` with a preseeded test user:
-- Upgrade: sub to Starter → upgrade to Pro; assert entitlement flips (AI coach 200 → 200, was 403 before).
-- Downgrade: Pro → Starter at period end; assert entitlement holds until `current_period_end`, then drops.
-- Failed payment: use Stripe test card `4000 0000 0000 0341`; assert `past_due` status → still active per grace, then `canceled` → 403.
-- Cancellation: cancel_at_period_end=true; entitlement holds until period end.
-- Trial expiration: use Stripe test clock advance 8 days; assert `trialing` → `active` with charge, `trialing` → `canceled` if payment fails.
-
-Where test clocks aren't reachable from the sandbox, script the equivalent webhook payload (signed with `PAYMENTS_SANDBOX_WEBHOOK_SECRET`) and POST to `/api/public/payments/webhook?env=sandbox`.
-
-## Files
-
-Create:
-- `src/lib/billing/entitlements.ts`
-- `src/lib/billing/entitlement.server.ts`
-- `src/lib/stripe.env.server.ts`
-- `src/lib/billing/team.functions.ts`
-- `src/routes/_authenticated/team.tsx`
-- `src/utils/checkout-verify.functions.ts`
-- `tests/billing.spec.ts`
-- 2 migrations (webhook_events, team tables + RPC, welcome_bonus RPC)
-
-Edit:
-- `src/utils/payments.functions.ts`
-- `src/routes/api/public/payments/webhook.ts`
-- `src/routes/checkout.return.tsx`
-- `src/components/StripeEmbeddedCheckout.tsx`, `src/hooks/useSubscription.ts` (drop env param)
-- Premium server fns/routes listed in §1
-- `src/routes/pricing.tsx` (surface seat quantity for Team, tier labels)
-
-## Rollout order
-
-1. Migrations (webhook_events, welcome bonus RPC, team tables).
-2. Entitlements module + env resolver + allowlist.
-3. Wire `requireFeature` into premium fns.
-4. Refactor checkout / portal / webhook / return-page verification.
-5. Team UI + invite flow.
-6. Tests.
+Once you confirm, I'll start Phase 1.

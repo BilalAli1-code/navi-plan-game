@@ -76,13 +76,23 @@ export function DayBriefing({ onOpenTab }: { onOpenTab?: (tab: OpenTab) => void 
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-accent">
             <Sunrise className="h-3.5 w-3.5" />
-            Morning briefing · Day {state.currentDay}
+            Chapter {state.currentDay} of 7
+            {(day.inWorldStart || day.inWorldEnd) && (
+              <span className="text-muted-foreground normal-case tracking-normal">
+                · {day.inWorldStart === day.inWorldEnd
+                  ? day.inWorldStart
+                  : `${day.inWorldStart ?? ""} – ${day.inWorldEnd ?? ""}`}
+              </span>
+            )}
           </div>
           <h3 className="mt-1 text-[17px] font-bold text-foreground">
             {day.title}
           </h3>
+          {day.storyTheme && (
+            <p className="mt-0.5 text-[12px] italic text-accent/80">"{day.storyTheme}"</p>
+          )}
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {c.projectName} · Phase: {day.phase}
+            {c.projectName} · Lifecycle: {day.phase}
           </p>
         </div>
         {!flags.briefing && (
