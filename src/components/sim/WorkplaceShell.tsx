@@ -102,10 +102,8 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     {
       label: "Learning",
       items: [
-        { id: "program", label: "Program", icon: Target },
         { id: "dashboard", label: "Project Metrics", icon: Activity },
         { id: "mastery", label: "PMBOK Mastery", icon: Sparkles },
-        { id: "reports", label: "Executive Reports", icon: BarChart2 },
       ],
     },
   ];
