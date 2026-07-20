@@ -636,7 +636,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     goToDay,
     saveDayReflection,
     loadDayReflection,
+    mayaNudges,
+    dismissNudge: (id: string) => setMayaNudges((q) => q.filter((n) => n.id !== id)),
   };
+
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>;
 }
