@@ -214,7 +214,7 @@ function AdvisoryCard({ advisory }: { advisory: Advisory }) {
 // ─── Main MayaFloating export ─────────────────────────────────────────────────
 
 export function MayaFloating() {
-  const { state, activeDecision, runId } = useSim();
+  const { state, activeDecision, runId, mayaNudges, dismissNudge } = useSim();
   const c = getCaseRef(state.caseId);
   const [expanded, setExpanded] = useState(false);
   const [minimized, setMinimized] = useState(false);
@@ -222,74 +222,28 @@ export function MayaFloating() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Proactive advisory notifications — re-fires if metric recovers then degrades again
-  const firedAlerts = useRef(new Set<string>());
+  // Auto-open the panel the first time a proactive nudge lands so learners
+  // never miss coaching, without spamming toasts.
+  const openedForNudgeRef = useRef<string | null>(null);
   useEffect(() => {
-    const m = state.metrics;
-    const proactive = [
-      {
-        key: `risk-${Math.round(m.risk / 10) * 10}`,
-        trigger: m.risk < 55 && m.risk > 0,
-        recover: m.risk >= 65, // clear key when metric recovers
-        recoverKey: `risk-`,
-        message: `⚠ Maya: Risk posture at ${Math.round(m.risk)}%. Activate your contingency plans now.`,
-        type: "warning" as const,
-      },
-      {
-        key: `budget-${Math.round(m.budget / 10) * 10}`,
-        trigger: m.budget < 65 && m.budget > 0,
-        recover: m.budget >= 75,
-        recoverKey: `budget-`,
-        message: `💸 Maya: Budget health is ${Math.round(m.budget)}%. Prepare a variance analysis for your sponsor.`,
-        type: "warning" as const,
-      },
-      {
-        key: `morale-${Math.round(m.morale / 10) * 10}`,
-        trigger: m.morale < 60 && m.morale > 0,
-        recover: m.morale >= 70,
-        recoverKey: `morale-`,
-        message: `😟 Maya: Team morale dropped to ${Math.round(m.morale)}%. Schedule a team check-in.`,
-        type: "warning" as const,
-      },
-      {
-        key: `trust-${Math.round(m.trust / 10) * 10}`,
-        trigger: m.trust < 55 && m.trust > 0,
-        recover: m.trust >= 65,
-        recoverKey: `trust-`,
-        message: `🤝 Maya: Stakeholder trust at ${Math.round(m.trust)}%. Send a proactive status update.`,
-        type: "warning" as const,
-      },
-      {
-        key: `phase-${state.phase}`,
-        trigger: state.phase !== "Tailoring" && state.phase !== "Complete",
-        recover: false,
-        recoverKey: "",
-        message: `📋 Maya: You've entered ${state.phase}. ${c.projectName} — stay focused on your critical path.`,
-        type: "info" as const,
-      },
-    ];
+    const latest = mayaNudges[mayaNudges.length - 1];
+    if (!latest || openedForNudgeRef.current === latest.id) return;
+    openedForNudgeRef.current = latest.id;
+    setMinimized(false);
+    setExpanded(true);
+  }, [mayaNudges]);
 
-    proactive.forEach(({ key, trigger, recover, recoverKey, message, type }) => {
-      // Clear stale keys when metric recovers so future degradation re-fires
-      if (recover && recoverKey) {
-        for (const fired of firedAlerts.current) {
-          if (fired.startsWith(recoverKey)) firedAlerts.current.delete(fired);
-        }
-      }
-      if (trigger && !firedAlerts.current.has(key)) {
-        firedAlerts.current.add(key);
-        setTimeout(() => {
-          if (type === "warning") {
-            toast.warning(message, { duration: 5000 });
-          } else {
-            toast.info(message, { duration: 4000 });
-          }
-        }, 1200);
-      }
-    });
-  }, [state.metrics, state.phase, c.projectName]);
+  // Convert queued nudges from the engine into first-class advisories so they
+  // sit alongside metric-derived tips instead of firing as toasts.
+  const nudgeAdvisories: Advisory[] = mayaNudges.map((n) => ({
+    id: `nudge-${n.id}`,
+    type: n.severity === "warning" ? "warning" : "coaching",
+    title: n.title,
+    body: n.message,
+  }));
 
-  const advisories = buildAdvisories(state, c);
+  const inferred = buildAdvisories(state, c);
+  const advisories: Advisory[] = [...nudgeAdvisories, ...inferred].slice(0, 5);
   const urgentCount = advisories.filter((a) => a.type === "warning").length;
 
   const scenarioTitle = activeDecision?.title ?? `${c.projectName} — ${state.phase}`;
