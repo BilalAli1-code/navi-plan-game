@@ -52,15 +52,21 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
           !(findStake(e.from)?.name ?? "").toLowerCase().includes(search.toLowerCase())
         )
           return false;
-        if (filter === "unread" && e.read) return false;
+        const done = isCompleted(e);
+        if (filter === "unread" && (e.read || done)) return false;
         if (filter === "important" && !isImportant(e.subject)) return false;
+        if (filter === "completed" && !done) return false;
+        // By default hide completed items so they don't compete for attention;
+        // they remain reviewable under the Completed filter.
+        if (filter === "all" && done) return false;
         return true;
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [emails, search, filter, stakes],
+    [emails, search, filter, stakes, answered],
   );
 
-  const unreadCount = emails.filter((e) => !e.read).length;
+  const unreadCount = emails.filter((e) => !e.read && !isCompleted(e)).length;
+
 
   return (
     <div
