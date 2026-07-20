@@ -25,48 +25,8 @@ import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
 
-// ─── Status Bar (thin progress bars per metric) ──────────────────────────────
+// (MetricBar removed — Soft Metrics moved out of Mission Control)
 
-function MetricBar({
-  label,
-  value,
-  invert = false,
-}: {
-  label: string;
-  value: number;
-  invert?: boolean;
-}) {
-  const v = Math.max(0, Math.min(100, Math.round(value)));
-  const good = invert ? v <= 30 : v >= 70;
-  const bad = invert ? v >= 70 : v <= 40;
-  const barCls = good
-    ? "bg-[color:var(--color-success)]"
-    : bad
-      ? "bg-[color:var(--color-destructive)]"
-      : "bg-[color:var(--color-warning)]";
-  const textCls = good
-    ? "text-[color:var(--color-success)]"
-    : bad
-      ? "text-[color:var(--color-destructive)]"
-      : "text-[color:var(--color-warning)]";
-
-  return (
-    <div>
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={cn("font-semibold tabular-nums", textCls)}>{v}</span>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08]">
-        <motion.div
-          initial={false}
-          animate={{ width: `${v}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={cn("h-full rounded-full", barCls)}
-        />
-      </div>
-    </div>
-  );
-}
 
 // ─── Achievement Badge ────────────────────────────────────────────────────────
 
