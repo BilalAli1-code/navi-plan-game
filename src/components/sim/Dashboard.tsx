@@ -39,6 +39,9 @@ export function Dashboard() {
         <MetricMeter label="Overall health" value={m.health} icon={<Activity className="h-4 w-4" />} />
       </div>
 
+      <DecisionSummary />
+
+
       {state.log.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="mb-3 text-[13px] font-semibold text-foreground">Decision log</div>
