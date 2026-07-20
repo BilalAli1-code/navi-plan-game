@@ -302,7 +302,9 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
     message: [],
     meeting: [],
     update: [],
+    completed: [],
   };
+
   for (const ev of events) grouped[categorize(ev)].push(ev);
 
   const urgentCount = events.filter((e) => e.priority === "urgent").length;
