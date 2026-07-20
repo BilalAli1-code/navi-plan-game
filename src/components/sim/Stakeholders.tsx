@@ -232,12 +232,16 @@ function StakeholderChat({
   const loadMemories = useServerFn(listMemories);
   const loadCommitments = useServerFn(listCommitments);
 
-  // Load persisted history on mount.
+  // Load persisted history on mount and when stakeholder changes.
   useEffect(() => {
+    setMessages([]);
+    setHistoryLoaded(false);
+
     if (!runId) {
       setHistoryLoaded(true);
       return;
     }
+
     let cancelled = false;
     loadHistory({ data: { runId, stakeholderId: stakeholder.id } })
       .then((rows: ChatMessageRow[]) => {
@@ -245,7 +249,10 @@ function StakeholderChat({
         setMessages(rows.map((r) => ({ role: r.role === "learner" ? "you" : "them", text: r.content })));
         setHistoryLoaded(true);
       })
-      .catch(() => setHistoryLoaded(true));
+      .catch(() => {
+        if (!cancelled) setHistoryLoaded(true);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -253,7 +260,10 @@ function StakeholderChat({
 
   async function send() {
     const trimmed = q.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading || !historyLoaded) return;
+
+    const baseMessages = messages;
+
     setQ("");
     setMessages((m) => [...m, { role: "you", text: trimmed }, { role: "them", text: "" }]);
     setLoading(true);
@@ -273,7 +283,8 @@ function StakeholderChat({
         ])
       : [[], []];
 
-    const recentMessagesForModel = messages
+    // Include persisted/base thread + the just-typed user message for model context.
+    const recentMessagesForModel = [...baseMessages, { role: "you" as const, text: trimmed }]
       .filter((m) => m.text.trim().length > 0)
       .slice(-8)
       .map<{ role: "learner" | "stakeholder"; content: string }>((m) => ({
@@ -429,7 +440,7 @@ function StakeholderChat({
           />
           <button
             type="submit"
-            disabled={loading || !q.trim()}
+            disabled={loading || !q.trim() || !historyLoaded}
             className="grid h-10 w-10 place-items-center rounded-full bg-accent text-accent-foreground disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
