@@ -692,6 +692,7 @@ export type Database = {
         Row: {
           budget_score: number
           case_id: string
+          chapter_state: Json
           completed_at: string | null
           completed_minutes: number
           created_at: string
@@ -701,6 +702,7 @@ export type Database = {
           customer_satisfaction: number
           estimated_total_minutes: number
           id: string
+          in_world_date: string | null
           last_activity_at: string
           project_health: number
           quality_score: number
@@ -721,6 +723,7 @@ export type Database = {
         Insert: {
           budget_score?: number
           case_id: string
+          chapter_state?: Json
           completed_at?: string | null
           completed_minutes?: number
           created_at?: string
@@ -730,6 +733,7 @@ export type Database = {
           customer_satisfaction?: number
           estimated_total_minutes?: number
           id?: string
+          in_world_date?: string | null
           last_activity_at?: string
           project_health?: number
           quality_score?: number
@@ -750,6 +754,7 @@ export type Database = {
         Update: {
           budget_score?: number
           case_id?: string
+          chapter_state?: Json
           completed_at?: string | null
           completed_minutes?: number
           created_at?: string
@@ -759,6 +764,7 @@ export type Database = {
           customer_satisfaction?: number
           estimated_total_minutes?: number
           id?: string
+          in_world_date?: string | null
           last_activity_at?: string
           project_health?: number
           quality_score?: number
