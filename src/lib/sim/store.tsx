@@ -33,6 +33,9 @@ import type { EventInput } from "./events.functions";
 import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
+import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
+import { toast } from "sonner";
+
 import type {
   Decision,
   DecisionOption,
