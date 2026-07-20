@@ -542,15 +542,9 @@ function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
 
 export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state, days } = useSim();
-  const m = state.metrics;
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
   const daysDone = days.filter((d) => d.status === "completed").length;
-
-  const healthColor = m.health >= 70 ? "success" : m.health >= 50 ? "warning" : "destructive";
-  const budgetColor = m.budget >= 70 ? "success" : m.budget >= 50 ? "warning" : "destructive";
-  const scheduleColor = m.schedule >= 70 ? "success" : m.schedule >= 50 ? "warning" : "destructive";
-  const riskColor = m.risk >= 60 ? "success" : m.risk >= 45 ? "warning" : "destructive";
 
   return (
     <div className="space-y-5">
