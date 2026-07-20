@@ -6,18 +6,16 @@ import {
   HeartHandshake,
   Users,
   Sparkles,
-  Smile,
   Target,
   Star,
   Zap,
-  AlertTriangle,
   CheckCircle2,
   Clock,
   ChevronRight,
   Bell,
 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
-import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
+import { getCaseRef } from "@/lib/sim/cases";
 import { getDay, TOTAL_DAYS, TOTAL_MINUTES } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { ScenarioTimeline } from "./ScenarioTimeline";
@@ -25,48 +23,9 @@ import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
 
-// ─── Status Bar (thin progress bars per metric) ──────────────────────────────
 
-function MetricBar({
-  label,
-  value,
-  invert = false,
-}: {
-  label: string;
-  value: number;
-  invert?: boolean;
-}) {
-  const v = Math.max(0, Math.min(100, Math.round(value)));
-  const good = invert ? v <= 30 : v >= 70;
-  const bad = invert ? v >= 70 : v <= 40;
-  const barCls = good
-    ? "bg-[color:var(--color-success)]"
-    : bad
-      ? "bg-[color:var(--color-destructive)]"
-      : "bg-[color:var(--color-warning)]";
-  const textCls = good
-    ? "text-[color:var(--color-success)]"
-    : bad
-      ? "text-[color:var(--color-destructive)]"
-      : "text-[color:var(--color-warning)]";
+// (MetricBar removed — Soft Metrics moved out of Mission Control)
 
-  return (
-    <div>
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={cn("font-semibold tabular-nums", textCls)}>{v}</span>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08]">
-        <motion.div
-          initial={false}
-          animate={{ width: `${v}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={cn("h-full rounded-full", barCls)}
-        />
-      </div>
-    </div>
-  );
-}
 
 // ─── Achievement Badge ────────────────────────────────────────────────────────
 
@@ -145,81 +104,8 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   );
 }
 
-// ─── Stakeholder Health Row ──────────────────────────────────────────────────
+// (StakeholderHealthRow removed — moved out of Mission Control)
 
-function StakeholderHealthRow({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
-  const { state } = useSim();
-  const stakes = stakeholdersFor(state.caseId);
-
-  return (
-    <div
-      className={cn(
-        "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
-        onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
-      )}
-      onClick={onOpenTab ? () => onOpenTab("stakeholders") : undefined}
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <HeartHandshake className="h-4 w-4 text-accent" />
-        <span className="text-[13px] font-semibold text-foreground">Stakeholder Health</span>
-        <span
-          className={cn(
-            "ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold",
-            state.metrics.trust >= 70
-              ? "bg-[color:var(--color-success)]/15 text-[color:var(--color-success)]"
-              : state.metrics.trust >= 50
-                ? "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning)]"
-                : "bg-[color:var(--color-destructive)]/15 text-[color:var(--color-destructive)]",
-          )}
-        >
-          Trust {Math.round(state.metrics.trust)}%
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {stakes.slice(0, 6).map((s) => {
-          // Derive stakeholder-specific health from overall trust + satisfaction
-          const baseScore = Math.round((state.metrics.trust + state.metrics.satisfaction) / 2);
-          const variance = (s.id.charCodeAt(0) % 20) - 10;
-          const score = Math.max(20, Math.min(100, baseScore + variance));
-          const tone = score >= 70 ? "success" : score >= 50 ? "warning" : "destructive";
-          const toneCls =
-            tone === "success"
-              ? "text-[color:var(--color-success)] bg-[color:var(--color-success)]/10"
-              : tone === "warning"
-                ? "text-[color:var(--color-warning)] bg-[color:var(--color-warning)]/10"
-                : "text-[color:var(--color-destructive)] bg-[color:var(--color-destructive)]/10";
-
-          return (
-            <div key={s.id} className="flex items-center gap-2 rounded-xl bg-white/[0.03] p-2">
-              <div
-                className={cn(
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white",
-                  s.color,
-                )}
-              >
-                {s.avatarInitial}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[11px] font-medium text-foreground">
-                  {s.name.split(" ")[0]}
-                </div>
-                <div className="truncate text-[9px] text-muted-foreground">{s.role}</div>
-              </div>
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                  toneCls,
-                )}
-              >
-                {score}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // ─── AI Recommendations Panel ────────────────────────────────────────────────
 
@@ -430,7 +316,7 @@ export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => voi
 
 // ─── Decision Log Summary ────────────────────────────────────────────────────
 
-function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const correct = state.log.filter((l) => l.correct).length;
   const total = state.log.length;
@@ -538,11 +424,12 @@ function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   );
 }
 
+
 // ─── Main MissionControl export ──────────────────────────────────────────────
 
 export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state, days } = useSim();
-  const m = state.metrics;
+
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
   const daysDone = days.filter((d) => d.status === "completed").length;
@@ -570,42 +457,16 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       {/* Scenario timeline */}
       <ScenarioTimeline onOpenTab={onOpenTab} />
 
-      {/* Secondary metrics */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <div
-          className={cn(
-            "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
-            onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
-          )}
-          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <Smile className="h-4 w-4 text-accent" />
-            <span className="text-[13px] font-semibold text-foreground">Soft Metrics</span>
-          </div>
-          <div className="space-y-3">
-            <MetricBar label="Team Morale" value={m.morale} />
-            <MetricBar label="Stakeholder Trust" value={m.trust} />
-            <MetricBar label="Quality" value={m.quality} />
-            <MetricBar label="Customer Satisfaction" value={m.satisfaction} />
-          </div>
-        </div>
+      {/* Today's mission */}
+      <TodaysMission onOpenTab={onOpenTab} />
 
-        <TodaysMission onOpenTab={onOpenTab} />
-      </div>
-
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <AIRecommendationsPanel />
-        <StakeholderHealthRow onOpenTab={onOpenTab} />
-      </div>
+      {/* Maya recommendations */}
+      <AIRecommendationsPanel />
 
       {/* Active project engine actions: risks & team conflicts */}
       <RiskResponsePanel dayNumber={state.currentDay} />
       <ConflictPanel dayNumber={state.currentDay} />
 
-      {/* Recent decisions activity */}
-      <DecisionSummary onOpenTab={onOpenTab} />
     </div>
   );
 }
