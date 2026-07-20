@@ -19,6 +19,7 @@ import {
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
+import { visibleEmails } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 import { Inbox } from "./Inbox";
 import { Meetings } from "./Meetings";
