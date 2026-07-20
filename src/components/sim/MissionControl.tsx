@@ -571,42 +571,16 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       {/* Scenario timeline */}
       <ScenarioTimeline onOpenTab={onOpenTab} />
 
-      {/* Secondary metrics */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <div
-          className={cn(
-            "rounded-2xl border border-white/10 bg-white/[0.03] p-4",
-            onOpenTab && "cursor-pointer transition hover:bg-white/[0.05]",
-          )}
-          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <Smile className="h-4 w-4 text-accent" />
-            <span className="text-[13px] font-semibold text-foreground">Soft Metrics</span>
-          </div>
-          <div className="space-y-3">
-            <MetricBar label="Team Morale" value={m.morale} />
-            <MetricBar label="Stakeholder Trust" value={m.trust} />
-            <MetricBar label="Quality" value={m.quality} />
-            <MetricBar label="Customer Satisfaction" value={m.satisfaction} />
-          </div>
-        </div>
+      {/* Today's mission */}
+      <TodaysMission onOpenTab={onOpenTab} />
 
-        <TodaysMission onOpenTab={onOpenTab} />
-      </div>
-
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <AIRecommendationsPanel />
-        <StakeholderHealthRow onOpenTab={onOpenTab} />
-      </div>
+      {/* Maya recommendations */}
+      <AIRecommendationsPanel />
 
       {/* Active project engine actions: risks & team conflicts */}
       <RiskResponsePanel dayNumber={state.currentDay} />
       <ConflictPanel dayNumber={state.currentDay} />
 
-      {/* Recent decisions activity */}
-      <DecisionSummary onOpenTab={onOpenTab} />
     </div>
   );
 }
