@@ -2,16 +2,11 @@ import { motion } from "framer-motion";
 import {
   Activity,
   DollarSign,
-  CalendarRange,
-  ShieldAlert,
   HeartHandshake,
   Users,
   Sparkles,
   Smile,
   Target,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Star,
   Zap,
   AlertTriangle,
@@ -28,8 +23,6 @@ import { ScenarioTimeline } from "./ScenarioTimeline";
 import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
-
-// ─── KPI Card ────────────────────────────────────────────────────────────────
 
 function KPICard({
   label,
