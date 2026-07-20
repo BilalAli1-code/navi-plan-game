@@ -21,6 +21,8 @@ import {
 } from "./daily.functions";
 import { applyMasteryUpdates } from "./mastery.functions";
 import { syncEvents, updateEventStatus } from "./events.functions";
+import { recordScoreSample } from "./scoring.functions";
+import { qualityToScore } from "./scoring";
 import {
   decisionMasteryDelta,
   tailoringMasteryDelta,
@@ -157,6 +159,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const masteryFn = useServerFn(applyMasteryUpdates);
   const syncEventsFn = useServerFn(syncEvents);
   const updateEventStatusFn = useServerFn(updateEventStatus);
+  const recordScoreFn = useServerFn(recordScoreSample);
 
   const refreshDays = useCallback(
     async (rid: string) => {
@@ -335,6 +338,19 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         }).catch((err) => {
           console.error("Failed to update mastery:", err);
         });
+        // Record chapter score sample (decision dimension).
+        void recordScoreFn({
+          data: {
+            runId: rid,
+            chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+            dimension: "decision",
+            score: qualityToScore(option.quality),
+            weight: 1,
+            tag: dec.pmbokDomain ?? undefined,
+          },
+        }).catch((err) => {
+          console.error("Failed to record decision score:", err);
+        });
         // Mark decision event as responded, and the source (email/meeting) too.
         void updateEventStatusFn({
           data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
@@ -356,7 +372,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         }
       }
     },
-    [state, saveDecisionFn, masteryFn, updateEventStatusFn],
+    [state, saveDecisionFn, masteryFn, updateEventStatusFn, recordScoreFn],
   );
 
   const submitTailoring = useCallback(
