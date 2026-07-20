@@ -3,15 +3,19 @@ import { useMemo, useState } from "react";
 import { Mail, Reply, Star, Archive, AlertCircle, Search } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
+import { visibleEmails } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void }) {
   const { state, markEmailRead } = useSim();
   const stakes = stakeholdersFor(state.caseId);
-  const [openId, setOpenId] = useState<string | null>(state.emails[0]?.id ?? null);
+  // Only surface emails whose gated chapter has opened. Future-chapter
+  // messages stay hidden until the learner reaches that day.
+  const emails = useMemo(() => visibleEmails(state), [state]);
+  const [openId, setOpenId] = useState<string | null>(emails[0]?.id ?? null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
-  const active = state.emails.find((e) => e.id === openId) ?? null;
+  const active = emails.find((e) => e.id === openId) ?? null;
 
   // Pre-compute stake lookup map to avoid O(n*m) in filter/render
   const stakeMap = useMemo(() => new Map(stakes.map((s) => [s.id, s])), [stakes]);
