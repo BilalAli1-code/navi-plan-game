@@ -247,8 +247,11 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   }, [caseId]);
 
   // Re-run chapter gates whenever the learner opens a new chapter so
-  // newly-eligible events unlock (Blueprint §7.3).
+  // newly-eligible events unlock (Blueprint §7.3). Also clear stale Maya
+  // nudges from the prior chapter so coaching stays contextual.
   useEffect(() => {
+    setMayaNudges([]);
+    firedNudgeIds.current = new Set();
     const rid = runIdRef.current;
     if (!rid || hydrating) return;
     void syncEventsFn({
