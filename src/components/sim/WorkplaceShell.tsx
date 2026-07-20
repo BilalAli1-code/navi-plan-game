@@ -362,7 +362,6 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   transition={{ duration: 0.18 }}
                 >
                   {tab === "mission" && <MissionControl onOpenTab={(t) => setTab(t as Tab)} />}
-                  {tab === "program" && <DayDashboard onOpenTab={(t) => setTab(t)} />}
                   {tab === "dashboard" && <Dashboard />}
                   {tab === "mastery" && <CompetencyDashboard />}
                   {tab === "inbox" && <Inbox onOpenDecision={openDecision} />}
@@ -370,7 +369,6 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   {tab === "meetings" && <Meetings onOpenDecision={openDecision} />}
                   {tab === "documents" && <Documents />}
                   {tab === "stakeholders" && <Stakeholders />}
-                  {tab === "reports" && <ReportsPanel />}
                   {tab === "activity" && <ActivityFeed />}
                   {tab === "tools" && <PMToolsPanel />}
                 </motion.div>
