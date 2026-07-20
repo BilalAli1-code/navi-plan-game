@@ -100,7 +100,7 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
           </div>
           {/* Filter tabs */}
           <div className="mt-2 flex gap-0.5">
-            {(["all", "unread", "important"] as const).map((f) => (
+            {(["all", "unread", "important", "completed"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -115,6 +115,7 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
               </button>
             ))}
           </div>
+
         </div>
 
         {/* Email list */}
