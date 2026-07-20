@@ -228,113 +228,146 @@ function buildScenarioEvents(
   return events.slice(0, 8);
 }
 
+type EventCategory = "action" | "message" | "meeting" | "update";
+
+function categorize(ev: ScenarioEvent): EventCategory {
+  if (ev.type === "alert" || (ev.type === "milestone" && ev.priority !== "info")) return "action";
+  if (ev.type === "email" || ev.type === "chat") return "message";
+  if (ev.type === "meeting") return "meeting";
+  return "update";
+}
+
+const CATEGORY_META: Record<EventCategory, { label: string; hint: string }> = {
+  action: { label: "Requires action", hint: "Address these first" },
+  message: { label: "New messages", hint: "Unread from stakeholders" },
+  meeting: { label: "Meetings & events", hint: "On today's calendar" },
+  update: { label: "Project updates", hint: "For your awareness" },
+};
+
+const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update"];
+
 export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const caseRef = getCaseRef(state.caseId);
   const events = buildScenarioEvents(state, caseRef);
   const dayLabel = getDayLabel(state.currentDay);
 
+  const grouped: Record<EventCategory, ScenarioEvent[]> = {
+    action: [],
+    message: [],
+    meeting: [],
+    update: [],
+  };
+  for (const ev of events) grouped[categorize(ev)].push(ev);
+
+  const urgentCount = events.filter((e) => e.priority === "urgent").length;
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-accent" />
-          <span className="text-[13px] font-semibold text-foreground">Scenario Feed</span>
+          <span className="text-[13px] font-semibold text-foreground">Daily Briefing</span>
           <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] text-muted-foreground">
             {dayLabel}
           </span>
         </div>
-        <span className="text-[11px] text-muted-foreground">
-          {events.filter((e) => e.priority === "urgent").length} urgent items
-        </span>
+        {urgentCount > 0 && (
+          <span className="rounded-full bg-[color:var(--color-destructive)]/15 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--color-destructive)]">
+            {urgentCount} urgent
+          </span>
+        )}
       </div>
 
-      <div className="relative space-y-2 pl-2">
-        {/* Timeline line */}
-        <div className="absolute left-0 top-2 bottom-2 w-px bg-white/[0.06]" />
+      {events.length === 0 && (
+        <p className="py-4 text-center text-[12px] text-muted-foreground">
+          Nothing new today. Check back as the simulation progresses.
+        </p>
+      )}
 
-        {events.map((ev, i) => {
-          const Icon = TYPE_ICON[ev.type];
-          const style = PRIORITY_STYLE[ev.priority];
+      <div className="space-y-4">
+        {CATEGORY_ORDER.map((cat) => {
+          const list = grouped[cat];
+          if (list.length === 0) return null;
+          const meta = CATEGORY_META[cat];
 
           return (
-            <motion.div
-              key={ev.id}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className={cn(
-                "relative ml-3 flex flex-col gap-1 rounded-xl border px-3 py-2.5 transition",
-                style.border,
-                style.bg,
-                onOpenTab && ev.actionTab ? "cursor-pointer hover:brightness-110" : "",
-              )}
-              onClick={() => onOpenTab && ev.actionTab && onOpenTab(ev.actionTab)}
-            >
-              {/* Timeline dot */}
-              <span
-                className={cn(
-                  "absolute -left-[18px] top-3.5 h-2.5 w-2.5 rounded-full border-2 border-background",
-                  ev.priority === "urgent"
-                    ? "bg-[color:var(--color-destructive)]"
-                    : ev.priority === "normal"
-                      ? "bg-accent"
-                      : "bg-white/20",
-                )}
-              />
-
-              <div className="flex items-start gap-3">
-                <span className={cn("mt-0.5 shrink-0", style.icon)}>
-                  <Icon className="h-3.5 w-3.5" />
-                </span>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {ev.time}
-                    </span>
-                    {ev.from && (
-                      <span className="text-[10px] text-foreground/60">from {ev.from}</span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 text-[12px] font-medium text-foreground/90">
-                    {ev.title}
-                  </div>
+            <section key={cat}>
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-foreground/70">
+                  {meta.label}
+                  <span className="ml-1.5 text-muted-foreground/70 normal-case tracking-normal">
+                    · {list.length}
+                  </span>
                 </div>
-
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {ev.priority === "urgent" && (
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
-                        style.badge,
-                      )}
-                    >
-                      Urgent
-                    </span>
-                  )}
-                  {onOpenTab && ev.actionTab && (
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
-                </div>
+                <div className="text-[10px] text-muted-foreground/60">{meta.hint}</div>
               </div>
 
-              {/* Immersive narrative text */}
-              {ev.narrative && (
-                <div className="ml-6 text-[11px] leading-relaxed text-muted-foreground">
-                  {ev.narrative}
-                </div>
-              )}
-            </motion.div>
+              <div className="space-y-1.5">
+                {list.map((ev, i) => {
+                  const Icon = TYPE_ICON[ev.type];
+                  const style = PRIORITY_STYLE[ev.priority];
+                  return (
+                    <motion.div
+                      key={ev.id}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className={cn(
+                        "flex items-start gap-3 rounded-xl border px-3 py-2 transition",
+                        style.border,
+                        style.bg,
+                        onOpenTab && ev.actionTab ? "cursor-pointer hover:brightness-110" : "",
+                      )}
+                      onClick={() => onOpenTab && ev.actionTab && onOpenTab(ev.actionTab)}
+                    >
+                      <span className={cn("mt-0.5 shrink-0", style.icon)}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2">
+                          <span className="text-[10px] text-muted-foreground tabular-nums">
+                            {ev.time}
+                          </span>
+                          {ev.from && (
+                            <span className="text-[10px] text-foreground/60">
+                              from {ev.from}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 text-[12px] font-medium text-foreground/90">
+                          {ev.title}
+                        </div>
+                        {ev.narrative && (
+                          <div className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                            {ev.narrative}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {ev.priority === "urgent" && (
+                          <span
+                            className={cn(
+                              "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+                              style.badge,
+                            )}
+                          >
+                            Urgent
+                          </span>
+                        )}
+                        {onOpenTab && ev.actionTab && (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </section>
           );
         })}
-
-        {events.length === 0 && (
-          <p className="py-4 text-center text-[12px] text-muted-foreground">
-            No events today. Check back as the simulation progresses.
-          </p>
-        )}
       </div>
     </div>
   );
 }
+
