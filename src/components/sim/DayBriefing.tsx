@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { Sunrise, Mail, CalendarDays, Users, Sparkles, ChevronRight, Moon } from "lucide-react";
+import { Sunrise, Sparkles, ChevronRight, Moon } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { getDay, REQUIRED_ACTIVITIES, type DayActivityKey } from "@/lib/sim/days";
 import { getCaseRef } from "@/lib/sim/cases";
