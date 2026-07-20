@@ -159,6 +159,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const masteryFn = useServerFn(applyMasteryUpdates);
   const syncEventsFn = useServerFn(syncEvents);
   const updateEventStatusFn = useServerFn(updateEventStatus);
+  const recordScoreFn = useServerFn(recordScoreSample);
 
   const refreshDays = useCallback(
     async (rid: string) => {
