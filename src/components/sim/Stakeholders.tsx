@@ -276,7 +276,10 @@ function StakeholderChat({
     const recentMessagesForModel = messages
       .filter((m) => m.text.trim().length > 0)
       .slice(-8)
-      .map((m) => ({ role: (m.role === "you" ? "learner" : "stakeholder") as const, content: m.text }));
+      .map<{ role: "learner" | "stakeholder"; content: string }>((m) => ({
+        role: m.role === "you" ? "learner" : "stakeholder",
+        content: m.text,
+      }));
 
     let assistantText = "";
     try {
