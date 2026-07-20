@@ -214,7 +214,7 @@ function AdvisoryCard({ advisory }: { advisory: Advisory }) {
 // ─── Main MayaFloating export ─────────────────────────────────────────────────
 
 export function MayaFloating() {
-  const { state, activeDecision } = useSim();
+  const { state, activeDecision, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const [expanded, setExpanded] = useState(false);
   const [minimized, setMinimized] = useState(false);
