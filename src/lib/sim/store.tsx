@@ -134,7 +134,11 @@ type Ctx = {
     what_would_change: string | null;
     key_learning: string | null;
   } | null>;
+  // Proactive Maya coaching queue (Blueprint §11.2)
+  mayaNudges: MayaNudge[];
+  dismissNudge: (id: string) => void;
 };
+
 
 const SimContext = createContext<Ctx | null>(null);
 
