@@ -655,45 +655,6 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       </div>
 
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KPICard
-          label="Project Health"
-          value={Math.round(m.health)}
-          icon={<Activity className="h-5 w-5" />}
-          color={healthColor}
-          trend={m.health >= 70 ? "up" : m.health >= 50 ? "flat" : "down"}
-          sub="overall composite"
-          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
-        />
-        <KPICard
-          label="Budget"
-          value={Math.round(m.budget)}
-          icon={<DollarSign className="h-5 w-5" />}
-          color={budgetColor}
-          trend={m.budget >= 70 ? "up" : m.budget >= 50 ? "flat" : "down"}
-          sub="vs. baseline"
-          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
-        />
-        <KPICard
-          label="Schedule"
-          value={Math.round(m.schedule)}
-          icon={<CalendarRange className="h-5 w-5" />}
-          color={scheduleColor}
-          trend={m.schedule >= 70 ? "up" : m.schedule >= 50 ? "flat" : "down"}
-          sub="on-time score"
-          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
-        />
-        <KPICard
-          label="Risk Posture"
-          value={Math.round(m.risk)}
-          icon={<ShieldAlert className="h-5 w-5" />}
-          color={riskColor}
-          trend={m.risk >= 60 ? "up" : m.risk >= 45 ? "flat" : "down"}
-          sub="higher = safer"
-          onClick={onOpenTab ? () => onOpenTab("tools") : undefined}
-        />
-      </div>
 
       {/* Morning briefing — story context for today's project work */}
       <DayBriefing onOpenTab={onOpenTab as (tab: string) => void} />
