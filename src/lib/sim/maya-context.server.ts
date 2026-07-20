@@ -91,7 +91,7 @@ export async function buildMayaContext({ supabase, runId }: MayaContextInput): P
   lines.push(`## Run context`);
   if (run) {
     lines.push(
-      `- Phase: ${run.phase ?? "n/a"} · Chapter ${chapterNum}${chapter ? ` — ${chapter.title}` : ""}`,
+      `- Phase: ${run.current_phase ?? "n/a"} · Chapter ${chapterNum}${chapter ? ` — ${chapter.title}` : ""}`,
     );
     if (run.in_world_date) lines.push(`- In-world date: ${run.in_world_date}`);
   }
