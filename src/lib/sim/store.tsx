@@ -361,10 +361,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (firedNudgeIds.current.has(n.id)) continue;
         firedNudgeIds.current.add(n.id);
         setMayaNudges((q) => [...q, n]);
-        const msg = `Maya: ${n.message}`;
-        if (n.severity === "warning") toast.warning(msg, { duration: 6000 });
-        else toast.info(msg, { duration: 6000 });
+        // Nudges surface inside the Maya panel; no toast — keeps the UI quiet.
       }
+
 
 
       const rid = runIdRef.current;
