@@ -274,20 +274,32 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
               </div>
             </div>
 
-            {/* Action CTA */}
+            {/* Action CTA — hidden once the required decision is submitted */}
             {active.unlocksDecisionId && (
               <div className="border-t border-white/10 px-5 py-4">
-                <div className="mb-2 text-[11px] text-muted-foreground">
-                  This message requires a decision from you:
-                </div>
-                <button
-                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
-                  className="w-full rounded-xl bg-accent px-5 py-3 text-[13px] font-semibold text-accent-foreground transition hover:opacity-90"
-                >
-                  Respond with a decision →
-                </button>
+                {answered.has(active.unlocksDecisionId) ? (
+                  <button
+                    onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-success)]/30 bg-[color:var(--color-success)]/10 px-5 py-3 text-[13px] font-semibold text-[color:var(--color-success)]"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Decision recorded — review
+                  </button>
+                ) : (
+                  <>
+                    <div className="mb-2 text-[11px] text-muted-foreground">
+                      This message requires a decision from you:
+                    </div>
+                    <button
+                      onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                      className="w-full rounded-xl bg-accent px-5 py-3 text-[13px] font-semibold text-accent-foreground transition hover:opacity-90"
+                    >
+                      Respond with a decision →
+                    </button>
+                  </>
+                )}
               </div>
             )}
+
           </>
         ) : (
           <div className="grid flex-1 place-items-center text-center text-muted-foreground">
