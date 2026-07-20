@@ -451,10 +451,11 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       {/* 2. Today's Progress — completion tracker */}
       <TodaysMission onOpenTab={onOpenTab} />
 
-      {/* 3. Priority Actions — risks & team conflicts requiring response */}
+      {/* 3. Priority Actions — risks, conflicts, and stakeholder pulse */}
       <div className="space-y-3">
         <RiskResponsePanel dayNumber={state.currentDay} />
         <ConflictPanel dayNumber={state.currentDay} />
+        <StakeholderPulse onOpenTab={onOpenTab} />
       </div>
 
       {/* 4. Daily Briefing — unified activity feed (emails, meetings, alerts) */}
