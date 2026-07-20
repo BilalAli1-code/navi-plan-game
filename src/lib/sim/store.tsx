@@ -246,6 +246,25 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
+  // Re-run chapter gates whenever the learner opens a new chapter so
+  // newly-eligible events unlock (Blueprint §7.3).
+  useEffect(() => {
+    const rid = runIdRef.current;
+    if (!rid || hydrating) return;
+    void syncEventsFn({
+      data: {
+        runId: rid,
+        events: applyChapterGates(
+          eventsFromState(state),
+          Math.max(1, Math.min(7, state.currentDay ?? 1)),
+          state.decisions,
+        ),
+      },
+    }).catch((err) => console.error("Failed to re-gate events:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentDay, hydrating]);
+
+
   // Persist: on every state change, mirror to localStorage (always) and push to
   // Supabase (queued — coalesces rapid updates). One flight at a time.
   useEffect(() => {
