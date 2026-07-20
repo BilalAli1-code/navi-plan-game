@@ -2,16 +2,12 @@ import { motion } from "framer-motion";
 import {
   Activity,
   DollarSign,
-  CalendarRange,
   ShieldAlert,
   HeartHandshake,
   Users,
   Sparkles,
   Smile,
   Target,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Star,
   Zap,
   AlertTriangle,
@@ -28,89 +24,6 @@ import { ScenarioTimeline } from "./ScenarioTimeline";
 import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
-
-// ─── KPI Card ────────────────────────────────────────────────────────────────
-
-function KPICard({
-  label,
-  value,
-  icon,
-  trend,
-  color,
-  sub,
-  onClick,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  trend?: "up" | "down" | "flat";
-  color: "success" | "warning" | "destructive" | "accent";
-  sub?: string;
-  onClick?: () => void;
-}) {
-  const colorMap = {
-    success: {
-      bg: "bg-[color:var(--color-success)]/10",
-      border: "border-[color:var(--color-success)]/20",
-      text: "text-[color:var(--color-success)]",
-      iconBg: "bg-[color:var(--color-success)]/15",
-    },
-    warning: {
-      bg: "bg-[color:var(--color-warning)]/10",
-      border: "border-[color:var(--color-warning)]/20",
-      text: "text-[color:var(--color-warning)]",
-      iconBg: "bg-[color:var(--color-warning)]/15",
-    },
-    destructive: {
-      bg: "bg-[color:var(--color-destructive)]/10",
-      border: "border-[color:var(--color-destructive)]/20",
-      text: "text-[color:var(--color-destructive)]",
-      iconBg: "bg-[color:var(--color-destructive)]/15",
-    },
-    accent: {
-      bg: "bg-accent/10",
-      border: "border-accent/20",
-      text: "text-accent",
-      iconBg: "bg-accent/15",
-    },
-  };
-  const c = colorMap[color];
-  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      disabled={!onClick}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={onClick ? { y: -2 } : undefined}
-      className={cn(
-        "w-full text-left rounded-2xl border p-4 transition",
-        c.bg,
-        c.border,
-        onClick ? "cursor-pointer hover:brightness-110" : "cursor-default",
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div className={cn("grid h-9 w-9 place-items-center rounded-xl", c.iconBg, c.text)}>
-          {icon}
-        </div>
-        {trend && <TrendIcon className={cn("h-4 w-4", c.text)} />}
-      </div>
-      <motion.div
-        key={value}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={cn("mt-3 text-[28px] font-bold tabular-nums", c.text)}
-      >
-        {value}%
-      </motion.div>
-      <div className="mt-0.5 text-[12px] font-medium text-foreground/80">{label}</div>
-      {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
-    </motion.button>
-  );
-}
 
 // ─── Status Bar (thin progress bars per metric) ──────────────────────────────
 
@@ -634,11 +547,6 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
   const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
   const daysDone = days.filter((d) => d.status === "completed").length;
 
-  const healthColor = m.health >= 70 ? "success" : m.health >= 50 ? "warning" : "destructive";
-  const budgetColor = m.budget >= 70 ? "success" : m.budget >= 50 ? "warning" : "destructive";
-  const scheduleColor = m.schedule >= 70 ? "success" : m.schedule >= 50 ? "warning" : "destructive";
-  const riskColor = m.risk >= 60 ? "success" : m.risk >= 45 ? "warning" : "destructive";
-
   return (
     <div className="space-y-5">
       {/* Executive header */}
@@ -655,45 +563,6 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       </div>
 
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KPICard
-          label="Project Health"
-          value={Math.round(m.health)}
-          icon={<Activity className="h-5 w-5" />}
-          color={healthColor}
-          trend={m.health >= 70 ? "up" : m.health >= 50 ? "flat" : "down"}
-          sub="overall composite"
-          onClick={onOpenTab ? () => onOpenTab("dashboard") : undefined}
-        />
-        <KPICard
-          label="Budget"
-          value={Math.round(m.budget)}
-          icon={<DollarSign className="h-5 w-5" />}
-          color={budgetColor}
-          trend={m.budget >= 70 ? "up" : m.budget >= 50 ? "flat" : "down"}
-          sub="vs. baseline"
-          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
-        />
-        <KPICard
-          label="Schedule"
-          value={Math.round(m.schedule)}
-          icon={<CalendarRange className="h-5 w-5" />}
-          color={scheduleColor}
-          trend={m.schedule >= 70 ? "up" : m.schedule >= 50 ? "flat" : "down"}
-          sub="on-time score"
-          onClick={onOpenTab ? () => onOpenTab("reports") : undefined}
-        />
-        <KPICard
-          label="Risk Posture"
-          value={Math.round(m.risk)}
-          icon={<ShieldAlert className="h-5 w-5" />}
-          color={riskColor}
-          trend={m.risk >= 60 ? "up" : m.risk >= 45 ? "flat" : "down"}
-          sub="higher = safer"
-          onClick={onOpenTab ? () => onOpenTab("tools") : undefined}
-        />
-      </div>
 
       {/* Morning briefing — story context for today's project work */}
       <DayBriefing onOpenTab={onOpenTab as (tab: string) => void} />

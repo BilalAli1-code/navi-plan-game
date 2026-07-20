@@ -9,9 +9,7 @@ import {
   Sparkles,
   RotateCcw,
   ArrowLeft,
-  Target,
   MessageSquare,
-  BarChart2,
   Activity,
   Bell,
   Briefcase,
@@ -28,18 +26,15 @@ import { Stakeholders } from "./Stakeholders";
 import { Dashboard } from "./Dashboard";
 import { DecisionPanel } from "./DecisionPanel";
 import { TailoringWorkshop } from "./TailoringWorkshop";
-import { DayDashboard } from "./DayDashboard";
 import { CompetencyDashboard } from "./CompetencyDashboard";
 import { MissionControl } from "./MissionControl";
 import { ChatPanel } from "./ChatPanel";
-import { ReportsPanel } from "./ReportsPanel";
 import { ActivityFeed } from "./ActivityFeed";
 import { PMToolsPanel } from "./PMToolsPanel";
 
 type Tab =
   | "mission"
   | "tailoring"
-  | "program"
   | "dashboard"
   | "mastery"
   | "inbox"
@@ -47,7 +42,6 @@ type Tab =
   | "meetings"
   | "documents"
   | "stakeholders"
-  | "reports"
   | "activity"
   | "tools";
 
@@ -108,10 +102,8 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     {
       label: "Learning",
       items: [
-        { id: "program", label: "Program", icon: Target },
         { id: "dashboard", label: "Project Metrics", icon: Activity },
         { id: "mastery", label: "PMBOK Mastery", icon: Sparkles },
-        { id: "reports", label: "Executive Reports", icon: BarChart2 },
       ],
     },
   ];
@@ -370,7 +362,6 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   transition={{ duration: 0.18 }}
                 >
                   {tab === "mission" && <MissionControl onOpenTab={(t) => setTab(t as Tab)} />}
-                  {tab === "program" && <DayDashboard onOpenTab={(t) => setTab(t)} />}
                   {tab === "dashboard" && <Dashboard />}
                   {tab === "mastery" && <CompetencyDashboard />}
                   {tab === "inbox" && <Inbox onOpenDecision={openDecision} />}
@@ -378,7 +369,6 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   {tab === "meetings" && <Meetings onOpenDecision={openDecision} />}
                   {tab === "documents" && <Documents />}
                   {tab === "stakeholders" && <Stakeholders />}
-                  {tab === "reports" && <ReportsPanel />}
                   {tab === "activity" && <ActivityFeed />}
                   {tab === "tools" && <PMToolsPanel />}
                 </motion.div>
