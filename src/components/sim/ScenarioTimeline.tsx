@@ -270,9 +270,10 @@ function buildScenarioEvents(
 }
 
 
-type EventCategory = "action" | "message" | "meeting" | "update";
+type EventCategory = "action" | "message" | "meeting" | "update" | "completed";
 
 function categorize(ev: ScenarioEvent): EventCategory {
+  if (ev.completed) return "completed";
   if (ev.type === "alert" || (ev.type === "milestone" && ev.priority !== "info")) return "action";
   if (ev.type === "email" || ev.type === "chat") return "message";
   if (ev.type === "meeting") return "meeting";
@@ -284,9 +285,11 @@ const CATEGORY_META: Record<EventCategory, { label: string; hint: string }> = {
   message: { label: "New messages", hint: "Unread from stakeholders" },
   meeting: { label: "Meetings & events", hint: "On today's calendar" },
   update: { label: "Project updates", hint: "For your awareness" },
+  completed: { label: "Completed", hint: "Already handled" },
 };
 
-const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update"];
+const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update", "completed"];
+
 
 export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
