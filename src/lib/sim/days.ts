@@ -331,3 +331,10 @@ export const REQUIRED_ACTIVITIES: DayActivityKey[] = [
 export function getDay(dayNumber: number): DayDefinition {
   return DAY_PLAN.find((d) => d.day === dayNumber) ?? DAY_PLAN[0];
 }
+
+// --- Chapter aliases (Blueprint §7/§8). Chapters are the runtime concept;
+// "day" remains the DB column name for backward compatibility.
+export type ChapterDefinition = DayDefinition;
+export const CHAPTER_PLAN: ChapterDefinition[] = DAY_PLAN;
+export const TOTAL_CHAPTERS = TOTAL_DAYS;
+export const getChapter = getDay;
