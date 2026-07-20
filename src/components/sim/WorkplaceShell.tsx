@@ -92,7 +92,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
         },
         { id: "inbox", label: "Inbox", icon: Mail, badge: unread || undefined },
         { id: "chat", label: "Team Chat", icon: MessageSquare },
-        { id: "meetings", label: "Calendar", icon: CalendarDays },
+        { id: "meetings", label: "Meetings", icon: CalendarDays },
         { id: "documents", label: "Documents", icon: FileText },
         { id: "stakeholders", label: "Stakeholders", icon: Users },
         { id: "tools", label: "PM Tools", icon: Briefcase },
