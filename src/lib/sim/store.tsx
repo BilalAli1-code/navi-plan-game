@@ -323,6 +323,24 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const next = commitDecision(state, dec, option);
       setState(next);
 
+      // Maya trigger dispatcher (Blueprint §11.2) — proactive coaching moments.
+      const nudges = evaluateMayaTriggers({
+        decision: dec,
+        option,
+        prevState: state,
+        nextState: next,
+        currentChapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+      });
+      for (const n of nudges) {
+        if (firedNudgeIds.current.has(n.id)) continue;
+        firedNudgeIds.current.add(n.id);
+        setMayaNudges((q) => [...q, n]);
+        const msg = `Maya: ${n.message}`;
+        if (n.severity === "warning") toast.warning(msg, { duration: 6000 });
+        else toast.info(msg, { duration: 6000 });
+      }
+
+
       const rid = runIdRef.current;
       if (rid) {
         // Persist the decision row.
