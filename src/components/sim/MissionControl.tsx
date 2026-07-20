@@ -62,7 +62,7 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
           </div>
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-              Today's Mission
+              Today's Progress
             </div>
             <div className="text-[14px] font-bold text-foreground">
               Day {state.currentDay} · {day.title}
@@ -82,15 +82,7 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
           className="h-full rounded-full bg-accent"
         />
       </div>
-      <p className="mb-3 text-[12px] text-foreground/75">{day.focus}</p>
-      <ul className="space-y-1.5">
-        {day.objectives.slice(0, 3).map((o) => (
-          <li key={o} className="flex items-start gap-2 text-[12px] text-foreground/80">
-            <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-accent" />
-            {o}
-          </li>
-        ))}
-      </ul>
+      <p className="text-[12px] text-foreground/75">{day.focus}</p>
       {onOpenTab && (
         <button
           onClick={() => onOpenTab("inbox")}
@@ -103,6 +95,7 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
     </div>
   );
 }
+
 
 // (StakeholderHealthRow removed — moved out of Mission Control)
 
