@@ -5,6 +5,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
 import { processAction } from "@/lib/sim/actions.functions";
+import {
+  appendChatMessage,
+  listChatHistory,
+  type ChatMessageRow,
+} from "@/lib/sim/stakeholders.functions";
 import type { Stakeholder } from "@/lib/sim/types";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +48,7 @@ function buildChannelMessages(
   const emailsFromStake = state.emails.filter((e) => e.from === stakeholder.id);
   emailsFromStake.forEach((email, i) => {
     msgs.push({
-      id: `email-${email.id}`,
+      id: `email-${email.id}-${i}`,
       senderId: stakeholder.id,
       senderName: stakeholder.name,
       senderInitial: stakeholder.avatarInitial,
@@ -58,7 +63,7 @@ function buildChannelMessages(
       const dec = state.decisions.find((d) => d.id === email.unlocksDecisionId);
       if (dec) {
         msgs.push({
-          id: `dec-followup-${email.id}`,
+          id: `dec-followup-${email.id}-${i}`,
           senderId: stakeholder.id,
           senderName: stakeholder.name,
           senderInitial: stakeholder.avatarInitial,
@@ -72,6 +77,26 @@ function buildChannelMessages(
   });
 
   return msgs.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+}
+
+function toUiMessage(
+  row: ChatMessageRow,
+  stakeholder: Stakeholder,
+  idx: number,
+): ChatMessage {
+  const isMe = row.role === "learner";
+  return {
+    id: `persisted-${stakeholder.id}-${idx}`,
+    senderId: isMe ? "me" : stakeholder.id,
+    senderName: isMe ? "You" : stakeholder.name,
+    senderInitial: isMe ? "Y" : stakeholder.avatarInitial,
+    senderColor: isMe ? "bg-slate-600" : stakeholder.color,
+    text: row.content,
+    timestamp: row.createdAt
+      ? new Date(row.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    isMe,
+  };
 }
 
 // ─── Single message bubble ───────────────────────────────────────────────────
@@ -120,22 +145,72 @@ function StakeholderChatThread({
   const { state, runId } = useSim();
   const caseRef = getCaseRef(state.caseId);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    buildChannelMessages(stakeholder, state),
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recordAction = useServerFn(processAction);
+  const persist = useServerFn(appendChatMessage);
+  const loadHistory = useServerFn(listChatHistory);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Load persisted thread history for this stakeholder.
+  useEffect(() => {
+    let cancelled = false;
+    setMessages([]);
+    setHistoryLoaded(false);
+
+    const seed = buildChannelMessages(stakeholder, state);
+
+    if (!runId) {
+      if (!cancelled) {
+        setMessages(seed);
+        setHistoryLoaded(true);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    loadHistory({ data: { runId, stakeholderId: stakeholder.id } })
+      .then((rows: ChatMessageRow[]) => {
+        if (cancelled) return;
+
+        const persisted = rows.map((r, i) => toUiMessage(r, stakeholder, i));
+
+        // Keep old seeded email context only if it isn't already represented.
+        const persistedTextSet = new Set(
+          persisted.map((m) => `${m.senderId}::${m.text.trim().toLowerCase()}`),
+        );
+        const dedupedSeed = seed.filter(
+          (m) => !persistedTextSet.has(`${m.senderId}::${m.text.trim().toLowerCase()}`),
+        );
+
+        setMessages([...dedupedSeed, ...persisted]);
+        setHistoryLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMessages(seed);
+          setHistoryLoaded(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [runId, stakeholder.id, loadHistory, state, stakeholder]);
+
   async function sendMessage() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !historyLoaded) return;
     setInput("");
+
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const userMsg: ChatMessage = {
       id: `me-${Date.now()}`,
@@ -144,7 +219,7 @@ function StakeholderChatThread({
       senderInitial: "Y",
       senderColor: "bg-slate-600",
       text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: now,
       isMe: true,
     };
     // Append user msg + empty stakeholder placeholder
@@ -158,12 +233,26 @@ function StakeholderChatThread({
         senderInitial: stakeholder.avatarInitial,
         senderColor: stakeholder.color,
         text: "",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: now,
         isMe: false,
       },
     ]);
 
+    // Persist learner message immediately.
+    if (runId) {
+      void persist({
+        data: {
+          runId,
+          stakeholderId: stakeholder.id,
+          role: "learner",
+          content: text,
+          chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+        },
+      }).catch(() => {});
+    }
+
     setLoading(true);
+    let assistantText = "";
     try {
       const res = await fetch("/api/sim-stakeholder", {
         method: "POST",
@@ -186,6 +275,7 @@ function StakeholderChatThread({
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
+        assistantText += chunk;
         setMessages((m) => {
           const copy = [...m];
           copy[copy.length - 1] = {
@@ -196,16 +286,31 @@ function StakeholderChatThread({
         });
       }
     } catch {
+      assistantText = `(${stakeholder.name.split(" ")[0]} couldn't respond right now)`;
       setMessages((m) => {
         const copy = [...m];
         copy[copy.length - 1] = {
           ...copy[copy.length - 1],
-          text: `(${stakeholder.name.split(" ")[0]} couldn't respond right now)`,
+          text: assistantText,
         };
         return copy;
       });
     } finally {
       setLoading(false);
+
+      // Persist stakeholder reply.
+      if (runId && assistantText.trim()) {
+        void persist({
+          data: {
+            runId,
+            stakeholderId: stakeholder.id,
+            role: "stakeholder",
+            content: assistantText,
+            chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+          },
+        }).catch(() => {});
+      }
+
       // Record interaction for mastery tracking (fire-and-forget)
       if (runId) {
         void recordAction({
@@ -251,7 +356,10 @@ function StakeholderChatThread({
 
       {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
-        {messages.length === 0 && (
+        {!historyLoaded && (
+          <div className="py-8 text-center text-[12px] text-muted-foreground">Loading history…</div>
+        )}
+        {historyLoaded && messages.length === 0 && (
           <div className="py-8 text-center text-[12px] text-muted-foreground">
             No messages yet. Say hello to {stakeholder.name.split(" ")[0]}!
           </div>
@@ -291,11 +399,11 @@ function StakeholderChatThread({
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Message ${stakeholder.name.split(" ")[0]}…`}
             className="flex-1 bg-transparent text-[13px] focus:outline-none"
-            disabled={loading}
+            disabled={loading || !historyLoaded}
           />
           <button
             type="submit"
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || loading || !historyLoaded}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground disabled:opacity-40"
           >
             <Send className="h-3.5 w-3.5" />
