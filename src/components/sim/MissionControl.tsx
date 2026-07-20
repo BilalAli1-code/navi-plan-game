@@ -444,21 +444,24 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
 
 
 
-      {/* Morning briefing — story context for today's project work */}
+      {/* 1. Daily Overview — story + objectives */}
       <DayBriefing onOpenTab={onOpenTab as (tab: string) => void} />
 
-      {/* Scenario timeline */}
-      <ScenarioTimeline onOpenTab={onOpenTab} />
-
-      {/* Today's mission */}
+      {/* 2. Today's Progress — completion tracker */}
       <TodaysMission onOpenTab={onOpenTab} />
 
-      {/* Maya recommendations */}
+      {/* 3. Priority Actions — risks & team conflicts requiring response */}
+      <div className="space-y-3">
+        <RiskResponsePanel dayNumber={state.currentDay} />
+        <ConflictPanel dayNumber={state.currentDay} />
+      </div>
+
+      {/* 4. Daily Briefing — unified activity feed (emails, meetings, alerts) */}
+      <ScenarioTimeline onOpenTab={onOpenTab} />
+
+      {/* 5. Maya's coaching recommendations */}
       <AIRecommendationsPanel />
 
-      {/* Active project engine actions: risks & team conflicts */}
-      <RiskResponsePanel dayNumber={state.currentDay} />
-      <ConflictPanel dayNumber={state.currentDay} />
 
     </div>
   );
