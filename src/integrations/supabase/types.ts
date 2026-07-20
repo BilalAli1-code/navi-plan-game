@@ -784,6 +784,206 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_scores: {
+        Row: {
+          chapter: number
+          communication_score: number
+          created_at: string
+          decision_score: number
+          id: string
+          metadata: Json
+          overall_score: number
+          run_id: string
+          sample_count: number
+          stakeholder_score: number
+          updated_at: string
+        }
+        Insert: {
+          chapter: number
+          communication_score?: number
+          created_at?: string
+          decision_score?: number
+          id?: string
+          metadata?: Json
+          overall_score?: number
+          run_id: string
+          sample_count?: number
+          stakeholder_score?: number
+          updated_at?: string
+        }
+        Update: {
+          chapter?: number
+          communication_score?: number
+          created_at?: string
+          decision_score?: number
+          id?: string
+          metadata?: Json
+          overall_score?: number
+          run_id?: string
+          sample_count?: number
+          stakeholder_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_scores_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stakeholder_commitments: {
+        Row: {
+          chapter: number | null
+          created_at: string
+          description: string
+          due_in_world: string | null
+          id: string
+          metadata: Json
+          resolution_note: string | null
+          run_id: string
+          stakeholder_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          chapter?: number | null
+          created_at?: string
+          description: string
+          due_in_world?: string | null
+          id?: string
+          metadata?: Json
+          resolution_note?: string | null
+          run_id: string
+          stakeholder_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          chapter?: number | null
+          created_at?: string
+          description?: string
+          due_in_world?: string | null
+          id?: string
+          metadata?: Json
+          resolution_note?: string | null
+          run_id?: string
+          stakeholder_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_commitments_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stakeholder_memories: {
+        Row: {
+          chapter: number | null
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          run_id: string
+          sentiment: string | null
+          stakeholder_id: string
+          summary: string
+          weight: number
+        }
+        Insert: {
+          chapter?: number | null
+          created_at?: string
+          id?: string
+          kind: string
+          metadata?: Json
+          run_id: string
+          sentiment?: string | null
+          stakeholder_id: string
+          summary: string
+          weight?: number
+        }
+        Update: {
+          chapter?: number | null
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          run_id?: string
+          sentiment?: string | null
+          stakeholder_id?: string
+          summary?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_memories_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stakeholder_relationships: {
+        Row: {
+          created_at: string
+          engagement: string
+          id: string
+          interaction_count: number
+          last_interaction_at: string | null
+          last_interaction_summary: string | null
+          metadata: Json
+          run_id: string
+          sentiment: string
+          stakeholder_id: string
+          trust: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          engagement?: string
+          id?: string
+          interaction_count?: number
+          last_interaction_at?: string | null
+          last_interaction_summary?: string | null
+          metadata?: Json
+          run_id: string
+          sentiment?: string
+          stakeholder_id: string
+          trust?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          engagement?: string
+          id?: string
+          interaction_count?: number
+          last_interaction_at?: string | null
+          last_interaction_summary?: string | null
+          metadata?: Json
+          run_id?: string
+          sentiment?: string
+          stakeholder_id?: string
+          trust?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_relationships_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
