@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { MetricMeter } from "./MetricMeter";
+import { DecisionSummary } from "./MissionControl";
+
 
 export function Dashboard() {
   const { state } = useSim();
