@@ -8,6 +8,7 @@ type AskRequest = {
   scenarioSummary?: string;
   phase?: string;
   chosenLabel?: string | null;
+  runId?: string;
 };
 
 export const Route = createFileRoute("/api/maya-ask")({
@@ -31,10 +32,27 @@ Hard rules:
 - NEVER reveal or hint at which multiple-choice option is "the answer" for the current scenario. If asked directly, redirect to the underlying principle.
 - Keep replies under ~140 words. Use short paragraphs or 2-4 bullet points.
 - Ground guidance in PMI terminology (e.g. Integrated Change Control, Risk Response Planning, Stakeholder Engagement, Servant Leadership, Value Delivery).
+- When run context is provided below, reference the learner's actual chapter, stakeholders, scores, and open commitments by name — do not invent facts.
 - End with one concise exam tip when useful.
 - No preamble like "Great question". Get straight to the coaching.`;
 
-        const context = [
+        // Optional persistent run context (stakeholder memory, scores, chapter).
+        let runContext = "";
+        const authHeader = request.headers.get("authorization") ?? "";
+        const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+        if (body.runId && token && token.split(".").length === 3) {
+          try {
+            const { createAuthedSupabase, buildMayaContext } = await import(
+              "@/lib/sim/maya-context.server"
+            );
+            const supabase = createAuthedSupabase(token);
+            runContext = await buildMayaContext({ supabase, runId: body.runId });
+          } catch (err) {
+            console.warn("[maya-ask] context build failed", err);
+          }
+        }
+
+        const scenarioBlock = [
           body.phase ? `Current phase: ${body.phase}` : null,
           body.scenarioTitle ? `Scenario: ${body.scenarioTitle}` : null,
           body.scenarioSummary ? `Context: ${body.scenarioSummary}` : null,
@@ -43,7 +61,9 @@ Hard rules:
           .filter(Boolean)
           .join("\n");
 
-        const prompt = `${context}\n\nLearner question: ${body.question.trim()}`;
+        const prompt = [runContext, scenarioBlock, `Learner question: ${body.question.trim()}`]
+          .filter(Boolean)
+          .join("\n\n");
 
         try {
           const result = streamText({ model, system, prompt });

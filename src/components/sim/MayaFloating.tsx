@@ -214,7 +214,7 @@ function AdvisoryCard({ advisory }: { advisory: Advisory }) {
 // ─── Main MayaFloating export ─────────────────────────────────────────────────
 
 export function MayaFloating() {
-  const { state, activeDecision } = useSim();
+  const { state, activeDecision, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const [expanded, setExpanded] = useState(false);
   const [minimized, setMinimized] = useState(false);
@@ -301,15 +301,22 @@ export function MayaFloating() {
     setLoading(true);
     setAnswer("");
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
       const res = await fetch("/api/maya-ask", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           question: trimmed,
           scenarioTitle,
           scenarioSummary: scenarioSummary.replace(/\*\*/g, ""),
           phase: state.phase,
           chosenLabel: null,
+          runId: runId ?? undefined,
         }),
       });
       if (!res.ok || !res.body) throw new Error(await res.text().catch(() => "unavailable"));
