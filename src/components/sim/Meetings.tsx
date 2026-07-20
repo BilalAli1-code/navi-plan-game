@@ -105,12 +105,21 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </div>
 
             {active.unlocksDecisionId && (
-              <button
-                onClick={() => onOpenDecision(active.unlocksDecisionId!)}
-                className="mt-6 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground hover:opacity-90"
-              >
-                Make the decision →
-              </button>
+              activeDone ? (
+                <button
+                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                  className="mt-6 flex items-center gap-2 rounded-full border border-[color:var(--color-success)]/30 bg-[color:var(--color-success)]/10 px-5 py-2.5 text-[13px] font-semibold text-[color:var(--color-success)]"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Decision recorded — review
+                </button>
+              ) : (
+                <button
+                  onClick={() => onOpenDecision(active.unlocksDecisionId!)}
+                  className="mt-6 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground hover:opacity-90"
+                >
+                  Make the decision →
+                </button>
+              )
             )}
           </>
         ) : (
@@ -122,3 +131,51 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
     </div>
   );
 }
+
+function MeetingRow({
+  meeting: m,
+  openId,
+  onSelect,
+  done,
+}: {
+  meeting: {
+    id: string;
+    title: string;
+    time: string;
+    attendees: string[];
+  };
+  openId: string | null;
+  onSelect: (id: string) => void;
+  done?: boolean;
+}) {
+  return (
+    <li>
+      <button
+        onClick={() => onSelect(m.id)}
+        className={cn(
+          "flex w-full flex-col gap-1 border-b border-white/5 px-4 py-3 text-left transition",
+          openId === m.id ? "bg-white/[0.06]" : "hover:bg-white/[0.03]",
+          done && "opacity-70",
+        )}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {new Date(m.time).toLocaleDateString(undefined, {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
+          </div>
+          {done && (
+            <span className="rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold text-[color:var(--color-success)]">
+              ✓ Done
+            </span>
+          )}
+        </div>
+        <div className="text-[13px] font-semibold text-foreground">{m.title}</div>
+        <div className="text-[11px] text-muted-foreground">{m.attendees.length} attendees</div>
+      </button>
+    </li>
+  );
+}
+
