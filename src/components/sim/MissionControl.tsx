@@ -430,7 +430,7 @@ export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => voi
 
 // ─── Decision Log Summary ────────────────────────────────────────────────────
 
-function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const { state } = useSim();
   const correct = state.log.filter((l) => l.correct).length;
   const total = state.log.length;
@@ -537,6 +537,7 @@ function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
     </div>
   );
 }
+
 
 // ─── Main MissionControl export ──────────────────────────────────────────────
 
