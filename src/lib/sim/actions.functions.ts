@@ -22,6 +22,16 @@ import { computeActionOutcome } from "./actions.engine";
 import { ActionInputSchema, type ActionInput } from "./actions";
 import type { MetricImpact, ProjectMetrics, SimState } from "./types";
 import type { MasteryUpdate } from "./mastery.functions";
+import {
+  addSample,
+  currentAverages,
+  emptyChapterScoreState,
+  overallScore,
+  qualityToScore,
+  type ChapterScoreState,
+  type ScoreDimension,
+} from "./scoring";
+import { getChapter } from "./days";
 
 const asJson = (v: unknown): Json => v as Json;
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
