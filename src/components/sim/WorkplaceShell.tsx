@@ -9,9 +9,7 @@ import {
   Sparkles,
   RotateCcw,
   ArrowLeft,
-  Target,
   MessageSquare,
-  BarChart2,
   Activity,
   Bell,
   Briefcase,
@@ -28,18 +26,15 @@ import { Stakeholders } from "./Stakeholders";
 import { Dashboard } from "./Dashboard";
 import { DecisionPanel } from "./DecisionPanel";
 import { TailoringWorkshop } from "./TailoringWorkshop";
-import { DayDashboard } from "./DayDashboard";
 import { CompetencyDashboard } from "./CompetencyDashboard";
 import { MissionControl } from "./MissionControl";
 import { ChatPanel } from "./ChatPanel";
-import { ReportsPanel } from "./ReportsPanel";
 import { ActivityFeed } from "./ActivityFeed";
 import { PMToolsPanel } from "./PMToolsPanel";
 
 type Tab =
   | "mission"
   | "tailoring"
-  | "program"
   | "dashboard"
   | "mastery"
   | "inbox"
@@ -47,7 +42,6 @@ type Tab =
   | "meetings"
   | "documents"
   | "stakeholders"
-  | "reports"
   | "activity"
   | "tools";
 
