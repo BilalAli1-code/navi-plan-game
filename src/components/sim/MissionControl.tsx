@@ -6,24 +6,23 @@ import {
   HeartHandshake,
   Users,
   Sparkles,
-  Smile,
   Target,
   Star,
   Zap,
-  AlertTriangle,
   CheckCircle2,
   Clock,
   ChevronRight,
   Bell,
 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
-import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
+import { getCaseRef } from "@/lib/sim/cases";
 import { getDay, TOTAL_DAYS, TOTAL_MINUTES } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { ScenarioTimeline } from "./ScenarioTimeline";
 import { DayBriefing } from "./DayBriefing";
 import { RiskResponsePanel } from "./RiskResponsePanel";
 import { ConflictPanel } from "./ConflictPanel";
+
 
 // (MetricBar removed — Soft Metrics moved out of Mission Control)
 
