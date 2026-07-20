@@ -144,11 +144,14 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const [hydrating, setHydrating] = useState(true);
   const [runId, setRunId] = useState<string | null>(null);
   const [days, setDays] = useState<DailyProgressRow[]>([]);
+  const [mayaNudges, setMayaNudges] = useState<MayaNudge[]>([]);
+  const firedNudgeIds = useRef<Set<string>>(new Set());
   const runIdRef = useRef<string | null>(null);
   const pendingRef = useRef<SimState | null>(null);
   const savingRef = useRef(false);
   const lastDecisionKeyRef = useRef<string | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const loadRunFn = useServerFn(loadRun);
   const saveRunFn = useServerFn(saveRun);
