@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Mail, Reply, Star, Archive, AlertCircle, Search } from "lucide-react";
+import { Mail, Reply, Star, Archive, AlertCircle, Search, CheckCircle2 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
 import { visibleEmails } from "@/lib/sim/visibility";
@@ -12,9 +12,17 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
   // Only surface emails whose gated chapter has opened. Future-chapter
   // messages stay hidden until the learner reaches that day.
   const emails = useMemo(() => visibleEmails(state), [state]);
+  // Derive completion from the single source of truth (decision log).
+  const answered = useMemo(
+    () => new Set(state.log.map((l) => l.decisionId)),
+    [state.log],
+  );
+  const isCompleted = (e: (typeof emails)[number]) =>
+    e.unlocksDecisionId ? answered.has(e.unlocksDecisionId) : e.read;
   const [openId, setOpenId] = useState<string | null>(emails[0]?.id ?? null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "important" | "completed">("all");
+
   const active = emails.find((e) => e.id === openId) ?? null;
 
   // Pre-compute stake lookup map to avoid O(n*m) in filter/render
