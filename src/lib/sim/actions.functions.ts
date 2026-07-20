@@ -277,6 +277,123 @@ export const processAction = createServerFn({ method: "POST" })
       if (masErr) throw new Error(masErr.message);
     }
 
+    // 8b. Persist chapter score sample (communication / decision / stakeholder).
+    const chapter = Math.max(1, Math.min(7, run.current_day ?? 1));
+    const dimension: ScoreDimension =
+      action.actionType === "stakeholder_interaction"
+        ? "stakeholder"
+        : action.actionType === "conflict_management"
+          ? "communication"
+          : "decision";
+    const sampleScore = qualityToScore(outcome.quality);
+    try {
+      const { data: scoreRow } = await db
+        .from("simulation_scores")
+        .select("*")
+        .eq("run_id", action.runId)
+        .eq("chapter", chapter)
+        .maybeSingle();
+      const prevState: ChapterScoreState =
+        (scoreRow?.metadata as { state?: ChapterScoreState } | null)?.state ??
+        emptyChapterScoreState(chapter);
+      const nextState = addSample(prevState, {
+        dimension,
+        score: sampleScore,
+        weight: 1,
+        tag: action.actionType,
+      });
+      const avgs = currentAverages(nextState);
+      const overall = overallScore(nextState, getChapter(chapter));
+      const payload = {
+        communication_score: avgs.communication,
+        decision_score: avgs.decision,
+        stakeholder_score: avgs.stakeholder,
+        overall_score: overall,
+        sample_count: nextState.sampleCount,
+        metadata: asJson({ state: nextState }),
+      };
+      if (scoreRow) {
+        await db.from("simulation_scores").update(payload).eq("id", scoreRow.id);
+      } else {
+        await db
+          .from("simulation_scores")
+          .insert({ run_id: action.runId, chapter, ...payload });
+      }
+    } catch (err) {
+      console.error("processAction: score persistence failed", err);
+    }
+
+    // 8c. Stakeholder relationship + memory persistence.
+    if (action.actionType === "stakeholder_interaction") {
+      const trustDelta = Math.round(
+        { excellent: 8, good: 3, risky: -4, poor: -10 }[outcome.quality],
+      );
+      const sentiment: "supportive" | "neutral" | "skeptical" | "hostile" =
+        outcome.quality === "excellent"
+          ? "supportive"
+          : outcome.quality === "good"
+            ? "neutral"
+            : outcome.quality === "risky"
+              ? "skeptical"
+              : "hostile";
+      try {
+        const { data: rel } = await db
+          .from("stakeholder_relationships")
+          .select("*")
+          .eq("run_id", action.runId)
+          .eq("stakeholder_id", outcome.subjectId)
+          .maybeSingle();
+        const nextTrust = Math.max(
+          0,
+          Math.min(100, (rel?.trust ?? 60) + trustDelta),
+        );
+        const summary =
+          (action.actionType === "stakeholder_interaction" &&
+            (action.learnerMessage ?? action.selectedResponse ?? "")
+              .toString()
+              .slice(0, 240)) ||
+          `${action.interactionType} interaction (${outcome.quality})`;
+        if (rel) {
+          await db
+            .from("stakeholder_relationships")
+            .update({
+              trust: nextTrust,
+              sentiment,
+              last_interaction_at: now,
+              last_interaction_summary: summary,
+              interaction_count: (rel.interaction_count ?? 0) + 1,
+            })
+            .eq("id", rel.id);
+        } else {
+          await db.from("stakeholder_relationships").insert({
+            run_id: action.runId,
+            stakeholder_id: outcome.subjectId,
+            trust: nextTrust,
+            sentiment,
+            last_interaction_at: now,
+            last_interaction_summary: summary,
+            interaction_count: 1,
+          });
+        }
+        await db.from("stakeholder_memories").insert({
+          run_id: action.runId,
+          stakeholder_id: outcome.subjectId,
+          chapter,
+          kind: "interaction",
+          summary,
+          sentiment:
+            outcome.quality === "excellent" || outcome.quality === "good"
+              ? "positive"
+              : outcome.quality === "risky"
+                ? "neutral"
+                : "negative",
+          weight: outcome.quality === "excellent" ? 3 : 1,
+        });
+      } catch (err) {
+        console.error("processAction: stakeholder persistence failed", err);
+      }
+    }
+
     // 9. Upsert delayed simulation_events.
     if (outcome.delayedEvents.length > 0) {
       const rows = outcome.delayedEvents.map((e) => ({
