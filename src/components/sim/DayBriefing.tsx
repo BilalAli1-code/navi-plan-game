@@ -41,34 +41,6 @@ export function DayBriefing({ onOpenTab }: { onOpenTab?: (tab: OpenTab) => void 
 
   const dayDone = REQUIRED_ACTIVITIES.every((a) => flags[a]);
 
-  // Case-agnostic "today's morning inbox" — three most recent unread emails.
-  const morningInbox = useMemo(
-    () =>
-      [...state.emails]
-        .filter((e) => !e.read)
-        .sort((a, b) => (a.receivedAt < b.receivedAt ? 1 : -1))
-        .slice(0, 3),
-    [state.emails],
-  );
-
-  // A meeting that unlocks a decision in the current phase — the "kickoff" or
-  // primary meeting of the day. Case-agnostic: any casepack that adds a
-  // phase-matching meeting will surface here.
-  const focusMeeting = useMemo(
-    () =>
-      state.meetings.find((m) => {
-        if (!m.unlocksDecisionId) return false;
-        const dec = state.decisions.find((d) => d.id === m.unlocksDecisionId);
-        return dec?.phase === day.phase;
-      }) ?? state.meetings[0] ?? null,
-    [state.meetings, state.decisions, day.phase],
-  );
-
-  function stakeholderName(id: string): string {
-    // Rendered as-is; Stakeholders panel does the full lookup with avatars.
-    return id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " ");
-  }
-
   return (
     <div className="rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/[0.08] via-white/[0.02] to-transparent p-5">
       <div className="flex items-start justify-between gap-3">
@@ -113,88 +85,6 @@ export function DayBriefing({ onOpenTab }: { onOpenTab?: (tab: OpenTab) => void 
         {day.briefing}
       </p>
 
-      {/* Quick links to the morning surfaces */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {/* Morning inbox */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-              <Mail className="h-3.5 w-3.5 text-accent" /> Morning inbox
-            </div>
-            <button
-              onClick={() => onOpenTab?.("inbox")}
-              className="text-[10px] text-accent hover:underline"
-            >
-              Open
-            </button>
-          </div>
-          {morningInbox.length === 0 ? (
-            <div className="text-[11px] text-muted-foreground">Inbox clear ✓</div>
-          ) : (
-            <ul className="space-y-1">
-              {morningInbox.map((e) => (
-                <li key={e.id} className="truncate text-[11px] text-foreground/80">
-                  <span className="text-muted-foreground">{stakeholderName(e.from)}: </span>
-                  {e.subject}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Focus meeting */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-              <CalendarDays className="h-3.5 w-3.5 text-accent" /> Today's meeting
-            </div>
-            <button
-              onClick={() => onOpenTab?.("meetings")}
-              className="text-[10px] text-accent hover:underline"
-            >
-              Join
-            </button>
-          </div>
-          {focusMeeting ? (
-            <>
-              <div className="text-[11px] font-semibold text-foreground">
-                {focusMeeting.title}
-              </div>
-              <div className="mt-0.5 text-[10px] text-muted-foreground">
-                {focusMeeting.attendees.slice(0, 4).map(stakeholderName).join(" · ")}
-                {focusMeeting.attendees.length > 4
-                  ? ` +${focusMeeting.attendees.length - 4}`
-                  : ""}
-              </div>
-            </>
-          ) : (
-            <div className="text-[11px] text-muted-foreground">No meeting queued today.</div>
-          )}
-        </div>
-
-        {/* Stakeholders to engage */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-              <Users className="h-3.5 w-3.5 text-accent" /> People to engage
-            </div>
-            <button
-              onClick={() => onOpenTab?.("stakeholders")}
-              className="text-[10px] text-accent hover:underline"
-            >
-              Chat
-            </button>
-          </div>
-          <ul className="space-y-1">
-            {(focusMeeting?.attendees ?? ["sponsor", "team-lead"]).slice(0, 3).map((id) => (
-              <li key={id} className="flex items-center gap-1 text-[11px] text-foreground/80">
-                <ChevronRight className="h-3 w-3 text-accent" />
-                {stakeholderName(id)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
 
       {/* Objectives (compact) */}
       <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.02] p-3">
