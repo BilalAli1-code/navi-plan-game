@@ -182,15 +182,22 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
                       <span className="flex-1 truncate text-[10px] text-muted-foreground/70">
                         {e.preview}
                       </span>
-                      {urgent && (
+                      {urgent && !isCompleted(e) && (
                         <AlertCircle className="h-3 w-3 shrink-0 text-[color:var(--color-destructive)]" />
                       )}
-                      {e.unlocksDecisionId && (
-                        <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
-                          Action
+                      {isCompleted(e) ? (
+                        <span className="shrink-0 rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold text-[color:var(--color-success)]">
+                          ✓ Done
                         </span>
+                      ) : (
+                        e.unlocksDecisionId && (
+                          <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
+                            Action
+                          </span>
+                        )
                       )}
                     </div>
+
                   </div>
                 </button>
               </li>
