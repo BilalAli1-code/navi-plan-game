@@ -372,7 +372,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         }
       }
     },
-    [state, saveDecisionFn, masteryFn, updateEventStatusFn],
+    [state, saveDecisionFn, masteryFn, updateEventStatusFn, recordScoreFn],
   );
 
   const submitTailoring = useCallback(
