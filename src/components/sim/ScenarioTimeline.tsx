@@ -392,7 +392,12 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
-                        {ev.priority === "urgent" && (
+                        {ev.completed && (
+                          <span className="rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--color-success)]">
+                            ✓ Done
+                          </span>
+                        )}
+                        {!ev.completed && ev.priority === "urgent" && (
                           <span
                             className={cn(
                               "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
@@ -406,6 +411,7 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
                       </div>
+
                     </motion.div>
                   );
                 })}
