@@ -14,7 +14,6 @@ import {
   DollarSign,
   BookOpen,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
