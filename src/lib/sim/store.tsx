@@ -265,12 +265,21 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (wasNew) {
         setRunId(res.runId);
         void refreshDays(res.runId);
-        // First time we have a runId — publish generator content as events.
+        // First time we have a runId — publish generator content as events,
+        // gated by the learner's current chapter (Blueprint §7.3).
         void syncEventsFn({
-          data: { runId: res.runId, events: eventsFromState(next) },
+          data: {
+            runId: res.runId,
+            events: applyChapterGates(
+              eventsFromState(next),
+              Math.max(1, Math.min(7, next.currentDay ?? 1)),
+              next.decisions,
+            ),
+          },
         }).catch((err) => {
           console.error("Failed to sync events:", err);
         });
+
       }
       setSaveStatus("saved");
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
