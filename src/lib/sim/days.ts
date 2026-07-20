@@ -33,6 +33,44 @@ export const DAY_ACTIVITY_MINUTES: Record<DayActivityKey, number> = {
   reflection: 5,
 };
 
+/**
+ * Chapter Contract (Simulation Design Blueprint §7.2 / §8.4).
+ *
+ * A DayDefinition is the runtime "chapter" a learner works through. Chapters
+ * are NOT calendar days: `inWorldStart` and `inWorldEnd` describe the
+ * simulated project time span the chapter covers, independent of the ~60
+ * minutes of real learner time it takes to complete.
+ *
+ * All Chapter Contract fields are OPTIONAL so existing casepacks keep
+ * working. New content authored against the Business Case Content Bible
+ * should populate them.
+ */
+export type ChapterAdvanceRule = {
+  /** Required activity keys. Defaults to REQUIRED_ACTIVITIES when omitted. */
+  requiredActivities?: DayActivityKey[];
+  /** IDs (or key suffixes) of decisions that must have a log entry. */
+  requiredDecisionIds?: string[];
+  /** Document kinds that must be present at chapter close. */
+  requiredOutputKinds?: string[];
+};
+
+export type ChapterProgressContext = {
+  chapter: number;
+  activityFlags: Record<DayActivityKey, boolean>;
+  decisionIdsLogged: Set<string>;
+  documentKindsPresent: Set<string>;
+};
+
+export type MayaTrigger =
+  | "unsupported_guarantee"
+  | "critical_stakeholder_excluded"
+  | "no_success_criteria"
+  | "high_priority_ignored"
+  | "learner_asked"
+  | "poor_decision_quality"
+  | "stakeholder_relationship_degraded"
+  | "commitment_missed";
+
 export type DayDefinition = {
   day: number;
   title: string;
@@ -43,6 +81,16 @@ export type DayDefinition = {
   briefing: string;
   /** End-of-day cliffhanger / story hook — pushes into the next day. */
   storyHook: string;
+
+  // --- Chapter Contract (all optional, additive) ---
+  storyTheme?: string;
+  inWorldStart?: string;         // e.g. "Project week 1"
+  inWorldEnd?: string;           // e.g. "Project week 1"
+  lifecycleEmphasis?: SimPhase[];
+  openingCondition?: string;
+  scoringEmphasis?: string[];
+  mayaTriggers?: MayaTrigger[];
+  advanceRule?: ChapterAdvanceRule;
 };
 
 
