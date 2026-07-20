@@ -23,7 +23,9 @@ type ScenarioEvent = {
   priority: "urgent" | "normal" | "info";
   actionTab?: string;
   read?: boolean;
+  completed?: boolean;
 };
+
 
 const TYPE_ICON = {
   email: Mail,
