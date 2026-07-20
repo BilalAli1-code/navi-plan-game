@@ -349,3 +349,32 @@ export function assessFeedback(
     ].filter(Boolean),
   };
 }
+
+// -------- Chapter-aware engagement --------
+// Which stakeholders are "in the spotlight" for a given chapter. Anyone
+// missing from the primary set is still fully chattable — they just aren't
+// pushed forward on the Stakeholders / Mission Control surfaces.
+
+const CHAPTER_PRIMARY_STAKEHOLDERS: Record<number, string[]> = {
+  1: ["sponsor", "customer", "team-lead", "vendor"],
+  2: ["sponsor", "customer", "team-lead", "risk-officer"],
+  3: ["sponsor", "vendor", "risk-officer", "team-lead"],
+  4: ["team-lead", "customer", "vendor"],
+  5: ["sponsor", "risk-officer", "team-lead"],
+  6: ["sponsor", "customer", "team-lead", "vendor"],
+  7: ["sponsor", "customer", "risk-officer"],
+};
+
+export type StakeholderEngagement = "primary" | "supporting" | "quiet";
+
+export function stakeholderEngagementForChapter(
+  stakeholderId: string,
+  chapter: number,
+): StakeholderEngagement {
+  const primary = CHAPTER_PRIMARY_STAKEHOLDERS[chapter] ?? [];
+  if (primary.includes(stakeholderId)) return "primary";
+  // Sponsor and team-lead are always at least supporting.
+  if (stakeholderId === "sponsor" || stakeholderId === "team-lead") return "supporting";
+  return "quiet";
+}
+
