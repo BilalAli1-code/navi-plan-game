@@ -301,15 +301,22 @@ export function MayaFloating() {
     setLoading(true);
     setAnswer("");
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
       const res = await fetch("/api/maya-ask", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           question: trimmed,
           scenarioTitle,
           scenarioSummary: scenarioSummary.replace(/\*\*/g, ""),
           phase: state.phase,
           chosenLabel: null,
+          runId: runId ?? undefined,
         }),
       });
       if (!res.ok || !res.body) throw new Error(await res.text().catch(() => "unavailable"));
