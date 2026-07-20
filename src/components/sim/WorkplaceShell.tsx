@@ -112,14 +112,16 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
   const currentDayRow = days.find((d) => d.day_number === state.currentDay);
   useEffect(() => {
     if (!currentDayRow) return;
+    // Auto-complete "workplace" once the learner has actually opened / read
+    // an inbox item. Auto-complete "decisions" once they log a decision at
+    // the current phase. "learning" / "briefing" / "practice" / "reflection"
+    // are always driven by explicit learner action so a brand-new run stays
+    // at 0% progress until the learner actually does something.
     if (!currentDayRow.workplace_activities_completed && state.emails.some((e) => e.read)) {
       void completeActivity(state.currentDay, "workplace");
     }
     if (!currentDayRow.decisions_completed && state.log.some((l) => l.atPhase === state.phase)) {
       void completeActivity(state.currentDay, "decisions");
-    }
-    if (state.currentDay === 1 && !currentDayRow.learning_completed && state.approach) {
-      void completeActivity(1, "learning");
     }
   }, [
     currentDayRow,
@@ -127,9 +129,9 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     state.log,
     state.phase,
     state.currentDay,
-    state.approach,
     completeActivity,
   ]);
+
 
   function openDecision(id: string) {
     setActiveDecision(id);
