@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import {
   Activity,
   DollarSign,
+  ShieldAlert,
   HeartHandshake,
   Users,
   Sparkles,
