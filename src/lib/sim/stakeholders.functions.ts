@@ -213,3 +213,201 @@ export const listMemories = createServerFn({ method: "POST" })
     if (error) throw error;
     return rows ?? [];
   });
+
+// ---------- persistent chat conversation ----------
+// Stored inside `stakeholder_memories` with kind='chat_message' so we don't
+// add a new table. Metadata carries role + full content; `summary` holds a
+// truncated preview for list views. Threads are never deleted; learners can
+// archive/unarchive via a flag on the relationship row's metadata.
+
+export type ChatMessageRow = {
+  id: string;
+  role: "learner" | "stakeholder";
+  content: string;
+  chapter: number | null;
+  createdAt: string;
+};
+
+export const appendChatMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({
+      runId: z.string().uuid(),
+      stakeholderId: z.string().min(1),
+      role: z.enum(["learner", "stakeholder"]),
+      content: z.string().min(1).max(4000),
+      chapter: z.number().int().min(1).max(7).optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const summary = data.content.slice(0, 240);
+    const { data: row, error } = await context.supabase
+      .from("stakeholder_memories")
+      .insert({
+        run_id: data.runId,
+        stakeholder_id: data.stakeholderId,
+        chapter: data.chapter ?? null,
+        kind: "chat_message",
+        summary,
+        sentiment: null,
+        weight: 1,
+        metadata: { role: data.role, content: data.content },
+      })
+      .select("id, created_at")
+      .single();
+    if (error) throw error;
+    return { id: row.id as string, createdAt: row.created_at as string };
+  });
+
+export const listChatHistory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({
+      runId: z.string().uuid(),
+      stakeholderId: z.string().min(1),
+      limit: z.number().int().min(1).max(500).optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data, context }): Promise<ChatMessageRow[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("stakeholder_memories")
+      .select("id, kind, chapter, summary, metadata, created_at")
+      .eq("run_id", data.runId)
+      .eq("stakeholder_id", data.stakeholderId)
+      .eq("kind", "chat_message")
+      .order("created_at", { ascending: true })
+      .limit(data.limit ?? 200);
+    if (error) throw error;
+    return (rows ?? []).map((r) => {
+      const meta = (r.metadata ?? {}) as { role?: string; content?: string };
+      const role: "learner" | "stakeholder" =
+        meta.role === "learner" ? "learner" : "stakeholder";
+      return {
+        id: r.id as string,
+        role,
+        content: meta.content ?? r.summary ?? "",
+        chapter: (r.chapter as number | null) ?? null,
+        createdAt: r.created_at as string,
+      };
+    });
+  });
+
+export type ConversationSummary = {
+  stakeholderId: string;
+  trust: number;
+  sentiment: RelationshipRow["sentiment"];
+  interactionCount: number;
+  archived: boolean;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  lastMessageRole: "learner" | "stakeholder" | null;
+  lastMessageChapter: number | null;
+};
+
+export const listAllConversations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ runId: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }): Promise<ConversationSummary[]> => {
+    const [relRes, msgRes] = await Promise.all([
+      context.supabase
+        .from("stakeholder_relationships")
+        .select("*")
+        .eq("run_id", data.runId),
+      context.supabase
+        .from("stakeholder_memories")
+        .select("stakeholder_id, chapter, summary, metadata, created_at")
+        .eq("run_id", data.runId)
+        .eq("kind", "chat_message")
+        .order("created_at", { ascending: false })
+        .limit(500),
+    ]);
+    if (relRes.error) throw relRes.error;
+    if (msgRes.error) throw msgRes.error;
+
+    const lastByStakeholder = new Map<
+      string,
+      { at: string; preview: string; role: "learner" | "stakeholder" | null; chapter: number | null }
+    >();
+    for (const m of msgRes.data ?? []) {
+      if (lastByStakeholder.has(m.stakeholder_id)) continue;
+      const meta = (m.metadata ?? {}) as { role?: string; content?: string };
+      lastByStakeholder.set(m.stakeholder_id, {
+        at: m.created_at as string,
+        preview: (meta.content ?? m.summary ?? "").slice(0, 140),
+        role: meta.role === "learner" ? "learner" : meta.role === "stakeholder" ? "stakeholder" : null,
+        chapter: (m.chapter as number | null) ?? null,
+      });
+    }
+
+    const rows: ConversationSummary[] = [];
+    const seen = new Set<string>();
+    for (const r of relRes.data ?? []) {
+      seen.add(r.stakeholder_id);
+      const last = lastByStakeholder.get(r.stakeholder_id);
+      const meta = (r.metadata ?? {}) as { archived?: boolean };
+      rows.push({
+        stakeholderId: r.stakeholder_id,
+        trust: r.trust ?? 60,
+        sentiment: (r.sentiment ?? "neutral") as RelationshipRow["sentiment"],
+        interactionCount: r.interaction_count ?? 0,
+        archived: !!meta.archived,
+        lastMessageAt: last?.at ?? r.last_interaction_at ?? null,
+        lastMessagePreview: last?.preview ?? r.last_interaction_summary ?? null,
+        lastMessageRole: last?.role ?? null,
+        lastMessageChapter: last?.chapter ?? null,
+      });
+    }
+    // Include stakeholders with messages but no relationship row yet.
+    for (const [sid, last] of lastByStakeholder.entries()) {
+      if (seen.has(sid)) continue;
+      rows.push({
+        stakeholderId: sid,
+        trust: 60,
+        sentiment: "neutral",
+        interactionCount: 0,
+        archived: false,
+        lastMessageAt: last.at,
+        lastMessagePreview: last.preview,
+        lastMessageRole: last.role,
+        lastMessageChapter: last.chapter,
+      });
+    }
+    return rows;
+  });
+
+export const setConversationArchived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({
+      runId: z.string().uuid(),
+      stakeholderId: z.string().min(1),
+      archived: z.boolean(),
+    }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: existing } = await context.supabase
+      .from("stakeholder_relationships")
+      .select("id, metadata")
+      .eq("run_id", data.runId)
+      .eq("stakeholder_id", data.stakeholderId)
+      .maybeSingle();
+    const meta = { ...(existing?.metadata as Record<string, unknown> | null ?? {}), archived: data.archived };
+    if (existing) {
+      const { error } = await context.supabase
+        .from("stakeholder_relationships")
+        .update({ metadata: meta })
+        .eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await context.supabase.from("stakeholder_relationships").insert({
+        run_id: data.runId,
+        stakeholder_id: data.stakeholderId,
+        trust: 60,
+        sentiment: "neutral",
+        metadata: meta,
+      });
+      if (error) throw error;
+    }
+    return { ok: true };
+  });
+
