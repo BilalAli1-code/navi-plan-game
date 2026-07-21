@@ -215,23 +215,21 @@ function buildScenarioEvents(
     });
   }
 
-  // Decisions pending — count only those whose source email is still open.
-  const pendingDecisionEmails = pendingEmails.filter((e) => e.unlocksDecisionId);
-  if (pendingDecisionEmails.length > 0) {
+  // Decisions pending — derived from the authoritative decision store, so the
+  // count always matches Inbox, Meetings and the Decision Log.
+  const pendingDecisions = pendingVisibleDecisions(state);
+  if (pendingDecisions.length > 0) {
     events.push({
       id: "pending-decisions",
       time: `${dayLabel} 4:15 PM`,
       type: "milestone",
-      title: `${pendingDecisionEmails.length} decision${pendingDecisionEmails.length > 1 ? "s" : ""} awaiting your action`,
+      title: `${pendingDecisions.length} decision${pendingDecisions.length > 1 ? "s" : ""} awaiting your action`,
       narrative:
         "These decisions will directly impact project health. Review your inbox and respond before end of day.",
       priority: "normal",
       actionTab: "inbox",
-      // When there is exactly one pending decision, we can open it directly.
-      decisionId:
-        pendingDecisionEmails.length === 1
-          ? pendingDecisionEmails[0].unlocksDecisionId
-          : undefined,
+      // When there is exactly one pending decision, open it directly.
+      decisionId: pendingDecisions.length === 1 ? pendingDecisions[0].id : undefined,
     });
   }
 
