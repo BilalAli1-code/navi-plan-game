@@ -66,7 +66,7 @@ export function RiskResponsePanel({ dayNumber }: { dayNumber: number }) {
             completed={responded.has(`risk:${risk.id}`)}
             onSubmit={async (draft) => {
               if (!runId) return { ok: false, message: "Not ready" } as const;
-              const res = (await dispatchLearnerAction({
+              const res = await dispatchLearnerAction({
                 type: "engine.action",
                 action: {
                   actionType: "risk_response",
@@ -80,7 +80,7 @@ export function RiskResponsePanel({ dayNumber }: { dayNumber: number }) {
                   reasoning: draft.reasoning || undefined,
                   residualRisk: draft.residualRisk,
                 },
-              })) as { ok: boolean; quality?: string | null; message?: string | null };
+              });
               await qc.invalidateQueries({ queryKey: ["sim-actions", runId] });
               return res;
             }}

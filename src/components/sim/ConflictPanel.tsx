@@ -47,7 +47,7 @@ export function ConflictPanel({ dayNumber }: { dayNumber: number }) {
             completed={responded.has(`conflict:${c.id}`)}
             onSubmit={async (draft) => {
               if (!runId) return { ok: false };
-              const res = (await dispatchLearnerAction({
+              const res = await dispatchLearnerAction({
                 type: "engine.action",
                 action: {
                   actionType: "conflict_management",
@@ -59,7 +59,7 @@ export function ConflictPanel({ dayNumber }: { dayNumber: number }) {
                   selectedTechnique: draft.selectedTechnique as ConflictTechnique,
                   reasoning: draft.reasoning || undefined,
                 },
-              })) as { ok: boolean; quality?: string | null; message?: string | null };
+              });
               await qc.invalidateQueries({ queryKey: ["sim-actions", runId] });
               return res;
             }}

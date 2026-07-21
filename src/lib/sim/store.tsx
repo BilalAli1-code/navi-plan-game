@@ -112,6 +112,13 @@ type LearnerAction =
   | { type: "day.goTo"; day: number }
   | { type: "engine.action"; action: ActionInput };
 
+type LearnerDispatchResult = {
+  ok: boolean;
+  quality?: string | null;
+  message?: string | null;
+  [key: string]: unknown;
+};
+
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 
 function applyImpact(metrics: SimState["metrics"], impact: Record<string, number>) {
@@ -141,6 +148,8 @@ function applyImpact(metrics: SimState["metrics"], impact: Record<string, number
 }
 
 function applyDecisionTransition(state: SimState, decision: Decision, option: DecisionOption): SimState {
+  // Intentional inlining of legacy commitDecision rules so decision transitions
+  // are owned by the centralized store dispatcher pipeline.
   const metrics = applyImpact(state.metrics, option.impact as Record<string, number>);
   const entry = {
     decisionId: decision.id,
@@ -224,7 +233,7 @@ type Ctx = {
   // Proactive Maya coaching queue (Blueprint §11.2)
   mayaNudges: MayaNudge[];
   dismissNudge: (id: string) => void;
-  dispatchLearnerAction: (action: LearnerAction) => Promise<unknown>;
+  dispatchLearnerAction: (action: LearnerAction) => Promise<LearnerDispatchResult>;
 };
 
 
@@ -736,7 +745,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   );
 
   const dispatchLearnerAction = useCallback(
-    async (action: LearnerAction) => {
+    async (action: LearnerAction): Promise<LearnerDispatchResult> => {
       switch (action.type) {
         case "decision.submit":
           submitDecision(action.option, action.decisionId);
@@ -757,8 +766,14 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           goToDay(action.day);
           return { ok: true as const };
         case "engine.action":
-          return processActionFn({ data: { action: action.action } });
+          return (await processActionFn({
+            data: { action: action.action },
+          })) as LearnerDispatchResult;
         default:
+          console.error(
+            `dispatchLearnerAction: unknown action type ${(action as { type?: string }).type ?? "unknown"}`,
+            action,
+          );
           return { ok: false as const };
       }
     },
@@ -778,13 +793,19 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     activeDecision,
     setActiveDecision,
     submitDecision: (option, decisionId) => {
-      void dispatchLearnerAction({ type: "decision.submit", option, decisionId });
+      void dispatchLearnerAction({ type: "decision.submit", option, decisionId }).catch((err) => {
+        console.error("Failed to dispatch decision submission:", err);
+      });
     },
     submitTailoring: (answers, approach) => {
-      void dispatchLearnerAction({ type: "tailoring.submit", answers, approach });
+      void dispatchLearnerAction({ type: "tailoring.submit", answers, approach }).catch((err) => {
+        console.error("Failed to dispatch tailoring submission:", err);
+      });
     },
     markEmailRead: (id) => {
-      void dispatchLearnerAction({ type: "email.read", id });
+      void dispatchLearnerAction({ type: "email.read", id }).catch((err) => {
+        console.error("Failed to dispatch email-read action:", err);
+      });
     },
     reset,
     pause,
@@ -800,7 +821,9 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       await dispatchLearnerAction({ type: "activity.complete", day, activity });
     },
     goToDay: (day) => {
-      void dispatchLearnerAction({ type: "day.goTo", day });
+      void dispatchLearnerAction({ type: "day.goTo", day }).catch((err) => {
+        console.error("Failed to dispatch day navigation:", err);
+      });
     },
     saveDayReflection: async (day, payload) => {
       await dispatchLearnerAction({ type: "reflection.save", day, payload });
