@@ -1,6 +1,6 @@
 import { Sunrise, Sparkles, ChevronRight, Moon } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
-import { getDay, REQUIRED_ACTIVITIES, type DayActivityKey } from "@/lib/sim/days";
+import { getDay } from "@/lib/sim/days";
 import { getCaseRef } from "@/lib/sim/cases";
 import { cn } from "@/lib/utils";
 
@@ -16,30 +16,12 @@ type OpenTab = "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders"
  * - Reveals the end-of-day story hook once all required activities are done
  */
 export function DayBriefing({ onOpenTab }: { onOpenTab?: (tab: OpenTab) => void }) {
-  const { state, days, completeActivity } = useSim();
+  const { state, projection, completeActivity } = useSim();
   const day = getDay(state.currentDay);
   const c = getCaseRef(state.caseId);
-  const dayRow = days.find((d) => d.day_number === state.currentDay);
-
-  const flags: Record<DayActivityKey, boolean> = dayRow
-    ? {
-        briefing: dayRow.briefing_completed,
-        learning: dayRow.learning_completed,
-        workplace: dayRow.workplace_activities_completed,
-        decisions: dayRow.decisions_completed,
-        practice: dayRow.practice_completed,
-        reflection: dayRow.reflection_completed,
-      }
-    : {
-        briefing: false,
-        learning: false,
-        workplace: false,
-        decisions: false,
-        practice: false,
-        reflection: false,
-      };
-
-  const dayDone = REQUIRED_ACTIVITIES.every((a) => flags[a]);
+  const currentDay = projection.currentDay;
+  const flags = currentDay.activities;
+  const dayDone = currentDay.status === "completed";
 
   return (
     <div className="rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/[0.08] via-white/[0.02] to-transparent p-5">

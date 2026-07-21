@@ -2,14 +2,11 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Circle, Lock, Clock, ChevronRight, Sparkles } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import {
-  DAY_PLAN,
   DAY_ACTIVITY_LABELS,
   DAY_ACTIVITY_MINUTES,
   REQUIRED_ACTIVITIES,
   TOTAL_DAYS,
-  TOTAL_MINUTES,
   getDay,
-  type DayActivityKey,
 } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { getCaseRef } from "@/lib/sim/cases";
@@ -21,25 +18,12 @@ import { XPAchievements } from "./MissionControl";
 
 
 export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meetings" | "documents" | "dashboard" | "stakeholders") => void }) {
-  const { state, days, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
+  const { state, projection, completeActivity, goToDay, saveDayReflection, loadDayReflection, runId } = useSim();
   const c = getCaseRef(state.caseId);
   const day = getDay(state.currentDay);
-  const dayRow = days.find((d) => d.day_number === state.currentDay);
-
-  const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
-  const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
-  const daysDone = days.filter((d) => d.status === "completed").length;
-
-  const flags: Record<DayActivityKey, boolean> = dayRow
-    ? {
-        briefing: dayRow.briefing_completed,
-        learning: dayRow.learning_completed,
-        workplace: dayRow.workplace_activities_completed,
-        decisions: dayRow.decisions_completed,
-        practice: dayRow.practice_completed,
-        reflection: dayRow.reflection_completed,
-      }
-    : { briefing: false, learning: false, workplace: false, decisions: false, practice: false, reflection: false };
+  const { overallPct, daysDone, totalCompletedMinutes } = projection.progress;
+  const currentDay = projection.currentDay;
+  const flags = currentDay.activities;
 
   return (
     <div className="flex flex-col gap-5">
@@ -68,16 +52,15 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
 
       {/* Day stepper */}
       <div className="grid grid-cols-7 gap-1.5">
-        {DAY_PLAN.map((d) => {
-          const row = days.find((r) => r.day_number === d.day);
-          const status = row?.status ?? (d.day === 1 ? "available" : "locked");
-          const isCurrent = state.currentDay === d.day;
+        {projection.chapters.map((chapter) => {
+          const status = chapter.status;
+          const isCurrent = chapter.isCurrent;
           const locked = status === "locked";
           return (
             <button
-              key={d.day}
+              key={chapter.dayNumber}
               disabled={locked}
-              onClick={() => goToDay(d.day)}
+              onClick={() => goToDay(chapter.dayNumber)}
               className={cn(
                 "rounded-xl border p-2 text-left text-[10px] transition",
                 isCurrent
@@ -90,14 +73,14 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="font-bold">Day {d.day}</span>
+                <span className="font-bold">Day {chapter.dayNumber}</span>
                 {status === "completed" ? (
                   <CheckCircle2 className="h-3 w-3 text-[color:var(--color-success)]" />
                 ) : locked ? (
                   <Lock className="h-3 w-3" />
                 ) : null}
               </div>
-              <div className="mt-0.5 truncate text-[9px] opacity-80">{d.title}</div>
+              <div className="mt-0.5 truncate text-[9px] opacity-80">{chapter.title}</div>
             </button>
           );
         })}
@@ -114,13 +97,13 @@ export function DayDashboard({ onOpenTab }: { onOpenTab?: (tab: "inbox" | "meeti
         <div className="mb-2 flex items-baseline justify-between">
           <div className="text-[12px] font-semibold text-foreground">Today's activities (~60 min)</div>
           <div className="text-[11px] text-muted-foreground">
-            {dayRow?.completion_percentage ?? 0}% complete · {dayRow?.completed_minutes ?? 0}/60 min
+            {currentDay.completionPercentage}% complete · {currentDay.completedMinutes}/60 min
           </div>
         </div>
         <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full bg-[color:var(--color-success)] transition-all"
-            style={{ width: `${dayRow?.completion_percentage ?? 0}%` }}
+            style={{ width: `${currentDay.completionPercentage}%` }}
           />
         </div>
 

@@ -58,7 +58,7 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
   const submitFn = useServerFn(submitPracticeAnswer);
   const completeFn = useServerFn(completePracticeSession);
   const getFn = useServerFn(getPracticeSession);
-  const { refreshDays } = useSim();
+  const { refreshDays, completeActivity } = useSim();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,6 +136,7 @@ export function PracticePanel({ runId, dayNumber }: { runId: string; dayNumber: 
     try {
       const res = await completeFn({ data: { sessionId: session.id } });
       setSession({ ...session, status: "completed", correct_answers: res.correct, score: res.score });
+      await completeActivity(dayNumber, "practice");
       await refreshDays();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not complete practice");

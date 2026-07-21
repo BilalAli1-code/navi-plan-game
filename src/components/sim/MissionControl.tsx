@@ -49,10 +49,9 @@ function AchievementBadge({ label, earned }: { label: string; earned: boolean })
 // ─── Today's Mission ─────────────────────────────────────────────────────────
 
 function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
-  const { state, days } = useSim();
-  const day = getDay(state.currentDay);
-  const dayRow = days.find((d) => d.day_number === state.currentDay);
-  const completedPct = dayRow?.completion_percentage ?? 0;
+  const { projection } = useSim();
+  const day = getDay(projection.currentDay.dayNumber);
+  const completedPct = projection.currentDay.completionPercentage;
 
   return (
     <div className="rounded-2xl border border-accent/20 bg-accent/[0.06] p-4">
@@ -66,7 +65,7 @@ function TodaysMission({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
               Today's Progress
             </div>
             <div className="text-[14px] font-bold text-foreground">
-              Day {state.currentDay} · {day.title}
+              Day {projection.currentDay.dayNumber} · {day.title}
             </div>
           </div>
         </div>

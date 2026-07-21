@@ -7,8 +7,7 @@
 // Contract: (SimState, DailyProgressRow[]) → SimProjection (pure, no side-effects)
 
 import type { DecisionLogEntry, SimState } from "./types";
-import type { DailyProgressRow } from "./daily.functions";
-import { TOTAL_MINUTES, TOTAL_DAYS } from "./days";
+import { buildProgressionSnapshot, type ChapterProjection } from "./progression";
 import { visibleDecisions, completedDecisions } from "./visibility";
 
 // ─── XP Tier definition ──────────────────────────────────────────────────────
@@ -50,8 +49,15 @@ export type ProgressProjection = {
   overallPct: number;
   /** How many days have status "completed". */
   daysDone: number;
-  /** Sum of completed_minutes across all daily_progress rows. */
+  /** Sum of completed_minutes across all chapters. */
   totalCompletedMinutes: number;
+};
+
+export type PhaseProjection = {
+  current: SimState["phase"];
+  currentIndex: number;
+  totalPhases: number;
+  progressPct: number;
 };
 
 export type XPProjection = {
@@ -72,6 +78,9 @@ export type AchievementEntry = {
 export type SimProjection = {
   decisions: DecisionProjection;
   progress: ProgressProjection;
+  currentDay: ChapterProjection;
+  chapters: ChapterProjection[];
+  phase: PhaseProjection;
   xp: XPProjection;
   achievements: AchievementEntry[];
 };
@@ -80,7 +89,6 @@ export type SimProjection = {
 
 export function buildSimProjection(
   state: SimState,
-  days: DailyProgressRow[],
 ): SimProjection {
   // ── Decisions ──
   const log = state.log ?? [];
@@ -101,12 +109,8 @@ export function buildSimProjection(
   const pending = visible - completedDecisionsList.length;
 
   // ── Progress ──
-  const totalCompletedMinutes = days.reduce(
-    (sum, d) => sum + (d.completed_minutes ?? 0),
-    0,
-  );
-  const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
-  const daysDone = days.filter((d) => d.status === "completed").length;
+  const progression = buildProgressionSnapshot(state);
+  const { totalCompletedMinutes, overallPct, daysDone, currentDay, chapters, phase } = progression;
 
   // ── XP ──
   const xp = state.xp ?? 0;
@@ -124,9 +128,7 @@ export function buildSimProjection(
     { label: "Approach Chosen", earned: !!state.approach },
     {
       label: "Phase 3+",
-      earned: ["Planning", "Execution", "Monitoring", "Closing", "Complete"].includes(
-        state.phase,
-      ),
+      earned: phase.currentIndex >= 2 || state.phase === "Complete",
     },
     { label: "25% Progress", earned: overallPct >= 25 },
     { label: "50% Progress", earned: overallPct >= 50 },
@@ -135,6 +137,9 @@ export function buildSimProjection(
   return {
     decisions: { total, correct, accuracy, byQuality, recent, visible, pending },
     progress: { overallPct, daysDone, totalCompletedMinutes },
+    currentDay,
+    chapters,
+    phase,
     xp: { current: xp, currentTier, nextTier, toNext, tierProgressPct },
     achievements,
   };

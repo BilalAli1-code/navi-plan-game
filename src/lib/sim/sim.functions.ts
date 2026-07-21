@@ -10,21 +10,28 @@ import { requireCaseAccess, requireRunAccess } from "@/lib/billing/entitlement.s
 import type { Json } from "@/integrations/supabase/types";
 import type { SimState } from "./types";
 import type { MasteryUpdate } from "./mastery.functions";
+import { buildProgressionSnapshot } from "./progression";
+import { syncDailyProgressRows } from "./daily.functions";
 
 const asJson = (v: unknown): Json => v as Json;
 
 function metricRow(state: SimState) {
   const m = state.metrics;
+  const progression = buildProgressionSnapshot(state);
+  const persistedState =
+    state.completedMinutes === progression.totalCompletedMinutes
+      ? state
+      : { ...state, completedMinutes: progression.totalCompletedMinutes };
   return {
-    case_id: state.caseId,
-    status: state.phase === "Complete" ? "completed" : "active",
-    selected_delivery_approach: state.approach,
-    current_phase: state.phase,
+    case_id: persistedState.caseId,
+    status: persistedState.phase === "Complete" ? "completed" : "active",
+    selected_delivery_approach: persistedState.approach,
+    current_phase: persistedState.phase,
     current_week: 0,
-    current_day: state.currentDay ?? 1,
+    current_day: persistedState.currentDay ?? 1,
     total_days: 7,
     estimated_total_minutes: 420,
-    completed_minutes: state.completedMinutes ?? 0,
+    completed_minutes: progression.totalCompletedMinutes,
     project_health: Math.round(m.health),
     budget_score: Math.round(m.budget),
     schedule_score: Math.round(m.schedule),
@@ -33,11 +40,11 @@ function metricRow(state: SimState) {
     team_morale: Math.round(m.morale),
     stakeholder_trust: Math.round(m.trust),
     customer_satisfaction: Math.round(m.satisfaction),
-    xp: state.xp,
-    tailoring_config: asJson(state.tailoring ?? {}),
-    state_snapshot: asJson(state),
+    xp: persistedState.xp,
+    tailoring_config: asJson(persistedState.tailoring ?? {}),
+    state_snapshot: asJson(persistedState),
     last_activity_at: new Date().toISOString(),
-    completed_at: state.phase === "Complete" ? new Date().toISOString() : null,
+    completed_at: persistedState.phase === "Complete" ? new Date().toISOString() : null,
   };
 }
 
@@ -83,6 +90,7 @@ export const saveRun = createServerFn({ method: "POST" })
         .eq("id", data.runId)
         .eq("user_id", context.userId);
       if (error) throw new Error(error.message);
+      await syncDailyProgressRows(context.supabase as never, context.userId, data.runId, data.state);
       return { runId: data.runId };
     }
     const { data: inserted, error } = await context.supabase
@@ -91,6 +99,7 @@ export const saveRun = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await syncDailyProgressRows(context.supabase as never, context.userId, inserted.id as string, data.state);
     return { runId: inserted.id as string };
   });
 
