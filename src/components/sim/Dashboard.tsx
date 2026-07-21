@@ -12,13 +12,16 @@ import {
 import { useSim } from "@/lib/sim/store";
 import { MetricMeter } from "./MetricMeter";
 import { DecisionSummary } from "./MissionControl";
+import { visibleDecisions, completedDecisions } from "@/lib/sim/visibility";
 
 
 export function Dashboard({ onOpenDecision }: { onOpenDecision?: (id: string) => void }) {
   const { state } = useSim();
   const m = state.metrics;
-  const done = state.log.length;
-  const total = state.decisions.length;
+  // Total = decisions reachable up to the current chapter. Done = answered
+  // decisions (same source of truth used by Inbox, Meetings and the log).
+  const total = visibleDecisions(state).length;
+  const done = completedDecisions(state).length;
 
   return (
     <div className="space-y-5">

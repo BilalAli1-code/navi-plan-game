@@ -11,6 +11,13 @@ import {
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { getDay } from "@/lib/sim/days";
+import {
+  visibleEmails,
+  visibleMeetings,
+  isEmailCompleted,
+  isMeetingCompleted,
+  pendingVisibleDecisions,
+} from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 type ScenarioEvent = {
@@ -99,21 +106,22 @@ function buildScenarioEvents(
     priority: "info",
   });
 
-  // Completion is derived from the single source of truth: state.log for
-  // decisions, and email.read for informational messages. Items whose action
-  // has been fulfilled surface in the "Completed" section, never as pending.
-  const answeredDecisionIds = new Set(state.log.map((l) => l.decisionId));
+  // Completion is derived from the single source of truth (visibility.ts):
+  // state.log for decisions, and email.read for informational messages.
+  // Items whose action has been fulfilled surface in the "Completed" section,
+  // never as pending. We only consider chapter-visible content so future-day
+  // items never leak into today's pending counts.
+  const chapterEmails = visibleEmails(state);
+  const chapterMeetings = visibleMeetings(state);
   const isEmailDone = (email: (typeof state.emails)[number]) =>
-    email.unlocksDecisionId
-      ? answeredDecisionIds.has(email.unlocksDecisionId)
-      : email.read;
+    isEmailCompleted(state, email);
   const isMeetingDone = (mtg: (typeof state.meetings)[number]) =>
-    !!mtg.unlocksDecisionId && answeredDecisionIds.has(mtg.unlocksDecisionId);
+    isMeetingCompleted(state, mtg);
 
   // Emails → show unread first, completed at the bottom in their own section.
   const times = ["8:15 AM", "8:47 AM", "9:12 AM", "9:38 AM"];
-  const pendingEmails = state.emails.filter((e) => !isEmailDone(e));
-  const completedEmails = state.emails.filter((e) => isEmailDone(e));
+  const pendingEmails = chapterEmails.filter((e) => !isEmailDone(e));
+  const completedEmails = chapterEmails.filter((e) => isEmailDone(e));
 
   pendingEmails.slice(0, 3).forEach((email, idx) => {
     const sender = stakes.find((s) => s.id === email.from);
@@ -149,8 +157,8 @@ function buildScenarioEvents(
   });
 
   // Upcoming meetings — hide any whose required decision has been made.
-  const pendingMeetings = state.meetings.filter((m) => !isMeetingDone(m));
-  const completedMeetings = state.meetings.filter((m) => isMeetingDone(m));
+  const pendingMeetings = chapterMeetings.filter((m) => !isMeetingDone(m));
+  const completedMeetings = chapterMeetings.filter((m) => isMeetingDone(m));
   pendingMeetings.slice(0, 2).forEach((mtg, i) => {
     const meetingTime = i === 0 ? "10:00 AM" : "2:00 PM";
     events.push({
@@ -207,23 +215,21 @@ function buildScenarioEvents(
     });
   }
 
-  // Decisions pending — count only those whose source email is still open.
-  const pendingDecisionEmails = pendingEmails.filter((e) => e.unlocksDecisionId);
-  if (pendingDecisionEmails.length > 0) {
+  // Decisions pending — derived from the authoritative decision store, so the
+  // count always matches Inbox, Meetings and the Decision Log.
+  const pendingDecisions = pendingVisibleDecisions(state);
+  if (pendingDecisions.length > 0) {
     events.push({
       id: "pending-decisions",
       time: `${dayLabel} 4:15 PM`,
       type: "milestone",
-      title: `${pendingDecisionEmails.length} decision${pendingDecisionEmails.length > 1 ? "s" : ""} awaiting your action`,
+      title: `${pendingDecisions.length} decision${pendingDecisions.length > 1 ? "s" : ""} awaiting your action`,
       narrative:
         "These decisions will directly impact project health. Review your inbox and respond before end of day.",
       priority: "normal",
       actionTab: "inbox",
-      // When there is exactly one pending decision, we can open it directly.
-      decisionId:
-        pendingDecisionEmails.length === 1
-          ? pendingDecisionEmails[0].unlocksDecisionId
-          : undefined,
+      // When there is exactly one pending decision, open it directly.
+      decisionId: pendingDecisions.length === 1 ? pendingDecisions[0].id : undefined,
     });
   }
 

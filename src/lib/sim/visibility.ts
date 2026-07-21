@@ -47,3 +47,46 @@ export function visibleMeetings(state: SimState): Meeting[] {
     return dec ? isDecisionEligible(dec, ch) : true;
   });
 }
+
+// ─── Authoritative decision-completion helpers ────────────────────────────
+//
+// Every UI surface (Mission Control, Inbox, Meetings, Dashboard, Decision
+// Performance) must derive completion from these helpers so a decision
+// appears exactly once and identically everywhere.
+//
+// Rules:
+//   • state.log is the single source of truth for "a decision was made".
+//   • An email is "done" only when its unlocksDecisionId is in the log.
+//     Informational emails (no unlocksDecisionId) fall back to email.read
+//     and are NEVER counted as decisions.
+//   • A meeting is "done" only when its unlocksDecisionId is in the log.
+
+export function answeredDecisionIds(state: SimState): Set<string> {
+  return new Set(state.log.map((l) => l.decisionId));
+}
+
+export function isEmailCompleted(state: SimState, email: Email): boolean {
+  if (email.unlocksDecisionId) {
+    return answeredDecisionIds(state).has(email.unlocksDecisionId);
+  }
+  return !!email.read;
+}
+
+export function isMeetingCompleted(state: SimState, meeting: Meeting): boolean {
+  return (
+    !!meeting.unlocksDecisionId &&
+    answeredDecisionIds(state).has(meeting.unlocksDecisionId)
+  );
+}
+
+/** Decisions whose gating email is visible in the current chapter and are not yet answered. */
+export function pendingVisibleDecisions(state: SimState): Decision[] {
+  const answered = answeredDecisionIds(state);
+  return visibleDecisions(state).filter((d) => !answered.has(d.id));
+}
+
+/** Decisions in the current chapter or earlier that the learner has answered. */
+export function completedDecisions(state: SimState): Decision[] {
+  const answered = answeredDecisionIds(state);
+  return state.decisions.filter((d) => answered.has(d.id));
+}
