@@ -8,7 +8,6 @@ import {
   generateEmails,
   generateMeetings,
 } from "./generator";
-import { commitDecision } from "./engine";
 import { scoreTailoring } from "./tailoring";
 import { loadRun, saveRun, saveDecision, setRunStatus } from "./sim.functions";
 import {
@@ -34,6 +33,8 @@ import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
 import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
+import { processAction } from "./actions.functions";
+import type { ActionInput } from "./actions";
 
 
 import type {
@@ -102,6 +103,101 @@ function writeLocal(state: SimState) {
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error" | "offline";
 
+type LearnerAction =
+  | { type: "decision.submit"; option: DecisionOption; decisionId?: string }
+  | { type: "tailoring.submit"; answers: TailoringAnswers; approach: DeliveryApproach }
+  | { type: "email.read"; id: string }
+  | { type: "activity.complete"; day: number; activity: DayActivityKey }
+  | { type: "reflection.save"; day: number; payload: { whatWentWell?: string; whatWasChallenging?: string; whatWouldChange?: string; keyLearning?: string } }
+  | { type: "day.goTo"; day: number }
+  | { type: "engine.action"; action: ActionInput };
+
+type LearnerDispatchResult = {
+  ok: boolean;
+  quality?: string | null;
+  message?: string | null;
+  [key: string]: unknown;
+};
+
+const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
+
+function applyImpact(metrics: SimState["metrics"], impact: Record<string, number>) {
+  const next = {
+    ...metrics,
+    budget: clamp(metrics.budget + (impact.budget ?? 0)),
+    schedule: clamp(metrics.schedule + (impact.schedule ?? 0)),
+    risk: clamp(metrics.risk + (impact.risk ?? 0)),
+    morale: clamp(metrics.morale + (impact.morale ?? 0)),
+    trust: clamp(metrics.trust + (impact.trust ?? 0)),
+    quality: clamp(metrics.quality + (impact.quality ?? 0)),
+    satisfaction: clamp(metrics.satisfaction + (impact.satisfaction ?? 0)),
+  };
+  return {
+    ...next,
+    health: Math.round(
+      (next.budget +
+        next.schedule +
+        next.risk +
+        next.morale +
+        next.trust +
+        next.quality +
+        next.satisfaction) /
+        7,
+    ),
+  };
+}
+
+function applyDecisionTransition(state: SimState, decision: Decision, option: DecisionOption): SimState {
+  // Intentional inlining of legacy commitDecision rules so decision transitions
+  // are owned by the centralized store dispatcher pipeline.
+  const metrics = applyImpact(state.metrics, option.impact as Record<string, number>);
+  const entry = {
+    decisionId: decision.id,
+    optionId: option.id,
+    quality: option.quality,
+    correct: option.id === decision.correctOptionId,
+    atPhase: state.phase,
+    impact: option.impact,
+    timestamp: Date.now(),
+  };
+  const xpDelta =
+    option.quality === "excellent"
+      ? 25
+      : option.quality === "good"
+        ? 15
+        : option.quality === "risky"
+          ? 5
+          : 0;
+  const withDecision: SimState = {
+    ...state,
+    metrics,
+    log: [...state.log, entry],
+    xp: state.xp + xpDelta,
+    activeDecisionId: decision.id,
+    lastConsequence: option.consequence,
+    emails: state.emails.map((e) =>
+      e.unlocksDecisionId === decision.id ? { ...e, read: true } : e,
+    ),
+  };
+  const inPhase = withDecision.decisions.filter((d) => d.phase === withDecision.phase);
+  const done = withDecision.log.filter((l) => l.atPhase === withDecision.phase);
+  if (!(inPhase.length > 0 && done.length >= inPhase.length)) return withDecision;
+  const order: SimState["phase"][] = [
+    "Tailoring",
+    "Initiation",
+    "Planning",
+    "Execution",
+    "Monitoring",
+    "Closing",
+    "Complete",
+  ];
+  const idx = order.indexOf(withDecision.phase);
+  return {
+    ...withDecision,
+    phase: idx < 0 || idx >= order.length - 1 ? "Complete" : order[idx + 1],
+  };
+}
+
 type Ctx = {
   state: SimState;
   activeDecision: Decision | null;
@@ -137,6 +233,7 @@ type Ctx = {
   // Proactive Maya coaching queue (Blueprint §11.2)
   mayaNudges: MayaNudge[];
   dismissNudge: (id: string) => void;
+  dispatchLearnerAction: (action: LearnerAction) => Promise<LearnerDispatchResult>;
 };
 
 
@@ -170,6 +267,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const syncEventsFn = useServerFn(syncEvents);
   const updateEventStatusFn = useServerFn(updateEventStatus);
   const recordScoreFn = useServerFn(recordScoreSample);
+  const processActionFn = useServerFn(processAction);
 
   const refreshDays = useCallback(
     async (rid: string) => {
@@ -349,7 +447,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (lastDecisionKeyRef.current === dec.id) return;
       lastDecisionKeyRef.current = dec.id;
 
-      const next = commitDecision(state, dec, option);
+      const next = applyDecisionTransition(state, dec, option);
       // Cascade completion: mark the source email as read so it disappears
       // from unread/pending surfaces everywhere at once.
       if (dec.source === "email") {
@@ -646,13 +744,69 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     [getReflectionSrv],
   );
 
+  const dispatchLearnerAction = useCallback(
+    async (action: LearnerAction): Promise<LearnerDispatchResult> => {
+      switch (action.type) {
+        case "decision.submit":
+          submitDecision(action.option, action.decisionId);
+          return { ok: true as const };
+        case "tailoring.submit":
+          submitTailoring(action.answers, action.approach);
+          return { ok: true as const };
+        case "email.read":
+          markEmailRead(action.id);
+          return { ok: true as const };
+        case "activity.complete":
+          await completeActivity(action.day, action.activity);
+          return { ok: true as const };
+        case "reflection.save":
+          await saveDayReflection(action.day, action.payload);
+          return { ok: true as const };
+        case "day.goTo":
+          goToDay(action.day);
+          return { ok: true as const };
+        case "engine.action":
+          return (await processActionFn({
+            data: { action: action.action },
+          })) as LearnerDispatchResult;
+        default:
+          console.error(
+            `dispatchLearnerAction: unknown action type ${(action as { type?: string }).type ?? "unknown"}`,
+            action,
+          );
+          return { ok: false as const };
+      }
+    },
+    [
+      submitDecision,
+      submitTailoring,
+      markEmailRead,
+      completeActivity,
+      saveDayReflection,
+      goToDay,
+      processActionFn,
+    ],
+  );
+
   const value: Ctx = {
     state,
     activeDecision,
     setActiveDecision,
-    submitDecision,
-    submitTailoring,
-    markEmailRead,
+    submitDecision: (option, decisionId) => {
+      void dispatchLearnerAction({ type: "decision.submit", option, decisionId }).catch((err) => {
+        console.error("Failed to dispatch decision submission:", err);
+      });
+    },
+    submitTailoring: (answers, approach) => {
+      void dispatchLearnerAction({ type: "tailoring.submit", answers, approach }).catch((err) => {
+        console.error("Failed to dispatch tailoring submission:", err);
+      });
+    },
+    markEmailRead: (id) => {
+      void dispatchLearnerAction({ type: "email.read", id }).catch((err) => {
+        console.error("Failed to dispatch email-read action:", err);
+      });
+    },
     reset,
     pause,
     saveStatus,
@@ -663,12 +817,21 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       const rid = runIdRef.current;
       if (rid) await refreshDays(rid);
     },
-    completeActivity,
-    goToDay,
-    saveDayReflection,
+    completeActivity: async (day, activity) => {
+      await dispatchLearnerAction({ type: "activity.complete", day, activity });
+    },
+    goToDay: (day) => {
+      void dispatchLearnerAction({ type: "day.goTo", day }).catch((err) => {
+        console.error("Failed to dispatch day navigation:", err);
+      });
+    },
+    saveDayReflection: async (day, payload) => {
+      await dispatchLearnerAction({ type: "reflection.save", day, payload });
+    },
     loadDayReflection,
     mayaNudges,
     dismissNudge: (id: string) => setMayaNudges((q) => q.filter((n) => n.id !== id)),
+    dispatchLearnerAction,
   };
 
 
