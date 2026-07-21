@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Hash, Search, Circle, Smile } from "lucide-react";
+import { Send, Hash, Search, Circle, Smile, Zap } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
@@ -138,9 +138,11 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
 function StakeholderChatThread({
   stakeholder,
   onBack,
+  onOpenDecision,
 }: {
   stakeholder: Stakeholder;
   onBack: () => void;
+  onOpenDecision?: (id: string) => void;
 }) {
   const { state, runId } = useSim();
   const caseRef = getCaseRef(state.caseId);
@@ -329,6 +331,17 @@ function StakeholderChatThread({
     }
   }
 
+  const pendingDecisionEmails = (() => {
+    if (!onOpenDecision) return [];
+    const answered = new Set(state.log.map((l) => l.decisionId));
+    return state.emails.filter(
+      (e) =>
+        e.from === stakeholder.id &&
+        e.unlocksDecisionId &&
+        !answered.has(e.unlocksDecisionId),
+    );
+  })();
+
   return (
     <div className="flex h-full flex-col">
       {/* Channel header */}
@@ -385,6 +398,22 @@ function StakeholderChatThread({
         <div ref={bottomRef} />
       </div>
 
+      {/* Pending decision CTA — shown when this stakeholder has emails with unanswered decisions */}
+      {pendingDecisionEmails.length > 0 && onOpenDecision && (
+        <div className="space-y-2 border-t border-white/10 px-5 py-3">
+          {pendingDecisionEmails.map((e) => (
+            <button
+              key={e.unlocksDecisionId}
+              onClick={() => onOpenDecision(e.unlocksDecisionId!)}
+              className="flex w-full items-center gap-2 rounded-xl bg-accent/10 border border-accent/30 px-4 py-2.5 text-left text-[12px] font-semibold text-accent transition hover:bg-accent/15"
+            >
+              <Zap className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 truncate">{e.subject} — Make the decision →</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-white/10 p-4">
         <form
@@ -416,7 +445,7 @@ function StakeholderChatThread({
 
 // ─── Main ChatPanel export ────────────────────────────────────────────────────
 
-export function ChatPanel() {
+export function ChatPanel({ onOpenDecision }: { onOpenDecision?: (id: string) => void }) {
   const { state } = useSim();
   const stakes = stakeholdersFor(state.caseId);
   const [activeStakeholder, setActiveStakeholder] = useState<Stakeholder | null>(null);
@@ -442,6 +471,7 @@ export function ChatPanel() {
         <StakeholderChatThread
           stakeholder={activeStakeholder}
           onBack={() => setActiveStakeholder(null)}
+          onOpenDecision={onOpenDecision}
         />
       </div>
     );
