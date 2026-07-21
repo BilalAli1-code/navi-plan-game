@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Mail, Reply, Star, Archive, AlertCircle, Search, CheckCircle2 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
-import { visibleEmails } from "@/lib/sim/visibility";
+import { visibleEmails, isEmailCompleted, answeredDecisionIds } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void }) {
@@ -12,13 +12,10 @@ export function Inbox({ onOpenDecision }: { onOpenDecision: (id: string) => void
   // Only surface emails whose gated chapter has opened. Future-chapter
   // messages stay hidden until the learner reaches that day.
   const emails = useMemo(() => visibleEmails(state), [state]);
-  // Derive completion from the single source of truth (decision log).
-  const answered = useMemo(
-    () => new Set(state.log.map((l) => l.decisionId)),
-    [state.log],
-  );
-  const isCompleted = (e: (typeof emails)[number]) =>
-    e.unlocksDecisionId ? answered.has(e.unlocksDecisionId) : e.read;
+  // Derive completion from the shared visibility helpers so every surface
+  // (Mission Control, Inbox, Meetings, Dashboard) agrees.
+  const answered = useMemo(() => answeredDecisionIds(state), [state.log]);
+  const isCompleted = (e: (typeof emails)[number]) => isEmailCompleted(state, e);
   const [openId, setOpenId] = useState<string | null>(emails[0]?.id ?? null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "unread" | "important" | "completed">("all");
