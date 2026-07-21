@@ -498,6 +498,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           data: {
             runId: rid,
             decisionId: dec.id,
+            // In ProjectSim's 7-day program structure, day number and chapter number
+            // are the same concept (Day 1 = Chapter 1 … Day 7 = Chapter 7).
+            // This mirrors the established convention in processAction and
+            // daily.functions.ts (run.current_day / data.dayNumber as chapter).
             chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
             phase: state.phase,
             selectedOptionId: option.id,

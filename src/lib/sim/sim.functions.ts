@@ -175,7 +175,8 @@ export const setRunStatus = createServerFn({ method: "POST" })
 // The mastery math here must stay byte-identical to mastery.functions.ts
 // (computeMastery). The scoring math mirrors scoring.functions.ts (addSample).
 
-const MASTERY_WINDOW = 10;
+// Rolling window size — must match WINDOW in mastery.functions.ts.
+const MASTERY_ROLLING_WINDOW = 10;
 
 function computeMasteryScore(
   prevRecent: number[],
@@ -183,7 +184,7 @@ function computeMasteryScore(
   attempts: number,
   difficulty: MasteryUpdate["difficulty"],
 ): { mastery: number; recent: number[] } {
-  const recent = [...prevRecent, incoming].slice(-MASTERY_WINDOW);
+  const recent = [...prevRecent, incoming].slice(-MASTERY_ROLLING_WINDOW);
   const n = recent.length;
   let num = 0, den = 0;
   recent.forEach((s, i) => {
@@ -247,8 +248,19 @@ export const persistDecisionAction = createServerFn({ method: "POST" })
     await requireRunAccess(db, context.userId, data.runId);
     const now = new Date().toISOString();
 
-    // 1. Upsert simulation_decisions row (idempotent by run+decision).
-    const { error: decErr } = await db.from("simulation_decisions").upsert(
+    // Guard: if this decision was already persisted, skip all sub-operations to
+    // prevent double-counting mastery and scoring on retries.
+    const { data: existingDecision } = await db
+      .from("simulation_decisions")
+      .select("id")
+      .eq("run_id", data.runId)
+      .eq("user_id", context.userId)
+      .eq("decision_id", data.decisionId)
+      .maybeSingle();
+    if (existingDecision) return { ok: true as const, duplicate: true as const };
+
+    // 1. Insert simulation_decisions row.
+    const { error: decErr } = await db.from("simulation_decisions").insert(
       {
         run_id: data.runId,
         user_id: context.userId,
@@ -260,7 +272,6 @@ export const persistDecisionAction = createServerFn({ method: "POST" })
         metric_impacts: asJson(data.metricImpacts),
         mentor_feedback: asJson(data.mentorFeedback),
       },
-      { onConflict: "run_id,decision_id", ignoreDuplicates: true },
     );
     if (decErr) throw new Error(decErr.message);
 
@@ -287,7 +298,7 @@ export const persistDecisionAction = createServerFn({ method: "POST" })
       const successful = prevSuccess + (score >= 75 ? 1 : 0);
       const consecutive_correct = score >= 75 ? prevStreakOK + 1 : 0;
       const consecutive_wrong = score < 40 ? prevStreakBad + 1 : 0;
-      const { mastery, recent } = computeMasteryScore(prevRecent, score, attempts, u.difficulty ?? null);
+      const { mastery, recent } = computeMasteryScore(prevRecent, score, attempts, u.difficulty ?? undefined);
       const is_mastered = mastery >= 85 && attempts >= 3 && consecutive_correct >= 3;
       const is_development_area = (mastery < 40 && attempts >= 2) || consecutive_wrong >= 3;
 

@@ -139,5 +139,3 @@ export function buildSimProjection(
     achievements,
   };
 }
-
-export { TOTAL_DAYS };
