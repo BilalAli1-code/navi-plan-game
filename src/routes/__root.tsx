@@ -12,7 +12,6 @@ import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { ProjectStateProvider } from "@/lib/sim/legacy/project-state";
 import { ExamStateProvider } from "@/lib/exam/exam-state";
 
 function NotFoundComponent() {
@@ -130,14 +129,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ProjectStateProvider>
-        <ExamStateProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-          {/* Global toast notifications */}
-          <Toaster position="top-right" richColors />
-        </ExamStateProvider>
-      </ProjectStateProvider>
+      <ExamStateProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        {/* Global toast notifications */}
+        <Toaster position="top-right" richColors />
+      </ExamStateProvider>
     </QueryClientProvider>
   );
 }

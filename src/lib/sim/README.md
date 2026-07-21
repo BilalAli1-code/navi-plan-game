@@ -14,7 +14,6 @@ UI lives in `src/components/sim/*`.
 ## `legacy/`
 
 The `legacy/` folder holds the earlier single-scenario simulator (types,
-scenarios, project-state, performance scoring). It is retained ONLY because
-`/performance` and the industry-case dataset (`legacy/industries.ts`) still
-depend on it. New work should use the primary modules above; treat `legacy/`
-as read-only until `/performance` is migrated onto the new engine.
+scenarios, project-state, performance scoring). The active `/performance` route
+now reads from canonical simulation runs/actions. The legacy industry dataset
+(`legacy/industries.ts`) is still used as a source metadata bridge.

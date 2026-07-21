@@ -5,6 +5,7 @@
 import { INDUSTRY_CASES, getIndustry } from "@/lib/sim/legacy/industries";
 import { customerPortalStakeholders } from "./casepacks/customer-portal";
 import type { DeliveryApproach, IndustryCaseRef, Stakeholder } from "./types";
+import { PROJECT_HORIZON_ALIGNMENT } from "./spec-alignment";
 
 
 const APPROACH_BY_ID: Record<string, DeliveryApproach> = {
@@ -14,7 +15,7 @@ const APPROACH_BY_ID: Record<string, DeliveryApproach> = {
   "supply-chain": "Hybrid",
   engineering: "Predictive",
   construction: "Predictive",
-  software: "Agile",
+  software: PROJECT_HORIZON_ALIGNMENT.deliveryApproach,
   healthcare: "Hybrid",
   pharma: "Predictive",
   energy: "Predictive",
@@ -105,10 +106,22 @@ const ROLE_OVERRIDES: Record<string, Partial<Record<string, Partial<Stakeholder>
 
 export function stakeholdersFor(caseId: string): Stakeholder[] {
   if (caseId === "software") {
-    return customerPortalStakeholders;
+    const rosterById = new Map(
+      PROJECT_HORIZON_ALIGNMENT.stakeholderRoster.map((stakeholder) => [
+        stakeholder.id,
+        stakeholder,
+      ]),
+    );
+    return customerPortalStakeholders.map((stakeholder) => {
+      const aligned = rosterById.get(stakeholder.id);
+      if (!aligned) return stakeholder;
+      return {
+        ...stakeholder,
+        name: aligned.name,
+        role: aligned.role,
+      };
+    });
   }
   const overrides = ROLE_OVERRIDES[caseId] ?? {};
   return BASE_STAKES.map((s) => ({ ...s, ...(overrides[s.id] ?? {}) }));
 }
-
-

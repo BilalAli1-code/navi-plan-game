@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useProjectState } from "@/lib/sim/legacy/project-state";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   PERF_CATEGORIES,
   KNOWLEDGE_AREAS,
@@ -8,6 +9,10 @@ import {
   knowledgeAreaLevel,
   weakestCategories,
 } from "@/lib/sim/legacy/performance";
+import {
+  getPerformanceProjection,
+  type PerformanceProjection,
+} from "@/lib/sim/performance.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/performance")({
@@ -31,19 +36,64 @@ function tone(v: number) {
 }
 
 function PerformancePage() {
-  const { perfScores, decisions } = useProjectState();
+  const loadProjection = useServerFn(getPerformanceProjection);
+  const [projection, setProjection] = useState<PerformanceProjection | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadProjection({ data: {} })
+      .then((result) => {
+        if (!cancelled) setProjection(result.projection);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadProjection]);
+
+  const perfScores = projection?.perfScores;
+  const decisions = projection
+    ? {
+        total: projection.totalDecisions,
+        correct: projection.correctDecisions,
+        pct: projection.overallAccuracyPct,
+      }
+    : { total: 0, correct: 0, pct: 0 };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main className="mx-auto max-w-[1400px] px-4 py-8 text-sm text-muted-foreground">
+          Loading performance projection…
+        </main>
+      </div>
+    );
+  }
+
+  if (!projection || !perfScores) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main className="mx-auto max-w-[1400px] px-4 py-8 text-sm text-muted-foreground">
+          Start a simulation run to see your performance dashboard.
+        </main>
+      </div>
+    );
+  }
+
   const recs = recommendations(perfScores);
   const weak = weakestCategories(perfScores, 2);
-  const correct = decisions.filter((d) => d.correct).length;
-  const total = decisions.length;
-  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const correct = decisions.correct;
+  const total = decisions.total;
+  const pct = decisions.pct;
 
   // Decisions per knowledge area
   const perKA: Record<string, { total: number; correct: number }> = {};
   for (const ka of KNOWLEDGE_AREAS) perKA[ka] = { total: 0, correct: 0 };
-  for (const d of decisions) {
-    perKA[d.knowledgeArea].total += 1;
-    if (d.correct) perKA[d.knowledgeArea].correct += 1;
+  for (const ka of KNOWLEDGE_AREAS) {
+    perKA[ka] = projection.knowledgeAreaCoverage[ka] ?? { total: 0, correct: 0 };
   }
 
   return (

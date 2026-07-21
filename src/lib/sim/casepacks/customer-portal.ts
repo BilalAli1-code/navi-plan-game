@@ -17,8 +17,8 @@ export const CUSTOMER_PORTAL_CASE_ID = "software";
 export const customerPortalStakeholders: Stakeholder[] = [
   {
     id: "sponsor",
-    name: "Elena Voss",
-    role: "Executive Sponsor · VP Customer Experience",
+    name: "Elena Martinez",
+    role: "Executive Sponsor · Chief Customer Officer",
     personality:
       "Decisive, ROI-focused. Owns CSAT and support-cost KPIs. Wants a one-page executive summary each week and clear go/no-go recommendations.",
     priorities: ["+15 CSAT lift", "25% support cost reduction", "Zero-drama go-live"],
@@ -27,7 +27,7 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "product-owner",
-    name: "Nadia Rahim",
+    name: "Marcus Reed",
     role: "Product Owner",
     personality:
       "Customer-obsessed, ruthless prioritizer. Runs the backlog, protects MVP scope, negotiates trade-offs with executives daily.",
@@ -37,7 +37,7 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "cs-director",
-    name: "Derek Malone",
+    name: "Priya Shah",
     role: "Customer Service Director",
     personality:
       "Ex-support agent turned director. Cares about ticket deflection, agent workflow, and the reality of angry customers on hold.",
@@ -67,8 +67,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "ux",
-    name: "Sara Lindqvist",
-    role: "UX Designer",
+    name: "Naomi Brooks",
+    role: "UX Research and Design Lead",
     personality:
       "Evidence-driven. Runs user research, measures task success, defends accessibility. Kind but firm.",
     priorities: ["Task success rate", "Accessibility (WCAG 2.2)", "Design consistency"],
@@ -77,8 +77,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "team-lead",
-    name: "Jordan Blake",
-    role: "Dev Team Lead",
+    name: "Daniel Cho",
+    role: "Engineering Manager",
     personality:
       "Servant leader. Protects team focus, honest about capacity, hates surprise scope.",
     priorities: ["Team focus", "Sustainable pace", "Engineering quality"],
@@ -87,8 +87,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "qa-lead",
-    name: "Priya Anand",
-    role: "QA Lead",
+    name: "Jordan Ellis",
+    role: "QA and UAT Lead",
     personality:
       "Detail-obsessed. Runs UAT with real customers, publishes defect trends daily during test phases.",
     priorities: ["Defect containment", "UAT quality", "Test coverage"],
@@ -107,8 +107,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "risk-officer",
-    name: "Dr. Amina Osei",
-    role: "Security & Compliance Officer",
+    name: "Aisha Rahman",
+    role: "Information Security Officer",
     personality:
       "Meticulous. Quotes GDPR/CCPA verbatim. Wants a living register with owners and mitigation dates.",
     priorities: ["Data protection", "AuthN/AuthZ", "Auditability"],
@@ -117,8 +117,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "finance",
-    name: "Hannah Weber",
-    role: "Finance Manager",
+    name: "Robert Kim",
+    role: "Finance Business Partner",
     personality:
       "Numbers-first. Tracks CapEx vs. OpEx, wants monthly variance with narrative, allergic to surprise overruns.",
     priorities: ["Budget discipline", "Benefits realization", "Vendor invoicing"],
@@ -137,8 +137,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "vendor",
-    name: "Aiko Mori",
-    role: "External Vendor PM",
+    name: "Liam O'Connor",
+    role: "External Integration Vendor Lead",
     personality:
       "Delivery-oriented but protects margin. Escalates change requests aggressively when scope drifts.",
     priorities: ["Contract scope", "Milestones", "Change orders"],
@@ -147,8 +147,8 @@ export const customerPortalStakeholders: Stakeholder[] = [
   },
   {
     id: "customer",
-    name: "Grace Okafor",
-    role: "Pilot Customer (Voice of Customer)",
+    name: "Maya Thompson",
+    role: "Pilot Customer / Enterprise Account Administrator",
     personality:
       "Represents 12 pilot customers. Direct, articulate, allergic to jargon. Wants working software over promises.",
     priorities: ["Ease of use", "Reliability", "Meaningful notifications"],
