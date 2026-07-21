@@ -830,7 +830,8 @@ export function customerPortalMeetings(now: number): Meeting[] {
       "Decision & communications",
     ],
     transcript:
-      "**Go/No-Go pack**\n\n- Scope: MVP complete, live chat deferred to Phase 2 with committed date.\n- Quality: UAT completion 96%; open Sev-1/Sev-2 count reviewed.\n- Security: pen test complete; residual risks accepted with sign-off.\n- Ops: runbook rehearsed twice; rollback tested end-to-end.\n- Pilot readiness: 20 customers on standby.\n\n> Elena asks: 'Full launch, pilot, or delay?' The room waits for your recommendation.",
+      "**Go/No-Go pack**\n\n- Scope: MVP complete, live chat deferred to Phase 2 with committed date.\n- Quality: UAT completion 96%; 3 open Sev-1 defects in ticket submission and invoice download.\n- Security: pen test complete; residual risks accepted with sign-off.\n- Ops: runbook rehearsed twice; rollback tested end-to-end.\n- Pilot readiness: 20 customers on standby.\n\n> Elena asks: 'Full launch, pilot, or delay?' The room waits for your recommendation.\n\nChoose one of the three launch options — full launch, pilot launch, or delay launch — to close the meeting.",
+    unlocksDecisionId: "cp-uat-defects",
   });
 
   return meetings;
