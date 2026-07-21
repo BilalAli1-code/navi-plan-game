@@ -324,6 +324,12 @@ export function DecisionSummary({
 
   const recent = state.log.slice(-3).reverse();
 
+  function handleDecisionItemClick(e: React.MouseEvent<HTMLLIElement>) {
+    e.stopPropagation();
+    const id = (e.currentTarget as HTMLLIElement).dataset.decisionId;
+    if (id && onOpenDecision) onOpenDecision(id);
+  }
+
   return (
     <div
       className={cn(
@@ -387,14 +393,8 @@ export function DecisionSummary({
                   return (
                     <li
                       key={l.decisionId}
-                      onClick={
-                        onOpenDecision
-                          ? (e) => {
-                              e.stopPropagation();
-                              onOpenDecision(l.decisionId);
-                            }
-                          : undefined
-                      }
+                      data-decision-id={l.decisionId}
+                      onClick={onOpenDecision ? handleDecisionItemClick : undefined}
                       className={cn(
                         "flex items-center gap-2 rounded-lg bg-white/[0.03] px-2 py-1.5 text-[11px]",
                         onOpenDecision && "cursor-pointer hover:bg-white/[0.06] transition",

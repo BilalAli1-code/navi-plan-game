@@ -331,6 +331,17 @@ function StakeholderChatThread({
     }
   }
 
+  const pendingDecisionEmails = (() => {
+    if (!onOpenDecision) return [];
+    const answered = new Set(state.log.map((l) => l.decisionId));
+    return state.emails.filter(
+      (e) =>
+        e.from === stakeholder.id &&
+        e.unlocksDecisionId &&
+        !answered.has(e.unlocksDecisionId),
+    );
+  })();
+
   return (
     <div className="flex h-full flex-col">
       {/* Channel header */}
@@ -388,31 +399,20 @@ function StakeholderChatThread({
       </div>
 
       {/* Pending decision CTA — shown when this stakeholder has emails with unanswered decisions */}
-      {onOpenDecision &&
-        (() => {
-          const answered = new Set(state.log.map((l) => l.decisionId));
-          const pending = state.emails.filter(
-            (e) =>
-              e.from === stakeholder.id &&
-              e.unlocksDecisionId &&
-              !answered.has(e.unlocksDecisionId),
-          );
-          if (pending.length === 0) return null;
-          return (
-            <div className="space-y-2 border-t border-white/10 px-5 py-3">
-              {pending.map((e) => (
-                <button
-                  key={e.unlocksDecisionId}
-                  onClick={() => onOpenDecision(e.unlocksDecisionId!)}
-                  className="flex w-full items-center gap-2 rounded-xl bg-accent/10 border border-accent/30 px-4 py-2.5 text-left text-[12px] font-semibold text-accent transition hover:bg-accent/15"
-                >
-                  <Zap className="h-3.5 w-3.5 shrink-0" />
-                  <span className="flex-1 truncate">{e.subject} — Make the decision →</span>
-                </button>
-              ))}
-            </div>
-          );
-        })()}
+      {pendingDecisionEmails.length > 0 && onOpenDecision && (
+        <div className="space-y-2 border-t border-white/10 px-5 py-3">
+          {pendingDecisionEmails.map((e) => (
+            <button
+              key={e.unlocksDecisionId}
+              onClick={() => onOpenDecision(e.unlocksDecisionId!)}
+              className="flex w-full items-center gap-2 rounded-xl bg-accent/10 border border-accent/30 px-4 py-2.5 text-left text-[12px] font-semibold text-accent transition hover:bg-accent/15"
+            >
+              <Zap className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 truncate">{e.subject} — Make the decision →</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="border-t border-white/10 p-4">

@@ -222,7 +222,7 @@ function buildScenarioEvents(
       // When there is exactly one pending decision, we can open it directly.
       decisionId:
         pendingDecisionEmails.length === 1
-          ? (pendingDecisionEmails[0].unlocksDecisionId ?? undefined)
+          ? pendingDecisionEmails[0].unlocksDecisionId
           : undefined,
     });
   }
