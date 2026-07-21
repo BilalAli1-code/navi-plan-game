@@ -9,7 +9,7 @@ import { DAY_PLAN, DAILY_MINUTES, REQUIRED_ACTIVITIES, type DayActivityKey } fro
 import { canAdvanceChapter } from "./chapter-contract";
 import type { SimState } from "./types";
 
-const asJson = (value: unknown): Json => value as Json;
+const assertJson = (value: unknown): Json => value as Json;
 
 export type DailyProgressRow = {
   id: string;
@@ -208,7 +208,7 @@ export const setCurrentDay = createServerFn({ method: "POST" })
       .update({
         current_day: data.dayNumber,
         last_activity_at: new Date().toISOString(),
-        state_snapshot: asJson({ ...snapshot, currentDay: data.dayNumber }),
+        state_snapshot: assertJson({ ...snapshot, currentDay: data.dayNumber }),
       })
       .eq("id", data.runId)
       .eq("user_id", context.userId);

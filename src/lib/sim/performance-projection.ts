@@ -10,6 +10,7 @@ import type { PerfScores, PerfCategory, KnowledgeArea } from "./legacy/types";
 import type { SimState } from "./types";
 
 type DecisionQuality = "excellent" | "good" | "risky" | "poor";
+const DEFAULT_ACTION_SCORE = 55;
 
 export type PerformanceProjection = {
   runId: string;
@@ -127,7 +128,9 @@ export function buildPerformanceProjection(params: {
   }
 
   for (const action of actions) {
-    const score = Number((action.outcome_data as { score?: number } | null)?.score ?? 55);
+    const score = Number(
+      (action.outcome_data as { score?: number } | null)?.score ?? DEFAULT_ACTION_SCORE,
+    );
     const quality = qualityFromScore(score);
     if (action.action_type === "stakeholder_interaction") {
       rollingScores = applyPerfImpact(rollingScores, {
