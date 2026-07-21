@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -64,8 +64,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     reset,
     saveStatus,
     hydrating,
-    completeActivity,
-    days,
+    projection,
   } = useSim();
   const c = getCaseRef(state.caseId);
   const [tab, setTab] = useState<Tab>("mission");
@@ -108,44 +107,10 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     },
   ];
 
-
-  const currentDayRow = days.find((d) => d.day_number === state.currentDay);
-  useEffect(() => {
-    if (!currentDayRow) return;
-    // Auto-complete "workplace" once the learner has actually opened / read
-    // an inbox item. Auto-complete "decisions" once they log a decision at
-    // the current phase. "learning" / "briefing" / "practice" / "reflection"
-    // are always driven by explicit learner action so a brand-new run stays
-    // at 0% progress until the learner actually does something.
-    if (!currentDayRow.workplace_activities_completed && state.emails.some((e) => e.read)) {
-      void completeActivity(state.currentDay, "workplace");
-    }
-    if (!currentDayRow.decisions_completed && state.log.some((l) => l.atPhase === state.phase)) {
-      void completeActivity(state.currentDay, "decisions");
-    }
-  }, [
-    currentDayRow,
-    state.emails,
-    state.log,
-    state.phase,
-    state.currentDay,
-    completeActivity,
-  ]);
-
-
   function openDecision(id: string) {
     setActiveDecision(id);
   }
-
-  const phaseIdx = [
-    "Tailoring",
-    "Initiation",
-    "Planning",
-    "Execution",
-    "Monitoring",
-    "Closing",
-    "Complete",
-  ].indexOf(state.phase);
+  const phaseIdx = projection.phase.currentIndex;
   const allTabs = navGroups.flatMap((g) => g.items);
 
   if (hydrating) {
@@ -281,7 +246,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-accent">
-                  Phase {Math.max(0, phaseIdx)} · {state.phase}
+                  Phase {Math.max(0, phaseIdx)} · {projection.phase.current}
                 </div>
                 <SaveIndicator status={hydrating ? "saving" : saveStatus} />
               </div>

@@ -112,6 +112,21 @@ export type DecisionLogEntry = {
 
 export type TailoringAnswers = Record<string, string>;
 
+export type ChapterActivityState = {
+  briefing: boolean;
+  learning: boolean;
+  workplace: boolean;
+  decisions: boolean;
+  practice: boolean;
+  reflection: boolean;
+};
+
+export type ChapterProgressState = {
+  activities: ChapterActivityState;
+  startedAt: string | null;
+  completedAt: string | null;
+};
+
 export type IndustryCaseRef = {
   id: string;
   industry: string;
@@ -144,6 +159,7 @@ export type SimState = {
   lastConsequence: string | null;
   currentDay: number;         // active chapter in the 7-chapter plan (1..7)
   completedMinutes: number;   // cumulative minutes across all chapters
+  chapterProgress?: Record<number, ChapterProgressState>;
   /** In-world project time label (Blueprint §8.3); derived from chapter. Optional. */
   inWorldDate?: string;
 };

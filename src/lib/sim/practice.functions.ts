@@ -8,8 +8,34 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireFeature } from "@/lib/billing/entitlement.server";
 import type { Json } from "@/integrations/supabase/types";
 import type { PracticeQuestion } from "./practice.server";
+import { INITIAL_METRICS, type SimState } from "./types";
+import { applyActivityCompletion, migrateChapterProgress } from "./progression";
+import { syncDailyProgressRows } from "./daily.functions";
 
 export type { PracticeQuestion } from "./practice.server";
+
+function asProgressState(snapshot: Partial<SimState>): SimState {
+  return {
+    caseId: snapshot.caseId ?? "",
+    phase: snapshot.phase ?? "Initiation",
+    metrics: snapshot.metrics ?? INITIAL_METRICS,
+    tailoring: snapshot.tailoring ?? null,
+    tailoringScore: snapshot.tailoringScore ?? null,
+    approach: snapshot.approach ?? null,
+    emails: snapshot.emails ?? [],
+    meetings: snapshot.meetings ?? [],
+    documents: snapshot.documents ?? [],
+    decisions: snapshot.decisions ?? [],
+    activeDecisionId: snapshot.activeDecisionId ?? null,
+    log: snapshot.log ?? [],
+    xp: snapshot.xp ?? 0,
+    createdAt: snapshot.createdAt ?? Date.now(),
+    lastConsequence: snapshot.lastConsequence ?? null,
+    currentDay: snapshot.currentDay ?? 1,
+    completedMinutes: snapshot.completedMinutes ?? 0,
+    chapterProgress: migrateChapterProgress(snapshot.chapterProgress),
+  };
+}
 
 export const startPracticeSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -305,48 +331,31 @@ export const completePracticeSession = createServerFn({ method: "POST" })
       /* best-effort */
     }
 
-    // Mark the daily "practice" activity complete and unlock the next day when all done.
+    // Mark practice complete in the canonical run snapshot, then mirror daily_progress from it.
     try {
-      const { data: dayRow } = await db
-        .from("daily_progress")
-        .select(
-          "id, practice_completed, briefing_completed, learning_completed, workplace_activities_completed, decisions_completed, reflection_completed",
-        )
-        .eq("run_id", session.run_id)
+      const { data: run } = await db
+        .from("simulation_runs")
+        .select("state_snapshot")
+        .eq("id", session.run_id)
         .eq("user_id", context.userId)
-        .eq("day_number", session.day_number)
-        .single();
-      if (dayRow && !dayRow.practice_completed) {
-        const flags = {
-          briefing: dayRow.briefing_completed,
-          learning: dayRow.learning_completed,
-          workplace: dayRow.workplace_activities_completed,
-          decisions: dayRow.decisions_completed,
-          practice: true,
-          reflection: dayRow.reflection_completed,
-        };
-        const done = Object.values(flags).filter(Boolean).length;
-        const allDone = done === 6;
+        .maybeSingle();
+      if (run) {
+        const nextState = applyActivityCompletion(
+          asProgressState((run.state_snapshot ?? {}) as Partial<SimState>),
+          session.day_number,
+          "practice",
+        );
         await db
-          .from("daily_progress")
+          .from("simulation_runs")
           .update({
-            practice_completed: true,
-            completion_percentage: Math.round((done / 6) * 100),
-            completed_minutes: Math.round((done / 6) * 60),
-            status: allDone ? "completed" : "in_progress",
-            completed_at: allDone ? new Date().toISOString() : null,
+            current_day: nextState.currentDay,
+            completed_minutes: nextState.completedMinutes,
+            last_activity_at: new Date().toISOString(),
+            state_snapshot: nextState as unknown as Json,
           })
-          .eq("id", dayRow.id)
+          .eq("id", session.run_id)
           .eq("user_id", context.userId);
-        if (allDone && session.day_number < 7) {
-          await db
-            .from("daily_progress")
-            .update({ status: "available" })
-            .eq("run_id", session.run_id)
-            .eq("user_id", context.userId)
-            .eq("day_number", session.day_number + 1)
-            .eq("status", "locked");
-        }
+        await syncDailyProgressRows(db as never, context.userId, session.run_id, nextState);
       }
     } catch {
       /* best-effort */

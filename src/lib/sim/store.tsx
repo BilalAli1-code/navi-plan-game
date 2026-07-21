@@ -12,7 +12,6 @@ import { scoreTailoring } from "./tailoring";
 import { loadRun, saveRun, persistDecisionAction, setRunStatus } from "./sim.functions";
 import {
   listDailyProgress,
-  completeDayActivity,
   setCurrentDay as setCurrentDayFn,
   saveReflection as saveReflectionFn,
   getReflection as getReflectionFn,
@@ -30,11 +29,12 @@ import {
 import type { EventInput } from "./events.functions";
 import { getDay } from "./days";
 import type { DayActivityKey } from "./days";
-import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
 import { processAction } from "./actions.functions";
 import type { ActionInput } from "./actions";
 import { buildSimProjection, type SimProjection } from "./projection";
+import { applyActivityCompletion, buildProgressionSnapshot, migrateChapterProgress } from "./progression";
+import { commitDecision } from "./engine";
 
 import type {
   Decision,
@@ -57,7 +57,7 @@ function importedKey(caseId: string) {
 function bootstrap(caseId: string): SimState {
   const c = getCaseRef(caseId);
   const decisions = generateDecisions(c);
-  return {
+  const state: SimState = {
     caseId,
     phase: "Initiation",
     metrics: INITIAL_METRICS,
@@ -76,6 +76,10 @@ function bootstrap(caseId: string): SimState {
     lastConsequence: null,
     currentDay: 1,
     completedMinutes: 0,
+  };
+  return {
+    ...state,
+    chapterProgress: migrateChapterProgress(state.chapterProgress),
   };
 }
 
@@ -117,85 +121,6 @@ type LearnerDispatchResult = {
   message?: string | null;
   [key: string]: unknown;
 };
-
-const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
-
-function applyImpact(metrics: SimState["metrics"], impact: Record<string, number>) {
-  const next = {
-    ...metrics,
-    budget: clamp(metrics.budget + (impact.budget ?? 0)),
-    schedule: clamp(metrics.schedule + (impact.schedule ?? 0)),
-    risk: clamp(metrics.risk + (impact.risk ?? 0)),
-    morale: clamp(metrics.morale + (impact.morale ?? 0)),
-    trust: clamp(metrics.trust + (impact.trust ?? 0)),
-    quality: clamp(metrics.quality + (impact.quality ?? 0)),
-    satisfaction: clamp(metrics.satisfaction + (impact.satisfaction ?? 0)),
-  };
-  return {
-    ...next,
-    health: Math.round(
-      (next.budget +
-        next.schedule +
-        next.risk +
-        next.morale +
-        next.trust +
-        next.quality +
-        next.satisfaction) /
-        7,
-    ),
-  };
-}
-
-function applyDecisionTransition(state: SimState, decision: Decision, option: DecisionOption): SimState {
-  // Intentional inlining of legacy commitDecision rules so decision transitions
-  // are owned by the centralized store dispatcher pipeline.
-  const metrics = applyImpact(state.metrics, option.impact as Record<string, number>);
-  const entry = {
-    decisionId: decision.id,
-    optionId: option.id,
-    quality: option.quality,
-    correct: option.id === decision.correctOptionId,
-    atPhase: state.phase,
-    impact: option.impact,
-    timestamp: Date.now(),
-  };
-  const xpDelta =
-    option.quality === "excellent"
-      ? 25
-      : option.quality === "good"
-        ? 15
-        : option.quality === "risky"
-          ? 5
-          : 0;
-  const withDecision: SimState = {
-    ...state,
-    metrics,
-    log: [...state.log, entry],
-    xp: state.xp + xpDelta,
-    activeDecisionId: decision.id,
-    lastConsequence: option.consequence,
-    emails: state.emails.map((e) =>
-      e.unlocksDecisionId === decision.id ? { ...e, read: true } : e,
-    ),
-  };
-  const inPhase = withDecision.decisions.filter((d) => d.phase === withDecision.phase);
-  const done = withDecision.log.filter((l) => l.atPhase === withDecision.phase);
-  if (!(inPhase.length > 0 && done.length >= inPhase.length)) return withDecision;
-  const order: SimState["phase"][] = [
-    "Tailoring",
-    "Initiation",
-    "Planning",
-    "Execution",
-    "Monitoring",
-    "Closing",
-    "Complete",
-  ];
-  const idx = order.indexOf(withDecision.phase);
-  return {
-    ...withDecision,
-    phase: idx < 0 || idx >= order.length - 1 ? "Complete" : order[idx + 1],
-  };
-}
 
 type Ctx = {
   state: SimState;
@@ -261,7 +186,6 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const persistDecisionFn = useServerFn(persistDecisionAction);
   const setStatusFn = useServerFn(setRunStatus);
   const listDaysFn = useServerFn(listDailyProgress);
-  const completeActivityFn = useServerFn(completeDayActivity);
   const setDayFn = useServerFn(setCurrentDayFn);
   const saveReflectionSrv = useServerFn(saveReflectionFn);
   const getReflectionSrv = useServerFn(getReflectionFn);
@@ -275,13 +199,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       try {
         const res = await listDaysFn({ data: { runId: rid } });
         setDays(res.days);
-        const done = res.days.filter((d) => d.status === "completed").length;
-        // Derive completedMinutes from actual per-day totals.
-        const minutes = res.days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
-        setState((s) =>
-          s.completedMinutes === minutes ? s : { ...s, completedMinutes: minutes },
-        );
-        return { done, minutes };
+        return res.days;
       } catch (err) {
         console.error("Failed to refresh days:", err);
         return null;
@@ -303,10 +221,17 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         if (res.run?.snapshot) {
           runIdRef.current = res.run.id;
           setRunId(res.run.id);
-          refreshDays(res.run.id).catch((err) => {
+          let runDays: DailyProgressRow[] = [];
+          try {
+            const dayRes = await listDaysFn({ data: { runId: res.run.id } });
+            if (!cancelled) {
+              runDays = dayRes.days;
+              setDays(dayRes.days);
+            }
+          } catch (err) {
             console.error("Failed to load days during rehydration:", err);
-          });
-          setState(rehydrate(caseId, res.run.snapshot));
+          }
+          setState(rehydrate(caseId, res.run.snapshot, runDays));
           setSaveStatus("saved");
           setHydrating(false);
           return;
@@ -321,7 +246,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
           );
           if (typeof window !== "undefined") localStorage.setItem(importedKey(caseId), "1");
           if (wantImport) {
-            const merged = rehydrate(caseId, local);
+            const merged = rehydrate(caseId, local, []);
             setState(merged);
             pendingRef.current = merged; // will flush via the save effect below
             setHydrating(false);
@@ -333,7 +258,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
         // Supabase unreachable — fall back to local snapshot if any.
         console.error("Failed to load run during hydration:", err);
         const local = readLocal(caseId);
-        setState(local ? rehydrate(caseId, local) : bootstrap(caseId));
+        setState(local ? rehydrate(caseId, local, []) : bootstrap(caseId));
         setSaveStatus("offline");
       } finally {
         if (!cancelled) setHydrating(false);
@@ -439,8 +364,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   // Engine-generated projection — the single authoritative source for all
   // derived UI values. Every component reads from here, never recomputes inline.
   const projection = useMemo(
-    () => buildSimProjection(state, days),
-    [state, days],
+    () => buildSimProjection(state),
+    [state],
   );
 
   const submitDecision = useCallback(
@@ -455,7 +380,8 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       if (lastDecisionKeyRef.current === dec.id) return;
       lastDecisionKeyRef.current = dec.id;
 
-      const next = applyDecisionTransition(state, dec, option);
+      let next = commitDecision(state, dec, option);
+      next = applyActivityCompletion(next, state.currentDay, "decisions");
       // Cascade completion: mark the source email as read so it disappears
       // from unread/pending surfaces everywhere at once.
       if (dec.source === "email") {
@@ -561,10 +487,13 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const markEmailRead = useCallback(
     (id: string) => {
-      setState((s) => ({
-        ...s,
-        emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
-      }));
+      setState((s) => {
+        const next = {
+          ...s,
+          emails: s.emails.map((e) => (e.id === id ? { ...e, read: true } : e)),
+        };
+        return applyActivityCompletion(next, s.currentDay, "workplace");
+      });
       const rid = runIdRef.current;
       if (rid) {
         // Email events use key `email:<decisionId>` (see eventsFromState).
@@ -603,83 +532,55 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const completeActivity = useCallback(
     async (day: number, activity: DayActivityKey) => {
       const rid = runIdRef.current;
-      if (!rid) return;
-      // Optimistic UI: bump completion locally, then reconcile from server.
-      setDays((ds) =>
-        ds.map((d) => {
-          if (d.day_number !== day) return d;
-          const flags: Record<DayActivityKey, boolean> = {
-            briefing: d.briefing_completed,
-            learning: d.learning_completed,
-            workplace: d.workplace_activities_completed,
-            decisions: d.decisions_completed,
-            practice: d.practice_completed,
-            reflection: d.reflection_completed,
-          };
-          if (flags[activity]) return d;
-          flags[activity] = true;
-          const completed = REQUIRED_ACTIVITIES.filter((a) => flags[a]).length;
-          const allDone = completed === REQUIRED_ACTIVITIES.length;
-          return {
-            ...d,
-            briefing_completed: flags.briefing,
-            learning_completed: flags.learning,
-            workplace_activities_completed: flags.workplace,
-            decisions_completed: flags.decisions,
-            practice_completed: flags.practice,
-            reflection_completed: flags.reflection,
-            completion_percentage: Math.round((completed / REQUIRED_ACTIVITIES.length) * 100),
-            completed_minutes: Math.round((completed / REQUIRED_ACTIVITIES.length) * DAILY_MINUTES),
-            status: allDone ? "completed" : "in_progress",
-          };
-        }),
-      );
+      let dayCompleted = false;
+      setState((s) => {
+        const next = applyActivityCompletion(s, day, activity);
+        dayCompleted =
+          buildProgressionSnapshot(next).chapters.find((chapter) => chapter.dayNumber === day)?.status ===
+          "completed";
+        return next;
+      });
       try {
-        await completeActivityFn({ data: { runId: rid, dayNumber: day, activity } });
-        // Notification event so the timeline reflects the tick.
-        void updateEventStatusFn({
-          data: {
-            runId: rid,
-            eventKey: `activity:day-${day}:${activity}`,
-            status: "completed",
-          },
-        }).catch((err) => {
-          console.error("Failed to update activity event status:", err);
-        });
+        if (rid) {
+          void updateEventStatusFn({
+            data: {
+              runId: rid,
+              eventKey: `activity:day-${day}:${activity}`,
+              status: "completed",
+            },
+          }).catch((err) => {
+            console.error("Failed to update activity event status:", err);
+          });
+        }
       } catch (err) {
         console.error("Failed to complete activity:", err);
         /* offline; day snapshot save will still capture progress */
       } finally {
-        const result = await refreshDays(rid);
-        // Re-inspect days state after refresh.
-        setDays((cur) => {
-          const done = cur.find((d) => d.day_number === day);
-          if (done && done.status === "completed") {
-            const def = getDay(day);
-            void masteryFn({
-              data: { updates: [dayCompletionMasteryDelta(day, def.phase)] },
-            }).catch((err) => {
-              console.error("Failed to record day completion mastery:", err);
-            });
-          }
-          return cur;
-        });
+        if (rid) await refreshDays(rid);
+        if (dayCompleted) {
+          const def = getDay(day);
+          void masteryFn({
+            data: { updates: [dayCompletionMasteryDelta(day, def.phase)] },
+          }).catch((err) => {
+            console.error("Failed to record day completion mastery:", err);
+          });
+        }
       }
     },
-    [completeActivityFn, refreshDays, updateEventStatusFn, masteryFn],
+    [refreshDays, updateEventStatusFn, masteryFn],
   );
 
   const goToDay = useCallback(
     (day: number) => {
-      const target = days.find((d) => d.day_number === day);
-      if (target && target.status === "locked") return;
+      const target = buildProgressionSnapshot(state).chapters.find((chapter) => chapter.dayNumber === day);
+      if (target?.status === "locked") return;
       setState((s) => ({ ...s, currentDay: day }));
       const rid = runIdRef.current;
       if (rid) void setDayFn({ data: { runId: rid, dayNumber: day } }).catch((err) => {
         console.error("Failed to set current day:", err);
       });
     },
-    [days, setDayFn],
+    [state, setDayFn],
   );
 
   const saveDayReflection = useCallback(
@@ -829,9 +730,10 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 // persisted snapshot. The decision log + metrics + tailoring are authoritative;
 // generated collateral (which references stakeholder data etc.) is regenerated
 // from the case so that pushing new case content doesn't wedge old snapshots.
-function rehydrate(caseId: string, snapshot: SimState): SimState {
+function rehydrate(caseId: string, snapshot: SimState, days: DailyProgressRow[] = []): SimState {
   const fresh = bootstrap(caseId);
-  return {
+  const chapterProgress = migrateChapterProgress(snapshot.chapterProgress, days);
+  const rehydrated: SimState = {
     ...fresh,
     phase: snapshot.phase ?? fresh.phase,
     metrics: { ...fresh.metrics, ...(snapshot.metrics ?? {}) },
@@ -843,6 +745,7 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
     lastConsequence: snapshot.lastConsequence ?? null,
     currentDay: snapshot.currentDay ?? 1,
     completedMinutes: snapshot.completedMinutes ?? 0,
+    chapterProgress,
     createdAt: snapshot.createdAt ?? fresh.createdAt,
     // mark emails that unlock decisions the learner already answered as read
     emails: fresh.emails.map((e) => {
@@ -851,6 +754,11 @@ function rehydrate(caseId: string, snapshot: SimState): SimState {
         (snapshot.log ?? []).some((l) => l.decisionId === e.unlocksDecisionId);
       return done ? { ...e, read: true } : e;
     }),
+  };
+  const progression = buildProgressionSnapshot(rehydrated);
+  return {
+    ...rehydrated,
+    completedMinutes: progression.totalCompletedMinutes,
   };
 }
 
