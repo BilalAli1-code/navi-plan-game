@@ -9,7 +9,7 @@ import {
   generateMeetings,
 } from "./generator";
 import { scoreTailoring } from "./tailoring";
-import { loadRun, saveRun, saveDecision, setRunStatus } from "./sim.functions";
+import { loadRun, saveRun, persistDecisionAction, setRunStatus } from "./sim.functions";
 import {
   listDailyProgress,
   completeDayActivity,
@@ -20,13 +20,12 @@ import {
 } from "./daily.functions";
 import { applyMasteryUpdates } from "./mastery.functions";
 import { syncEvents, updateEventStatus } from "./events.functions";
-import { recordScoreSample } from "./scoring.functions";
 import { qualityToScore } from "./scoring";
 import {
-  decisionMasteryDelta,
   tailoringMasteryDelta,
   reflectionMasteryDelta,
   dayCompletionMasteryDelta,
+  decisionMasteryDelta,
 } from "./mastery";
 import type { EventInput } from "./events.functions";
 import { getDay } from "./days";
@@ -35,7 +34,7 @@ import { DAILY_MINUTES, REQUIRED_ACTIVITIES } from "./days";
 import { applyChapterGates, evaluateMayaTriggers, type MayaNudge } from "./orchestrator";
 import { processAction } from "./actions.functions";
 import type { ActionInput } from "./actions";
-
+import { buildSimProjection, type SimProjection } from "./projection";
 
 import type {
   Decision,
@@ -234,6 +233,9 @@ type Ctx = {
   mayaNudges: MayaNudge[];
   dismissNudge: (id: string) => void;
   dispatchLearnerAction: (action: LearnerAction) => Promise<LearnerDispatchResult>;
+  /** Engine-generated read-only projections. All UI surfaces must read derived
+   *  values from here instead of computing them inline. */
+  projection: SimProjection;
 };
 
 
@@ -256,7 +258,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const loadRunFn = useServerFn(loadRun);
   const saveRunFn = useServerFn(saveRun);
-  const saveDecisionFn = useServerFn(saveDecision);
+  const persistDecisionFn = useServerFn(persistDecisionAction);
   const setStatusFn = useServerFn(setRunStatus);
   const listDaysFn = useServerFn(listDailyProgress);
   const completeActivityFn = useServerFn(completeDayActivity);
@@ -266,7 +268,6 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
   const masteryFn = useServerFn(applyMasteryUpdates);
   const syncEventsFn = useServerFn(syncEvents);
   const updateEventStatusFn = useServerFn(updateEventStatus);
-  const recordScoreFn = useServerFn(recordScoreSample);
   const processActionFn = useServerFn(processAction);
 
   const refreshDays = useCallback(
@@ -435,6 +436,13 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     setState((s) => ({ ...s, activeDecisionId: id }));
   }, []);
 
+  // Engine-generated projection — the single authoritative source for all
+  // derived UI values. Every component reads from here, never recomputes inline.
+  const projection = useMemo(
+    () => buildSimProjection(state, days),
+    [state, days],
+  );
+
   const submitDecision = useCallback(
     (option: DecisionOption, decisionId?: string) => {
       const targetId = decisionId ?? state.activeDecisionId;
@@ -477,11 +485,20 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
       const rid = runIdRef.current;
       if (rid) {
-        // Persist the decision row.
-        void saveDecisionFn({
+        // Single consolidated server call: decision row + mastery + score + event statuses.
+        const eventStatusUpdates: { eventKey: string; status: "responded" }[] = [
+          { eventKey: `decision:${dec.id}`, status: "responded" },
+        ];
+        if (dec.source === "email") {
+          eventStatusUpdates.push({ eventKey: `email:${dec.id}`, status: "responded" });
+        } else if (dec.source === "meeting") {
+          eventStatusUpdates.push({ eventKey: `meeting:${dec.id}`, status: "responded" });
+        }
+        void persistDecisionFn({
           data: {
             runId: rid,
             decisionId: dec.id,
+            chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
             phase: state.phase,
             selectedOptionId: option.id,
             selectedOptionText: option.label,
@@ -492,51 +509,16 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
               consequence: option.consequence,
             },
             eventId: dec.sourceId ?? null,
+            masteryUpdates: [decisionMasteryDelta(dec, option)],
+            decisionScore: qualityToScore(option.quality),
+            eventStatusUpdates,
           },
         }).catch((err) => {
-          console.error("Failed to save decision:", err);
+          console.error("Failed to persist decision action:", err);
         });
-        // Update mastery via the shared service.
-        void masteryFn({
-          data: { updates: [decisionMasteryDelta(dec, option)] },
-        }).catch((err) => {
-          console.error("Failed to update mastery:", err);
-        });
-        // Record chapter score sample (decision dimension).
-        void recordScoreFn({
-          data: {
-            runId: rid,
-            chapter: Math.max(1, Math.min(7, state.currentDay ?? 1)),
-            dimension: "decision",
-            score: qualityToScore(option.quality),
-            weight: 1,
-            tag: dec.pmbokDomain ?? undefined,
-          },
-        }).catch((err) => {
-          console.error("Failed to record decision score:", err);
-        });
-        // Mark decision event as responded, and the source (email/meeting) too.
-        void updateEventStatusFn({
-          data: { runId: rid, eventKey: `decision:${dec.id}`, status: "responded" },
-        }).catch((err) => {
-          console.error("Failed to update decision event status:", err);
-        });
-        if (dec.source === "email") {
-          void updateEventStatusFn({
-            data: { runId: rid, eventKey: `email:${dec.id}`, status: "responded" },
-          }).catch((err) => {
-            console.error("Failed to update email event status:", err);
-          });
-        } else if (dec.source === "meeting") {
-          void updateEventStatusFn({
-            data: { runId: rid, eventKey: `meeting:${dec.id}`, status: "responded" },
-          }).catch((err) => {
-            console.error("Failed to update meeting event status:", err);
-          });
-        }
       }
     },
-    [state, saveDecisionFn, masteryFn, updateEventStatusFn, recordScoreFn],
+    [state, persistDecisionFn],
   );
 
   const submitTailoring = useCallback(
@@ -790,6 +772,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const value: Ctx = {
     state,
+    projection,
     activeDecision,
     setActiveDecision,
     submitDecision: (option, decisionId) => {

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef } from "@/lib/sim/cases";
-import { getDay, TOTAL_DAYS, TOTAL_MINUTES } from "@/lib/sim/days";
+import { getDay, TOTAL_DAYS } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
 import { ScenarioTimeline } from "./ScenarioTimeline";
 import { DayBriefing } from "./DayBriefing";
@@ -238,35 +238,8 @@ function AIRecommendationsPanel() {
 // ─── XP & Achievements ───────────────────────────────────────────────────────
 
 export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
-  const { state, days } = useSim();
-  const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
-  const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
-
-  const xpThresholds = [
-    { label: "PM Initiate", xp: 0 },
-    { label: "PM Associate", xp: 100 },
-    { label: "PM Professional", xp: 250 },
-    { label: "PM Expert", xp: 500 },
-    { label: "PM Master", xp: 1000 },
-  ];
-  const currentTier = xpThresholds.filter((t) => state.xp >= t.xp).at(-1)!;
-  const nextTier = xpThresholds.find((t) => t.xp > state.xp);
-  const xpToNext = nextTier ? nextTier.xp - state.xp : 0;
-  const xpPct = nextTier
-    ? Math.round(((state.xp - currentTier.xp) / (nextTier.xp - currentTier.xp)) * 100)
-    : 100;
-
-  const achievements = [
-    { label: "First Decision", earned: state.log.length >= 1 },
-    { label: "5 Decisions", earned: state.log.length >= 5 },
-    { label: "Approach Chosen", earned: !!state.approach },
-    {
-      label: "Phase 3+",
-      earned: ["Planning", "Execution", "Monitoring", "Closing", "Complete"].includes(state.phase),
-    },
-    { label: "25% Progress", earned: overallPct >= 25 },
-    { label: "50% Progress", earned: overallPct >= 50 },
-  ];
+  const { state, projection } = useSim();
+  const { xp, achievements } = projection;
 
   return (
     <div
@@ -284,17 +257,17 @@ export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => voi
         <span className="text-[22px] font-bold text-accent">{state.xp} XP</span>
       </div>
       <div className="mb-1 flex items-center justify-between text-[11px]">
-        <span className="font-semibold text-accent">{currentTier.label}</span>
-        {nextTier && (
+        <span className="font-semibold text-accent">{xp.currentTier.label}</span>
+        {xp.nextTier && (
           <span className="text-muted-foreground">
-            {xpToNext} XP to {nextTier.label}
+            {xp.toNext} XP to {xp.nextTier.label}
           </span>
         )}
       </div>
       <div className="mb-3 h-2.5 w-full overflow-hidden rounded-full bg-white/[0.08]">
         <motion.div
           initial={false}
-          animate={{ width: `${xpPct}%` }}
+          animate={{ width: `${xp.tierProgressPct}%` }}
           transition={{ type: "spring", stiffness: 80, damping: 18 }}
           className="h-full rounded-full bg-gradient-to-r from-accent/80 to-accent"
         />
@@ -317,12 +290,9 @@ export function DecisionSummary({
   onOpenTab?: (tab: string) => void;
   onOpenDecision?: (id: string) => void;
 }) {
-  const { state } = useSim();
-  const correct = state.log.filter((l) => l.correct).length;
-  const total = state.log.length;
-  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-  const recent = state.log.slice(-3).reverse();
+  const { state, projection } = useSim();
+  const { decisions } = projection;
+  const { correct, total, accuracy, recent } = decisions;
 
   function handleDecisionItemClick(e: React.MouseEvent<HTMLLIElement>) {
     e.stopPropagation();
@@ -445,11 +415,8 @@ export function MissionControl({
   onOpenTab?: (tab: string) => void;
   onOpenDecision?: (id: string) => void;
 }) {
-  const { state, days } = useSim();
-
-  const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
-  const overallPct = Math.round((totalCompletedMinutes / TOTAL_MINUTES) * 100);
-  const daysDone = days.filter((d) => d.status === "completed").length;
+  const { state, projection } = useSim();
+  const { overallPct, daysDone } = projection.progress;
 
   return (
     <div className="space-y-5">

@@ -84,13 +84,14 @@ function MetricsRadarChart() {
 // ─── Decision Quality Chart ──────────────────────────────────────────────────
 
 function DecisionQualityChart() {
-  const { state } = useSim();
+  const { projection } = useSim();
+  const { byQuality, total } = projection.decisions;
 
   const qualityCounts = {
-    Excellent: state.log.filter((l) => l.quality === "excellent").length,
-    Good: state.log.filter((l) => l.quality === "good").length,
-    Risky: state.log.filter((l) => l.quality === "risky").length,
-    Poor: state.log.filter((l) => l.quality === "poor").length,
+    Excellent: byQuality.excellent,
+    Good: byQuality.good,
+    Risky: byQuality.risky,
+    Poor: byQuality.poor,
   };
 
   const data = Object.entries(qualityCounts).map(([name, value]) => ({ name, value }));
@@ -101,7 +102,7 @@ function DecisionQualityChart() {
     Poor: "var(--color-destructive, #ef4444)",
   };
 
-  if (state.log.length === 0) {
+  if (total === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="mb-2 flex items-center gap-2">
@@ -387,11 +388,10 @@ function TeamHealthCard() {
 // ─── Decision Log Report ─────────────────────────────────────────────────────
 
 function DecisionLogReport() {
-  const { state } = useSim();
-  const correct = state.log.filter((l) => l.correct).length;
-  const total = state.log.length;
-  const excellent = state.log.filter((l) => l.quality === "excellent").length;
-  const poor = state.log.filter((l) => l.quality === "poor").length;
+  const { state, projection } = useSim();
+  const { correct, total, byQuality } = projection.decisions;
+  const excellent = byQuality.excellent;
+  const poor = byQuality.poor;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">

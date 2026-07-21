@@ -443,15 +443,15 @@ function HealthPill({ value }: { value: number }) {
 }
 
 function CompleteView() {
-  const { state, reset } = useSim();
+  const { state, reset, projection } = useSim();
   const c = getCaseRef(state.caseId);
-  const correct = state.log.filter((l) => l.correct).length;
+  const { total, correct } = projection.decisions;
   return (
     <div className="text-center">
       <div className="text-5xl">🎉</div>
       <h2 className="mt-3 text-[26px] font-bold">Project closed: {c.projectName}</h2>
       <p className="mt-2 text-muted-foreground">
-        You made {state.log.length} decisions ({correct} PMI-aligned) and earned {state.xp} XP.
+        You made {total} decisions ({correct} PMI-aligned) and earned {state.xp} XP.
       </p>
       <div className="mx-auto mt-6 grid max-w-md grid-cols-2 gap-3 text-left">
         {(["health", "budget", "schedule", "quality", "trust", "morale"] as const).map((k) => (
