@@ -587,13 +587,15 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
 
   const goToDay = useCallback(
     (day: number) => {
+      const target = days.find((d) => d.day_number === day);
+      if (target && target.status === "locked") return;
       setState((s) => ({ ...s, currentDay: day }));
       const rid = runIdRef.current;
       if (rid) void setDayFn({ data: { runId: rid, dayNumber: day } }).catch((err) => {
         console.error("Failed to set current day:", err);
       });
     },
-    [setDayFn],
+    [days, setDayFn],
   );
 
   const saveDayReflection = useCallback(
