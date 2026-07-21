@@ -157,8 +157,8 @@ function buildScenarioEvents(
   });
 
   // Upcoming meetings — hide any whose required decision has been made.
-  const pendingMeetings = state.meetings.filter((m) => !isMeetingDone(m));
-  const completedMeetings = state.meetings.filter((m) => isMeetingDone(m));
+  const pendingMeetings = chapterMeetings.filter((m) => !isMeetingDone(m));
+  const completedMeetings = chapterMeetings.filter((m) => isMeetingDone(m));
   pendingMeetings.slice(0, 2).forEach((mtg, i) => {
     const meetingTime = i === 0 ? "10:00 AM" : "2:00 PM";
     events.push({
