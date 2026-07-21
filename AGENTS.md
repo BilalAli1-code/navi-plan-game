@@ -40,3 +40,7 @@ When implementing new functionality:
 3. Follow the Business Case Content Bible.
 4. Prioritize realism over complexity.
 5. Build reusable components whenever possible.
+
+## 5. Copilot CI Efficiency
+- Keep changes surgical and avoid re-running the same validation commands unless code changed after the last run.
+- Prefer targeted checks for modified files first, then run the required full validation once before finalizing.
