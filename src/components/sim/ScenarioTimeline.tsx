@@ -22,6 +22,8 @@ type ScenarioEvent = {
   from?: string;
   priority: "urgent" | "normal" | "info";
   actionTab?: string;
+  /** When set, clicking this event opens the decision panel directly instead of switching tabs. */
+  decisionId?: string;
   read?: boolean;
   completed?: boolean;
 };
@@ -141,6 +143,7 @@ function buildScenarioEvents(
       from: sender?.name ?? "Unknown",
       priority: isUrgent ? "urgent" : "normal",
       actionTab: "inbox",
+      decisionId: email.unlocksDecisionId ?? undefined,
       read: email.read,
     });
   });
@@ -162,6 +165,7 @@ function buildScenarioEvents(
         .join(", "),
       priority: "normal",
       actionTab: "meetings",
+      decisionId: mtg.unlocksDecisionId ?? undefined,
     });
   });
 
@@ -215,6 +219,11 @@ function buildScenarioEvents(
         "These decisions will directly impact project health. Review your inbox and respond before end of day.",
       priority: "normal",
       actionTab: "inbox",
+      // When there is exactly one pending decision, we can open it directly.
+      decisionId:
+        pendingDecisionEmails.length === 1
+          ? (pendingDecisionEmails[0].unlocksDecisionId ?? undefined)
+          : undefined,
     });
   }
 
@@ -291,7 +300,13 @@ const CATEGORY_META: Record<EventCategory, { label: string; hint: string }> = {
 const CATEGORY_ORDER: EventCategory[] = ["action", "message", "meeting", "update", "completed"];
 
 
-export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function ScenarioTimeline({
+  onOpenTab,
+  onOpenDecision,
+}: {
+  onOpenTab?: (tab: string) => void;
+  onOpenDecision?: (id: string) => void;
+}) {
   const { state } = useSim();
   const caseRef = getCaseRef(state.caseId);
   const events = buildScenarioEvents(state, caseRef);
@@ -308,6 +323,15 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
   for (const ev of events) grouped[categorize(ev)].push(ev);
 
   const urgentCount = events.filter((e) => e.priority === "urgent").length;
+
+  function handleEventClick(ev: ScenarioEvent) {
+    // Prefer opening the decision directly when a decisionId is available and not yet completed.
+    if (onOpenDecision && ev.decisionId && !ev.completed) {
+      onOpenDecision(ev.decisionId);
+    } else if (onOpenTab && ev.actionTab) {
+      onOpenTab(ev.actionTab);
+    }
+  }
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
@@ -354,6 +378,9 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                 {list.map((ev, i) => {
                   const Icon = TYPE_ICON[ev.type];
                   const style = PRIORITY_STYLE[ev.priority];
+                  const isClickable =
+                    !ev.completed &&
+                    ((onOpenDecision && !!ev.decisionId) || (onOpenTab && !!ev.actionTab));
                   return (
                     <motion.div
                       key={ev.id}
@@ -364,9 +391,9 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                         "flex items-start gap-3 rounded-xl border px-3 py-2 transition",
                         style.border,
                         style.bg,
-                        onOpenTab && ev.actionTab ? "cursor-pointer hover:brightness-110" : "",
+                        isClickable ? "cursor-pointer hover:brightness-110" : "",
                       )}
-                      onClick={() => onOpenTab && ev.actionTab && onOpenTab(ev.actionTab)}
+                      onClick={() => handleEventClick(ev)}
                     >
                       <span className={cn("mt-0.5 shrink-0", style.icon)}>
                         <Icon className="h-3.5 w-3.5" />
@@ -407,7 +434,7 @@ export function ScenarioTimeline({ onOpenTab }: { onOpenTab?: (tab: string) => v
                             Urgent
                           </span>
                         )}
-                        {onOpenTab && ev.actionTab && (
+                        {isClickable && (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
                       </div>

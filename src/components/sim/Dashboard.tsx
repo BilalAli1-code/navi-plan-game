@@ -14,7 +14,7 @@ import { MetricMeter } from "./MetricMeter";
 import { DecisionSummary } from "./MissionControl";
 
 
-export function Dashboard() {
+export function Dashboard({ onOpenDecision }: { onOpenDecision?: (id: string) => void }) {
   const { state } = useSim();
   const m = state.metrics;
   const done = state.log.length;
@@ -39,7 +39,7 @@ export function Dashboard() {
         <MetricMeter label="Overall health" value={m.health} icon={<Activity className="h-4 w-4" />} />
       </div>
 
-      <DecisionSummary />
+      <DecisionSummary onOpenDecision={onOpenDecision} />
 
 
       {state.log.length > 0 && (

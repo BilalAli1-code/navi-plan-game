@@ -310,7 +310,13 @@ export function XPAchievements({ onOpenTab }: { onOpenTab?: (tab: string) => voi
 
 // ─── Decision Log Summary ────────────────────────────────────────────────────
 
-export function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function DecisionSummary({
+  onOpenTab,
+  onOpenDecision,
+}: {
+  onOpenTab?: (tab: string) => void;
+  onOpenDecision?: (id: string) => void;
+}) {
   const { state } = useSim();
   const correct = state.log.filter((l) => l.correct).length;
   const total = state.log.length;
@@ -381,7 +387,18 @@ export function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => vo
                   return (
                     <li
                       key={l.decisionId}
-                      className="flex items-center gap-2 rounded-lg bg-white/[0.03] px-2 py-1.5 text-[11px]"
+                      onClick={
+                        onOpenDecision
+                          ? (e) => {
+                              e.stopPropagation();
+                              onOpenDecision(l.decisionId);
+                            }
+                          : undefined
+                      }
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg bg-white/[0.03] px-2 py-1.5 text-[11px]",
+                        onOpenDecision && "cursor-pointer hover:bg-white/[0.06] transition",
+                      )}
                     >
                       <span
                         className={cn(
@@ -421,7 +438,13 @@ export function DecisionSummary({ onOpenTab }: { onOpenTab?: (tab: string) => vo
 
 // ─── Main MissionControl export ──────────────────────────────────────────────
 
-export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
+export function MissionControl({
+  onOpenTab,
+  onOpenDecision,
+}: {
+  onOpenTab?: (tab: string) => void;
+  onOpenDecision?: (id: string) => void;
+}) {
   const { state, days } = useSim();
 
   const totalCompletedMinutes = days.reduce((sum, d) => sum + (d.completed_minutes ?? 0), 0);
@@ -459,10 +482,13 @@ export function MissionControl({ onOpenTab }: { onOpenTab?: (tab: string) => voi
       </div>
 
       {/* 4. Daily Briefing — unified activity feed (emails, meetings, alerts) */}
-      <ScenarioTimeline onOpenTab={onOpenTab} />
+      <ScenarioTimeline onOpenTab={onOpenTab} onOpenDecision={onOpenDecision} />
 
       {/* 5. Maya's coaching recommendations */}
       <AIRecommendationsPanel />
+
+      {/* 6. Decision Performance — review recent decisions */}
+      <DecisionSummary onOpenTab={onOpenTab} onOpenDecision={onOpenDecision} />
 
 
     </div>

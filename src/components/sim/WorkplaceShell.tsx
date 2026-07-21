@@ -363,11 +363,16 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.18 }}
                 >
-                  {tab === "mission" && <MissionControl onOpenTab={(t) => setTab(t as Tab)} />}
-                  {tab === "dashboard" && <Dashboard />}
+                  {tab === "mission" && (
+                    <MissionControl
+                      onOpenTab={(t) => setTab(t as Tab)}
+                      onOpenDecision={openDecision}
+                    />
+                  )}
+                  {tab === "dashboard" && <Dashboard onOpenDecision={openDecision} />}
                   {tab === "mastery" && <CompetencyDashboard />}
                   {tab === "inbox" && <Inbox onOpenDecision={openDecision} />}
-                  {tab === "chat" && <ChatPanel />}
+                  {tab === "chat" && <ChatPanel onOpenDecision={openDecision} />}
                   {tab === "meetings" && <Meetings onOpenDecision={openDecision} />}
                   {tab === "documents" && <Documents />}
                   {tab === "stakeholders" && <Stakeholders />}
