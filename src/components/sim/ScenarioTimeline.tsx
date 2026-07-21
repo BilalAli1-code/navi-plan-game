@@ -11,6 +11,13 @@ import {
 import { useSim } from "@/lib/sim/store";
 import { getCaseRef, stakeholdersFor } from "@/lib/sim/cases";
 import { getDay } from "@/lib/sim/days";
+import {
+  visibleEmails,
+  visibleMeetings,
+  isEmailCompleted,
+  isMeetingCompleted,
+  pendingVisibleDecisions,
+} from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 type ScenarioEvent = {
