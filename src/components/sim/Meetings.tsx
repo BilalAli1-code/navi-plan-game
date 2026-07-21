@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { CalendarDays, Users, CheckCircle2 } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor } from "@/lib/sim/cases";
-import { visibleMeetings } from "@/lib/sim/visibility";
+import { visibleMeetings, isMeetingCompleted } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => void }) {
@@ -11,12 +11,7 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
   const stakes = stakeholdersFor(state.caseId);
   // Chapter-gated: only surface meetings whose gating chapter has opened.
   const meetings = useMemo(() => visibleMeetings(state), [state]);
-  const answered = useMemo(
-    () => new Set(state.log.map((l) => l.decisionId)),
-    [state.log],
-  );
-  const isCompleted = (m: (typeof meetings)[number]) =>
-    !!m.unlocksDecisionId && answered.has(m.unlocksDecisionId);
+  const isCompleted = (m: (typeof meetings)[number]) => isMeetingCompleted(state, m);
   const upcoming = meetings.filter((m) => !isCompleted(m));
   const past = meetings.filter((m) => isCompleted(m));
   const [openId, setOpenId] = useState<string | null>(meetings[0]?.id ?? null);
