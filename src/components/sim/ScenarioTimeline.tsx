@@ -106,21 +106,22 @@ function buildScenarioEvents(
     priority: "info",
   });
 
-  // Completion is derived from the single source of truth: state.log for
-  // decisions, and email.read for informational messages. Items whose action
-  // has been fulfilled surface in the "Completed" section, never as pending.
-  const answeredDecisionIds = new Set(state.log.map((l) => l.decisionId));
+  // Completion is derived from the single source of truth (visibility.ts):
+  // state.log for decisions, and email.read for informational messages.
+  // Items whose action has been fulfilled surface in the "Completed" section,
+  // never as pending. We only consider chapter-visible content so future-day
+  // items never leak into today's pending counts.
+  const chapterEmails = visibleEmails(state);
+  const chapterMeetings = visibleMeetings(state);
   const isEmailDone = (email: (typeof state.emails)[number]) =>
-    email.unlocksDecisionId
-      ? answeredDecisionIds.has(email.unlocksDecisionId)
-      : email.read;
+    isEmailCompleted(state, email);
   const isMeetingDone = (mtg: (typeof state.meetings)[number]) =>
-    !!mtg.unlocksDecisionId && answeredDecisionIds.has(mtg.unlocksDecisionId);
+    isMeetingCompleted(state, mtg);
 
   // Emails → show unread first, completed at the bottom in their own section.
   const times = ["8:15 AM", "8:47 AM", "9:12 AM", "9:38 AM"];
-  const pendingEmails = state.emails.filter((e) => !isEmailDone(e));
-  const completedEmails = state.emails.filter((e) => isEmailDone(e));
+  const pendingEmails = chapterEmails.filter((e) => !isEmailDone(e));
+  const completedEmails = chapterEmails.filter((e) => isEmailDone(e));
 
   pendingEmails.slice(0, 3).forEach((email, idx) => {
     const sender = stakes.find((s) => s.id === email.from);
