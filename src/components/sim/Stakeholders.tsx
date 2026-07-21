@@ -4,7 +4,6 @@ import { Archive, ArchiveRestore, MessageSquare, Send, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
-import { processAction } from "@/lib/sim/actions.functions";
 import {
   appendChatMessage,
   listAllConversations,
@@ -219,14 +218,13 @@ function StakeholderChat({
   chapter: number;
   onClose: () => void;
 }) {
-  const { state, runId } = useSim();
+  const { state, runId, dispatchLearnerAction } = useSim();
   const c = getCaseRef(state.caseId);
   const chapterDef = getChapter(chapter);
   const [messages, setMessages] = useState<{ role: "you" | "them"; text: string }[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
-  const recordAction = useServerFn(processAction);
   const persist = useServerFn(appendChatMessage);
   const loadHistory = useServerFn(listChatHistory);
   const loadMemories = useServerFn(listMemories);
@@ -355,16 +353,15 @@ function StakeholderChat({
 
       // First-class engine action: updates relationships, memories, scoring.
       if (runId) {
-        void recordAction({
-          data: {
-            action: {
-              actionType: "stakeholder_interaction",
-              runId,
-              sectionNumber: chapter,
-              stakeholderId: stakeholder.id,
-              interactionType: "chat",
-              learnerMessage: trimmed,
-            },
+        void dispatchLearnerAction({
+          type: "engine.action",
+          action: {
+            actionType: "stakeholder_interaction",
+            runId,
+            sectionNumber: chapter,
+            stakeholderId: stakeholder.id,
+            interactionType: "chat",
+            learnerMessage: trimmed,
           },
         }).catch(() => {});
       }

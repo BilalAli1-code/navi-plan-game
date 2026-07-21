@@ -4,7 +4,6 @@ import { Send, Hash, Search, Circle, Smile, Zap } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useSim } from "@/lib/sim/store";
 import { stakeholdersFor, getCaseRef } from "@/lib/sim/cases";
-import { processAction } from "@/lib/sim/actions.functions";
 import {
   appendChatMessage,
   listChatHistory,
@@ -144,7 +143,7 @@ function StakeholderChatThread({
   onBack: () => void;
   onOpenDecision?: (id: string) => void;
 }) {
-  const { state, runId } = useSim();
+  const { state, runId, dispatchLearnerAction } = useSim();
   const caseRef = getCaseRef(state.caseId);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -152,7 +151,6 @@ function StakeholderChatThread({
   const [loading, setLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const recordAction = useServerFn(processAction);
   const persist = useServerFn(appendChatMessage);
   const loadHistory = useServerFn(listChatHistory);
 
@@ -315,16 +313,15 @@ function StakeholderChatThread({
 
       // Record interaction for mastery tracking (fire-and-forget)
       if (runId) {
-        void recordAction({
-          data: {
-            action: {
-              actionType: "stakeholder_interaction",
-              runId,
-              sectionNumber: Math.max(1, Math.min(7, state.currentDay ?? 1)),
-              stakeholderId: stakeholder.id,
-              interactionType: "chat",
-              learnerMessage: text,
-            },
+        void dispatchLearnerAction({
+          type: "engine.action",
+          action: {
+            actionType: "stakeholder_interaction",
+            runId,
+            sectionNumber: Math.max(1, Math.min(7, state.currentDay ?? 1)),
+            stakeholderId: stakeholder.id,
+            interactionType: "chat",
+            learnerMessage: text,
           },
         }).catch(() => {});
       }

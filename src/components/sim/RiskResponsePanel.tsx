@@ -11,7 +11,7 @@ import {
   THREAT_STRATEGIES,
   type RiskStrategy,
 } from "@/lib/sim/actions";
-import { processAction, listActions } from "@/lib/sim/actions.functions";
+import { listActions } from "@/lib/sim/actions.functions";
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -32,10 +32,9 @@ const EMPTY: Draft = {
 };
 
 export function RiskResponsePanel({ dayNumber }: { dayNumber: number }) {
-  const { state, runId } = useSim();
+  const { state, runId, dispatchLearnerAction } = useSim();
   const risks = useMemo(() => risksFor(state.caseId), [state.caseId]);
   const dayRisks = risks.filter((r) => r.sectionNumber === dayNumber);
-  const processFn = useServerFn(processAction);
   const listFn = useServerFn(listActions);
   const qc = useQueryClient();
 
@@ -67,22 +66,21 @@ export function RiskResponsePanel({ dayNumber }: { dayNumber: number }) {
             completed={responded.has(`risk:${risk.id}`)}
             onSubmit={async (draft) => {
               if (!runId) return { ok: false, message: "Not ready" } as const;
-              const res = await processFn({
-                data: {
-                  action: {
-                    actionType: "risk_response",
-                    runId,
-                    sectionNumber: dayNumber,
-                    riskId: risk.id,
-                    riskType: risk.riskType,
-                    responseStrategy: draft.responseStrategy as string,
-                    ownerAssigned: draft.ownerAssigned || undefined,
-                    contingencyDefined: draft.contingencyDefined,
-                    reasoning: draft.reasoning || undefined,
-                    residualRisk: draft.residualRisk,
-                  },
+              const res = (await dispatchLearnerAction({
+                type: "engine.action",
+                action: {
+                  actionType: "risk_response",
+                  runId,
+                  sectionNumber: dayNumber,
+                  riskId: risk.id,
+                  riskType: risk.riskType,
+                  responseStrategy: draft.responseStrategy as string,
+                  ownerAssigned: draft.ownerAssigned || undefined,
+                  contingencyDefined: draft.contingencyDefined,
+                  reasoning: draft.reasoning || undefined,
+                  residualRisk: draft.residualRisk,
                 },
-              });
+              })) as { ok: boolean; quality?: string | null; message?: string | null };
               await qc.invalidateQueries({ queryKey: ["sim-actions", runId] });
               return res;
             }}

@@ -4,7 +4,7 @@ import { CheckCircle2, Loader2, Sparkles, Swords } from "lucide-react";
 import { useSim } from "@/lib/sim/store";
 import { conflictsFor, type ConflictCase } from "@/lib/sim/risks";
 import { CONFLICT_TECHNIQUES, type ConflictTechnique } from "@/lib/sim/actions";
-import { processAction, listActions } from "@/lib/sim/actions.functions";
+import { listActions } from "@/lib/sim/actions.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type Draft = {
@@ -13,10 +13,9 @@ type Draft = {
 };
 
 export function ConflictPanel({ dayNumber }: { dayNumber: number }) {
-  const { state, runId } = useSim();
+  const { state, runId, dispatchLearnerAction } = useSim();
   const conflicts = useMemo(() => conflictsFor(state.caseId), [state.caseId]);
   const dayConflicts = conflicts.filter((c) => c.sectionNumber === dayNumber);
-  const processFn = useServerFn(processAction);
   const listFn = useServerFn(listActions);
   const qc = useQueryClient();
 
@@ -48,20 +47,19 @@ export function ConflictPanel({ dayNumber }: { dayNumber: number }) {
             completed={responded.has(`conflict:${c.id}`)}
             onSubmit={async (draft) => {
               if (!runId) return { ok: false };
-              const res = await processFn({
-                data: {
-                  action: {
-                    actionType: "conflict_management",
-                    runId,
-                    sectionNumber: dayNumber,
-                    conflictId: c.id,
-                    parties: c.parties,
-                    conflictCause: c.cause,
-                    selectedTechnique: draft.selectedTechnique as ConflictTechnique,
-                    reasoning: draft.reasoning || undefined,
-                  },
+              const res = (await dispatchLearnerAction({
+                type: "engine.action",
+                action: {
+                  actionType: "conflict_management",
+                  runId,
+                  sectionNumber: dayNumber,
+                  conflictId: c.id,
+                  parties: c.parties,
+                  conflictCause: c.cause,
+                  selectedTechnique: draft.selectedTechnique as ConflictTechnique,
+                  reasoning: draft.reasoning || undefined,
                 },
-              });
+              })) as { ok: boolean; quality?: string | null; message?: string | null };
               await qc.invalidateQueries({ queryKey: ["sim-actions", runId] });
               return res;
             }}
