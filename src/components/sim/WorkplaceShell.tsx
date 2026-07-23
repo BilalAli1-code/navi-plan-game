@@ -306,7 +306,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             {allTabs.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => selectTab(t.id)}
                 className={cn(
                   "flex shrink-0 items-center gap-1 rounded-xl px-2.5 py-2 text-[11px]",
                   tab === t.id ? "bg-accent text-accent-foreground" : "text-foreground/65",
