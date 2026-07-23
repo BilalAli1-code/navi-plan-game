@@ -212,7 +212,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   {group.items.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => setTab(item.id)}
+                      onClick={() => selectTab(item.id)}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] transition",
                         tab === item.id
