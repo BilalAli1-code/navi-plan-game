@@ -325,6 +325,13 @@ function StakeholderChatThread({
           },
         }).catch(() => {});
       }
+
+      // Sending a chat message is a first-class workplace activity for the
+      // current chapter — flip the canonical `workplace` flag.
+      void dispatchLearnerAction({
+        type: "chat.send",
+        stakeholderId: stakeholder.id,
+      }).catch(() => {});
     }
   }
 
