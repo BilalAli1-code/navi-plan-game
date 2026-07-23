@@ -6,6 +6,7 @@ import {
   DAY_ACTIVITY_MINUTES,
   REQUIRED_ACTIVITIES,
   TOTAL_DAYS,
+  TOTAL_MINUTES,
   getDay,
 } from "@/lib/sim/days";
 import { cn } from "@/lib/utils";
