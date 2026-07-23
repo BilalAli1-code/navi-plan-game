@@ -65,9 +65,18 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     saveStatus,
     hydrating,
     projection,
+    dispatchLearnerAction,
   } = useSim();
   const c = getCaseRef(state.caseId);
   const [tab, setTab] = useState<Tab>("mission");
+
+  function selectTab(next: Tab) {
+    setTab(next);
+    // Opening a Learning surface counts as completing the day's learning activity.
+    if (next === "mastery" || next === "dashboard") {
+      void dispatchLearnerAction({ type: "tab.open.learning" }).catch(() => {});
+    }
+  }
   const navigate = useNavigate();
 
   // Chapter-gated: only count emails available in the current chapter so the
