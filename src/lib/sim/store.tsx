@@ -110,6 +110,9 @@ type LearnerAction =
   | { type: "decision.submit"; option: DecisionOption; decisionId?: string }
   | { type: "tailoring.submit"; answers: TailoringAnswers; approach: DeliveryApproach }
   | { type: "email.read"; id: string }
+  | { type: "meeting.open"; id: string }
+  | { type: "chat.send"; stakeholderId: string }
+  | { type: "tab.open.learning" }
   | { type: "activity.complete"; day: number; activity: DayActivityKey }
   | { type: "reflection.save"; day: number; payload: { whatWentWell?: string; whatWasChallenging?: string; whatWouldChange?: string; keyLearning?: string } }
   | { type: "day.goTo"; day: number }
