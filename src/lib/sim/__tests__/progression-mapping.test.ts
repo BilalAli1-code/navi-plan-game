@@ -92,8 +92,21 @@ describe("applyActivityCompletion — flag writes", () => {
 });
 
 describe("Day 1 end-to-end completion", () => {
+  // Day 1's ChapterAdvanceRule additionally requires Charter + Stakeholder
+  // Register outputs (Blueprint §7.2). Seed them so the write-side test
+  // exercises the full contract and not just activity flags.
+  function withDay1Outputs(state: SimState): SimState {
+    return {
+      ...state,
+      documents: [
+        { id: "d1", title: "Project Charter", kind: "Charter" as SimState["documents"][number]["kind"], contentMd: "", createdAt: Date.now() },
+        { id: "d2", title: "Stakeholder Register", kind: "Stakeholder Register" as SimState["documents"][number]["kind"], contentMd: "", createdAt: Date.now() },
+      ],
+    };
+  }
+
   it("completing every required Day 1 action yields 100% and completes the chapter", () => {
-    let state = baseState();
+    let state = withDay1Outputs(baseState());
     for (const a of REQUIRED_ACTIVITIES) {
       state = applyActivityCompletion(state, 1, a);
     }
@@ -107,22 +120,23 @@ describe("Day 1 end-to-end completion", () => {
   });
 
   it("advances currentDay to the next open chapter once Day 1 finishes", () => {
-    let state = baseState();
+    let state = withDay1Outputs(baseState());
     for (const a of REQUIRED_ACTIVITIES) {
       state = applyActivityCompletion(state, 1, a);
     }
-    // applyActivityCompletion auto-advances currentDay when the current day
-    // completes; the final call must land us on Day 2.
     expect(state.currentDay).toBe(2);
   });
 
   it("rehydrating from the same chapterProgress preserves 100% completion", () => {
-    let state = baseState();
+    let state = withDay1Outputs(baseState());
     for (const a of REQUIRED_ACTIVITIES) {
       state = applyActivityCompletion(state, 1, a);
     }
-    // Simulate refresh: rebuild snapshot from the persisted chapterProgress.
-    const rehydrated: SimState = { ...baseState(), chapterProgress: state.chapterProgress, currentDay: state.currentDay };
+    const rehydrated: SimState = {
+      ...withDay1Outputs(baseState()),
+      chapterProgress: state.chapterProgress,
+      currentDay: state.currentDay,
+    };
     const snap = buildProgressionSnapshot(rehydrated);
     const day1 = snap.chapters.find((c) => c.dayNumber === 1)!;
     expect(day1.completionPercentage).toBe(100);
