@@ -7,7 +7,7 @@ import { visibleMeetings, isMeetingCompleted } from "@/lib/sim/visibility";
 import { cn } from "@/lib/utils";
 
 export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => void }) {
-  const { state } = useSim();
+  const { state, dispatchLearnerAction } = useSim();
   const stakes = stakeholdersFor(state.caseId);
   // Chapter-gated: only surface meetings whose gating chapter has opened.
   const meetings = useMemo(() => visibleMeetings(state), [state]);
@@ -17,6 +17,12 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
   const [openId, setOpenId] = useState<string | null>(meetings[0]?.id ?? null);
   const active = meetings.find((m) => m.id === openId) ?? null;
   const activeDone = active ? isCompleted(active) : false;
+
+  function selectMeeting(id: string) {
+    setOpenId(id);
+    // Attending a meeting is a first-class workplace activity.
+    void dispatchLearnerAction({ type: "meeting.open", id }).catch(() => {});
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(280px,340px)_1fr]">
@@ -37,7 +43,7 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </li>
           )}
           {upcoming.map((m) => (
-            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} />
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={selectMeeting} />
           ))}
           {past.length > 0 && (
             <li className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -45,7 +51,7 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </li>
           )}
           {past.map((m) => (
-            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} done />
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={selectMeeting} done />
           ))}
         </ul>
       </div>

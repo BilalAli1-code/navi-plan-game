@@ -110,6 +110,9 @@ type LearnerAction =
   | { type: "decision.submit"; option: DecisionOption; decisionId?: string }
   | { type: "tailoring.submit"; answers: TailoringAnswers; approach: DeliveryApproach }
   | { type: "email.read"; id: string }
+  | { type: "meeting.open"; id: string }
+  | { type: "chat.send"; stakeholderId: string }
+  | { type: "tab.open.learning" }
   | { type: "activity.complete"; day: number; activity: DayActivityKey }
   | { type: "reflection.save"; day: number; payload: { whatWentWell?: string; whatWasChallenging?: string; whatWouldChange?: string; keyLearning?: string } }
   | { type: "day.goTo"; day: number }
@@ -635,13 +638,30 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
     async (action: LearnerAction): Promise<LearnerDispatchResult> => {
       switch (action.type) {
         case "decision.submit":
+          // submitDecision internally sets the `decisions` flag.
           submitDecision(action.option, action.decisionId);
           return { ok: true as const };
         case "tailoring.submit":
           submitTailoring(action.answers, action.approach);
           return { ok: true as const };
         case "email.read":
+          // markEmailRead internally sets the `workplace` flag.
           markEmailRead(action.id);
+          return { ok: true as const };
+        case "meeting.open":
+          // Attending a meeting is a first-class workplace activity, even
+          // when the meeting is informational and has no gated decision.
+          await completeActivity(state.currentDay, "workplace");
+          return { ok: true as const };
+        case "chat.send":
+          // Sending a message in Team Chat or Stakeholder Chat counts as
+          // a workplace interaction for the current chapter.
+          await completeActivity(state.currentDay, "workplace");
+          return { ok: true as const };
+        case "tab.open.learning":
+          // Opening a Learning surface (Project Metrics / PMBOK Mastery)
+          // completes the `learning` activity for the current chapter.
+          await completeActivity(state.currentDay, "learning");
           return { ok: true as const };
         case "activity.complete":
           await completeActivity(action.day, action.activity);
@@ -665,6 +685,7 @@ export function SimProvider({ caseId, children }: { caseId: string; children: Re
       }
     },
     [
+      state.currentDay,
       submitDecision,
       submitTailoring,
       markEmailRead,

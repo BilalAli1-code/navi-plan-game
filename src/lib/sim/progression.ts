@@ -2,6 +2,54 @@ import { canAdvanceChapter } from "./chapter-contract";
 import { DAILY_MINUTES, DAY_PLAN, REQUIRED_ACTIVITIES, TOTAL_DAYS, type DayActivityKey } from "./days";
 import { SIM_PHASE_ORDER, type ChapterActivityState, type ChapterProgressState, type SimPhase, type SimState } from "./types";
 
+/**
+ * Canonical mapping from LearnerAction kind → chapter activity flag.
+ *
+ * Single source of truth for the write-side progression contract: every UI
+ * surface (Inbox, Meetings, Chat, Decisions, Practice, Learning, Briefing,
+ * Reflection) MUST route completion through `dispatchLearnerAction` with one
+ * of these kinds so the correct flag is set on `chapterProgress.activities`.
+ *
+ * `null` means the action does not by itself complete an activity — either
+ * because the activity is passed explicitly (`activity.complete`) or because
+ * the action is orthogonal to Day completion (`day.goTo`, `tailoring.submit`,
+ * `engine.action`).
+ */
+export type LearnerActionKind =
+  | "decision.submit"
+  | "email.read"
+  | "meeting.open"
+  | "chat.send"
+  | "tab.open.learning"
+  | "briefing.acknowledge"
+  | "practice.complete"
+  | "reflection.save"
+  | "activity.complete"
+  | "day.goTo"
+  | "tailoring.submit"
+  | "engine.action";
+
+export function activityForActionKind(kind: LearnerActionKind): DayActivityKey | null {
+  switch (kind) {
+    case "decision.submit":
+      return "decisions";
+    case "email.read":
+    case "meeting.open":
+    case "chat.send":
+      return "workplace";
+    case "tab.open.learning":
+      return "learning";
+    case "briefing.acknowledge":
+      return "briefing";
+    case "practice.complete":
+      return "practice";
+    case "reflection.save":
+      return "reflection";
+    default:
+      return null;
+  }
+}
+
 export type ChapterProjection = {
   dayNumber: number;
   title: string;

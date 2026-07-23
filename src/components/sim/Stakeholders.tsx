@@ -365,6 +365,12 @@ function StakeholderChat({
           },
         }).catch(() => {});
       }
+
+      // Flip the canonical `workplace` activity flag for this chapter.
+      void dispatchLearnerAction({
+        type: "chat.send",
+        stakeholderId: stakeholder.id,
+      }).catch(() => {});
     }
   }
 

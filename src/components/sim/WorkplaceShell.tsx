@@ -65,9 +65,18 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
     saveStatus,
     hydrating,
     projection,
+    dispatchLearnerAction,
   } = useSim();
   const c = getCaseRef(state.caseId);
   const [tab, setTab] = useState<Tab>("mission");
+
+  function selectTab(next: Tab) {
+    setTab(next);
+    // Opening a Learning surface counts as completing the day's learning activity.
+    if (next === "mastery" || next === "dashboard") {
+      void dispatchLearnerAction({ type: "tab.open.learning" }).catch(() => {});
+    }
+  }
   const navigate = useNavigate();
 
   // Chapter-gated: only count emails available in the current chapter so the
@@ -203,7 +212,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
                   {group.items.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => setTab(item.id)}
+                      onClick={() => selectTab(item.id)}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] transition",
                         tab === item.id
@@ -297,7 +306,7 @@ export function WorkplaceShell({ mayaSlot }: { mayaSlot?: ReactNode }) {
             {allTabs.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => selectTab(t.id)}
                 className={cn(
                   "flex shrink-0 items-center gap-1 rounded-xl px-2.5 py-2 text-[11px]",
                   tab === t.id ? "bg-accent text-accent-foreground" : "text-foreground/65",
