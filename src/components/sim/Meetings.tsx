@@ -43,7 +43,7 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </li>
           )}
           {upcoming.map((m) => (
-            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} />
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={selectMeeting} />
           ))}
           {past.length > 0 && (
             <li className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -51,7 +51,7 @@ export function Meetings({ onOpenDecision }: { onOpenDecision: (id: string) => v
             </li>
           )}
           {past.map((m) => (
-            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={setOpenId} done />
+            <MeetingRow key={m.id} meeting={m} openId={openId} onSelect={selectMeeting} done />
           ))}
         </ul>
       </div>
