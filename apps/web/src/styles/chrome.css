@@ -1,0 +1,81 @@
+/**
+ * Shared presentational chrome (BC-012 legacy visual transfer).
+ *
+ * Element-level styling for the workplace surfaces so every page inherits the
+ * Navy Trust card / list / control language without changing page markup,
+ * query ownership, or any authoritative behavior.
+ */
+
+.workplace-content > main > section,
+.workplace-content > main > form > section {
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  border-radius: var(--ps-radius);
+  padding: 1.1rem 1.15rem;
+  box-shadow: var(--ps-shadow);
+}
+
+.workplace-content > main > section > h2:first-child {
+  margin-top: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.workplace-content h1 {
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+}
+
+.workplace-content p[role="status"],
+.workplace-content p[role="alert"] {
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  border-left: 3px solid var(--ps-primary);
+  border-radius: var(--ps-radius-sm);
+  padding: 0.75rem 0.9rem;
+}
+
+.workplace-content p[role="alert"] {
+  border-left-color: var(--ps-destructive);
+}
+
+.workplace-content button {
+  font: inherit;
+  min-height: 44px;
+  border-radius: var(--ps-radius-sm);
+  border: 1px solid var(--ps-border-strong);
+  background: var(--ps-primary-soft);
+  color: var(--ps-foreground);
+  padding: 0.5rem 0.95rem;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.workplace-content button:hover:not(:disabled) {
+  background: var(--ps-primary);
+  border-color: var(--ps-primary);
+  color: var(--ps-primary-foreground);
+}
+
+.workplace-content button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.workplace-content dt {
+  color: var(--ps-muted-foreground);
+  font-size: 0.85rem;
+}
+
+.workplace-content small,
+.workplace-content .muted {
+  color: var(--ps-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workplace-content * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

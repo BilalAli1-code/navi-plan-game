@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .mc-header h1 {
@@ -34,8 +34,8 @@
 }
 
 .mc-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .mc-count-unavailable {
-  color: #64748b;
+  color: var(--ps-muted-foreground);
   font-style: italic;
 }
 
@@ -100,7 +100,7 @@
 }
 
 .mc-nav button {
-  border: 1px solid #0f766e;
+  border: 1px solid var(--ps-primary);
   background: transparent;
   color: inherit;
   border-radius: 0.35rem;
@@ -123,7 +123,7 @@
 
 .mc-chapter-actions button {
   min-height: 44px;
-  border: 1px solid #0f766e;
+  border: 1px solid var(--ps-primary);
   background: transparent;
   color: inherit;
   border-radius: 0.35rem;
@@ -139,17 +139,17 @@
 .mc-chapter-hint {
   margin: 0;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ps-muted-foreground);
 }
 
 .mc-action-error {
   margin: 0 0 0.5rem;
-  color: #b91c1c;
+  color: var(--ps-destructive);
 }
 
 .mc-action-status {
   margin: 0 0 0.5rem;
-  color: #0f766e;
+  color: var(--ps-primary);
   font-size: 0.875rem;
 }
 

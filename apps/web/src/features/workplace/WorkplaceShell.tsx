@@ -24,7 +24,7 @@ import {
 } from "./routes";
 import "./WorkplaceShell.css";
 
-const NARROW_QUERY = "(max-width: 719px)";
+const NARROW_QUERY = "(max-width: 899px)";
 
 /**
  * Run-scoped Unified Workplace Shell (PS-ROADMAP-013).
@@ -96,109 +96,114 @@ export function WorkplaceShell() {
 
   return (
     <div className="workplace-shell" data-testid="workplace-shell">
-      <div className="workplace-context">
-        <div>
-          <p className="workplace-identity">Workplace</p>
-          <p className="workplace-run" data-testid="workplace-run-id">
-            Run {simulationRunId}
-          </p>
+      <aside className="workplace-sidebar">
+        <div className="workplace-context">
+          <div>
+            <p className="workplace-identity">ProjectSim</p>
+            <p className="workplace-run" data-testid="workplace-run-id">
+              Run {simulationRunId}
+            </p>
+          </div>
+          <Link className="workplace-home" to="/">
+            Home
+          </Link>
         </div>
-        <Link className="workplace-home" to="/">
-          Home
-        </Link>
-      </div>
 
-      <div className="workplace-nav-bar">
-        <button
-          type="button"
-          ref={menuToggleRef}
-          className="workplace-menu-toggle"
-          aria-expanded={menuOpen}
-          aria-controls={navListId}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          Workplace menu
-        </button>
-        <nav aria-label="Workplace">
-          <ul
-            id={navListId}
-            className="workplace-nav-list"
-            data-testid="workplace-nav"
-            hidden={navHidden}
+        <div className="workplace-nav-bar">
+          <button
+            type="button"
+            ref={menuToggleRef}
+            className="workplace-menu-toggle"
+            aria-expanded={menuOpen}
+            aria-controls={navListId}
+            onClick={() => setMenuOpen((open) => !open)}
           >
-            <li>
-              <NavLink to={workplaceMissionControlPath(simulationRunId)} end>
-                Mission Control
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceInboxPath(simulationRunId)} end>
-                Inbox
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceMeetingsPath(simulationRunId)} end>
-                Meetings
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceStakeholdersPath(simulationRunId)} end>
-                Stakeholders
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceDocumentsPath(simulationRunId)} end>
-                Documents
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceNotificationsPath(simulationRunId)} end>
-                Notifications
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceActivitiesPath(simulationRunId)} end>
-                Activities
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceCompletedHistoryPath(simulationRunId)} end>
-                Completed History
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceDecisionLogPath(simulationRunId)} end>
-                Decision Log
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplacePerformancePath(simulationRunId)} end>
-                Performance
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceProgressPath(simulationRunId)} end>
-                Progress
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceAchievementsPath(simulationRunId)} end>
-                Achievements
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceMasteryPath(simulationRunId)} end>
-                Mastery
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={workplaceCoachingPath(simulationRunId)} end>
-                Coaching
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-      </div>
+            Workplace menu
+          </button>
+          <nav aria-label="Workplace">
+            <ul
+              id={navListId}
+              className="workplace-nav-list"
+              data-testid="workplace-nav"
+              hidden={navHidden}
+            >
+              <li>
+                <NavLink to={workplaceMissionControlPath(simulationRunId)} end>
+                  Mission Control
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceInboxPath(simulationRunId)} end>
+                  Inbox
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceMeetingsPath(simulationRunId)} end>
+                  Meetings
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceStakeholdersPath(simulationRunId)} end>
+                  Stakeholders
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceDocumentsPath(simulationRunId)} end>
+                  Documents
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceNotificationsPath(simulationRunId)} end>
+                  Notifications
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceActivitiesPath(simulationRunId)} end>
+                  Activities
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to={workplaceCompletedHistoryPath(simulationRunId)}
+                  end
+                >
+                  Completed History
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceDecisionLogPath(simulationRunId)} end>
+                  Decision Log
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplacePerformancePath(simulationRunId)} end>
+                  Performance
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceProgressPath(simulationRunId)} end>
+                  Progress
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceAchievementsPath(simulationRunId)} end>
+                  Achievements
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceMasteryPath(simulationRunId)} end>
+                  Mastery
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={workplaceCoachingPath(simulationRunId)} end>
+                  Coaching
+                </NavLink>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
 
       <div
         className="workplace-content"

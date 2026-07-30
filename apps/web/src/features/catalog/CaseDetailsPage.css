@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .case-details-header h1 {
@@ -43,7 +43,7 @@
 }
 
 .case-details-nav button {
-  border: 1px solid #0f766e;
+  border: 1px solid var(--ps-primary);
   background: transparent;
   color: inherit;
   border-radius: 0.35rem;
@@ -97,7 +97,7 @@
   align-items: center;
   min-height: 1.75rem;
   padding: 0.15rem 0.55rem;
-  border: 1px solid #334155;
+  border: 1px solid var(--ps-surface-strong);
   border-radius: 0.35rem;
   font-size: 0.8rem;
   text-transform: capitalize;
@@ -108,7 +108,7 @@
   flex-direction: column;
   gap: 1rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--ps-surface-strong);
 }
 
 .case-start-panel h2 {
@@ -118,7 +118,7 @@
 
 .case-start-hint {
   margin: 0;
-  color: #94a3b8;
+  color: var(--ps-muted-foreground);
 }
 
 .case-level-options {
@@ -168,12 +168,12 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  color: #0f172a;
-  background: #5eead4;
+  color: var(--ps-background);
+  background: var(--ps-primary);
 }
 
 .case-start-actions button:hover:not(:disabled) {
-  background: #99f6e4;
+  background: var(--ps-primary);
 }
 
 .case-start-actions button:disabled {
@@ -183,7 +183,7 @@
 
 .case-start-error {
   margin: 0;
-  color: #fca5a5;
+  color: var(--ps-destructive);
 }
 
 @media (min-width: 720px) {

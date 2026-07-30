@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .inbox-header h1 {
@@ -35,8 +35,8 @@
 }
 
 .inbox-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -54,7 +54,7 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.9rem 0;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--ps-border);
 }
 
 .inbox-message:first-child {

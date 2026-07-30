@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #1d4ed8;
+  color: var(--ps-primary);
 }
 
 .performance-header h1 {
@@ -35,8 +35,8 @@
 }
 
 .performance-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -55,6 +55,6 @@
 
 .performance-counts li {
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--ps-border);
   border-radius: 0.5rem;
 }
