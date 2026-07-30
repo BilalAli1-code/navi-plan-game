@@ -1,0 +1,133 @@
+.activities-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  /* Explicit dark text: global shell uses a light foreground on dark body. */
+  color: #0f172a;
+}
+
+.activities-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+.activities-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.activities-subtitle,
+.activities-freshness,
+.activities-stale,
+.activities-capabilities,
+.activities-empty {
+  margin: 0;
+  color: #334155;
+}
+
+.activities-freshness {
+  font-size: 0.8125rem;
+  color: #15803d;
+}
+
+.activities-stale {
+  font-size: 0.8125rem;
+  color: #b45309;
+}
+
+.activities-run-id {
+  font-family: monospace;
+  font-size: 0.875em;
+  color: #475569;
+}
+
+.activities-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activities-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  color: #0f172a;
+}
+
+.activities-item-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.activities-item-summary {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #334155;
+}
+
+.activities-item-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #334155;
+}
+
+.activities-item-meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.activities-capabilities {
+  font-size: 0.8125rem;
+}
+
+.activities-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.activities-item-actions button {
+  min-height: 44px;
+  border: 1px solid #1d4ed8;
+  background: transparent;
+  color: #1d4ed8;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.activities-item-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.activities-action-error {
+  margin: 0;
+  color: #b91c1c;
+}
+
+.activities-action-status {
+  margin: 0;
+  color: #15803d;
+  font-size: 0.875rem;
+}

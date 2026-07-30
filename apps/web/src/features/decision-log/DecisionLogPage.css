@@ -1,0 +1,116 @@
+.dlog-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.dlog-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #0f766e;
+}
+
+.dlog-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.dlog-subtitle,
+.dlog-freshness,
+.dlog-stale,
+.dlog-empty {
+  margin: 0;
+}
+
+.dlog-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dlog-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.dlog-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dlog-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid #d1d5db;
+}
+
+.dlog-entry:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.dlog-entry-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dlog-entry-meta,
+.dlog-entry-option,
+.dlog-entry-outcome,
+.dlog-entry-status {
+  margin: 0;
+}
+
+.dlog-entry-status {
+  text-transform: capitalize;
+}
+
+.dlog-nav a,
+.dlog-nav button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dlog-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.dlog-nav button {
+  border: 1px solid #0f766e;
+  background: transparent;
+  color: inherit;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+@media (min-width: 720px) {
+  .dlog-page {
+    padding: 2.5rem 1.5rem 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlog-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

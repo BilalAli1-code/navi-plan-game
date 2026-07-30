@@ -1,0 +1,65 @@
+.learner-progression-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.learner-progression-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+.learner-progression-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.learner-progression-subtitle,
+.learner-progression-freshness,
+.learner-progression-stale,
+.learner-progression-run-id,
+.learner-progression-empty {
+  margin: 0;
+}
+
+.learner-progression-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.learner-progression-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.learner-progression-chapters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.learner-progression-chapter {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.learner-progression-chapter h3 {
+  margin: 0 0 0.5rem;
+}
+
+.learner-progression-requirements {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}

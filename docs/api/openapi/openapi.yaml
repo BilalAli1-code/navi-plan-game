@@ -1,0 +1,2797 @@
+openapi: 3.1.0
+info:
+  title: ProjectSim 2.0 Simulation API
+  version: 1.0.0
+  description: |
+    Public routes for canonical SimulationProjection reads, Mission Control
+    projection reads (PS-ROADMAP-011), and SubmitDecision commands. Routes
+    delegate to Application services; they do not expose database rows, outbox,
+    or hidden content.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /simulation-runs/{simulationRunId}/projection:
+    get:
+      operationId: getSimulationProjection
+      summary: Get canonical SimulationProjection
+      description: |
+        Authenticated read of the learner-safe SimulationProjection via
+        GetSimulationProjection. Includes freshness and sourceAggregateVersion
+        for command synchronization. Stale/rebuild_failed projections must not
+        be used for SubmitDecision.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Canonical projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectionApiResponse"
+              examples:
+                current:
+                  value:
+                    data:
+                      projectionType: simulation
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+                      run:
+                        simulationRunId: run_1
+                        status: active
+                        startedAt: "2026-07-25T11:00:00.000Z"
+                        pausedAt: null
+                        completedAt: null
+                        archivedAt: null
+                        currentChapterId: null
+                        currentDayId: null
+                        contentPackageVersionId: cpv_1
+                        sourceStateVersion: 0
+                      project:
+                        status: initiated
+                        sourceStateVersion: 0
+                        metrics:
+                          - metricKey: budget
+                            value: 100
+                            unit: USD
+                      availableDecisions:
+                        - decisionDefinitionId: decision_1
+                          title: Scaffold Decision
+                          prompt: Choose how to proceed.
+                          description: Deterministic fixture decision
+                          status: available
+                          expiresAt: null
+                          authoredOrder: 0
+                          options:
+                            - optionId: option_a
+                              label: Conservative option
+                              authoredOrder: 0
+                            - optionId: option_b
+                              label: Balanced option
+                              authoredOrder: 1
+                      decisionHistory: []
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/mission-control:
+    get:
+      operationId: getMissionControlProjection
+      summary: Get learner-facing Mission Control projection
+      description: |
+        Authenticated read of the learner-safe Mission Control projection via
+        GetMissionControlProjection. Binds projection type `mission_control`
+        internally. Clients cannot select projection type, tenant, schema
+        version, or force rebuild. Read-only; Decision mutation remains on
+        SubmitDecision.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Mission Control projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionControlApiResponse"
+              examples:
+                current:
+                  value:
+                    data:
+                      projectionType: mission_control
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+                      runSummary:
+                        simulationRunId: run_1
+                        status: active
+                        startedAt: "2026-07-25T11:00:00.000Z"
+                        completedAt: null
+                        currentChapterId: null
+                        currentDayId: null
+                        contentPackageVersionId: cpv_1
+                      projectSummary:
+                        status: initiated
+                        metrics:
+                          - metricKey: budget
+                            value: 100
+                            unit: USD
+                      counts:
+                        pendingDecisions:
+                          availability: available
+                          count: 1
+                        unreadActionRequiredInboxItems:
+                          availability: unavailable
+                          reason: channel_not_implemented
+                        upcomingMeetings:
+                          availability: unavailable
+                          reason: channel_not_implemented
+                      nextRecommendedActions:
+                        - actionId: decision:decision_1
+                          label: Scaffold Decision
+                          targetKind: decision
+                          targetId: decision_1
+                          authoredOrder: 0
+                      recentRevealedOutcome: null
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/decision-log:
+    get:
+      operationId: getDecisionLogProjection
+      summary: Get learner-facing Decision Log projection
+      description: |
+        Authenticated read of the learner-safe Decision Log projection via
+        GetDecisionLogProjection. Binds projection type `decision_log`
+        internally. Clients cannot select projection type, tenant, schema
+        version, or force rebuild. Empty `entries` means no completed
+        learner-visible decisions yet (available empty), not unavailable.
+        Read-only; Decision mutation remains on SubmitDecision.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Decision Log projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionLogApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: decision_log
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+                      entries: []
+                      summary:
+                        totalEntries: 0
+                        isEmpty: true
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-25T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: decision_log
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 1
+                      generatedAt: "2026-07-25T12:05:00.000Z"
+                      entries:
+                        - entryId: drec_1
+                          decisionRecordId: drec_1
+                          decisionDefinitionId: decision_1
+                          sequence: 1
+                          decidedAt: "2026-07-25T12:04:00.000Z"
+                          title: Stakeholder alignment
+                          selectedOption:
+                            optionId: option_a
+                            label: Align now
+                          status: resolved
+                          revealedOutcome:
+                            summary: Stakeholders accepted the revised plan.
+                      summary:
+                        totalEntries: 1
+                        isEmpty: false
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-25T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/inbox:
+    get:
+      operationId: getInboxProjection
+      summary: Get learner-facing Inbox projection
+      description: |
+        Authenticated read of the learner-safe Inbox projection via
+        GetInboxProjection. Binds projection type `inbox` internally. Clients
+        cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `messages` means no delivered learner-visible messages yet
+        (available empty), not unavailable. Messages are newest-first by
+        authoritative deliverySequence. Read/archive/reply/compose remain
+        unsupported. GET is side-effect free and does not mark messages read.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Inbox projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: inbox
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      messages: []
+                      summary:
+                        totalMessages: 0
+                        isEmpty: true
+                      capabilities:
+                        readState: unsupported
+                        archive: unsupported
+                        reply: unsupported
+                        compose: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: inbox
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 1
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+                      messages:
+                        - messageId: learner_message:consequence_1
+                          definitionId: msg_def_1
+                          definitionVersion: "1"
+                          sequence: 1
+                          deliveredAt: "2026-07-26T12:04:00.000Z"
+                          sender:
+                            senderId: stakeholder_sponsor
+                            displayName: Alex Sponsor
+                            roleLabel: Executive Sponsor
+                          subject: Project update
+                          preview: The sponsor shared an update on the timeline.
+                          body: The sponsor shared an update on the timeline.
+                      summary:
+                        totalMessages: 1
+                        isEmpty: false
+                      capabilities:
+                        readState: unsupported
+                        archive: unsupported
+                        reply: unsupported
+                        compose: unsupported
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/meetings:
+    get:
+      operationId: getMeetingsProjection
+      summary: Get learner-facing Meetings projection
+      description: |
+        Authenticated read of the learner-safe Meetings projection via
+        GetMeetingsProjection. Binds projection type `meetings` internally. Clients
+        cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `meetings` means no authoritative Meeting occurrences yet
+        (available empty), not unavailable. Items are ordered ascending by
+        authoritative scheduleSequence. Start/complete/cancel/reschedule remain
+        unsupported. GET is side-effect free and does not mutate Meeting lifecycle.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Meetings projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingsApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: meetings
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      meetings: []
+                      summary:
+                        totalMeetings: 0
+                        upcomingCount: 0
+                        activeCount: 0
+                        completedCount: 0
+                        cancelledCount: 0
+                        isEmpty: true
+                      capabilities:
+                        start: unsupported
+                        complete: unsupported
+                        cancel: unsupported
+                        reschedule: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: meetings
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 1
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+                      meetings:
+                        - meetingOccurrenceId: meeting_occurrence:meeting_1
+                          meetingDefinitionId: meeting_def_1
+                          meetingDefinitionVersion: "1"
+                          scheduleSequence: 1
+                          scheduledFor: "2026-07-27T09:00:00.000Z"
+                          durationMinutes: 30
+                          title: Risk review
+                          agenda: Discuss risks
+                          participants:
+                            - stakeholderId: stakeholder_1
+                              displayName: Alex Sponsor
+                          channel: Room A
+                          location: HQ
+                          status: scheduled
+                          scheduledAt: "2026-07-26T10:00:00.000Z"
+                          availableAt: null
+                          startedAt: null
+                          completedAt: null
+                          cancelledAt: null
+                      summary:
+                        totalMeetings: 1
+                        upcomingCount: 1
+                        activeCount: 0
+                        completedCount: 0
+                        cancelledCount: 0
+                        isEmpty: false
+                      capabilities:
+                        start: unsupported
+                        complete: unsupported
+                        cancel: unsupported
+                        reschedule: unsupported
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/stakeholders:
+    get:
+      operationId: getStakeholdersProjection
+      summary: Get learner-facing Stakeholders projection
+      description: |
+        Authenticated read of the learner-safe Stakeholders projection via
+        GetStakeholdersProjection. Binds projection type `stakeholders` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `stakeholders` means no authoritative Stakeholders initialized yet
+        (available empty), not unavailable. Items are ordered ascending by
+        authoritative initializationSequence. Message send and profile edit remain
+        unsupported. GET may perform authorized query-time catch-up rebuild but does
+        not mutate authoritative Stakeholder state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Stakeholders projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StakeholdersApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: stakeholders
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      stakeholders: []
+                      summary:
+                        totalStakeholders: 0
+                        stakeholdersWithConversation: 0
+                        totalMessages: 0
+                        isEmpty: true
+                      capabilities:
+                        sendMessage: unsupported
+                        editProfile: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: stakeholders
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 2
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+                      stakeholders:
+                        - stakeholderId: stakeholder_1
+                          stakeholderDefinitionId: stakeholder_1
+                          stakeholderDefinitionVersion: "1"
+                          initializationSequence: 1
+                          profile:
+                            displayName: Alex Sponsor
+                            roleLabel: Executive Sponsor
+                            organization: Acme
+                            department: Strategy
+                            biography: Seasoned sponsor.
+                          conversation:
+                            conversationId: conversation:stakeholder_1
+                            messages:
+                              - messageId: stakeholder_message:cmd_1
+                                conversationSequence: 1
+                                direction: learner_to_stakeholder
+                                author:
+                                  kind: learner
+                                  label: You
+                                body: Hello Alex
+                                occurredAt: "2026-07-26T12:04:00.000Z"
+                      summary:
+                        totalStakeholders: 1
+                        stakeholdersWithConversation: 1
+                        totalMessages: 1
+                        isEmpty: false
+                      capabilities:
+                        sendMessage: unsupported
+                        editProfile: unsupported
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/documents:
+    get:
+      operationId: getDocumentsProjection
+      summary: Get learner-facing Documents projection
+      description: |
+        Authenticated read of the learner-safe Documents projection via
+        GetDocumentsProjection. Binds projection type `documents` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `documents` means no authoritative Documents initialized yet
+        (available empty), not unavailable. Items are ordered ascending by
+        authoritative creationSequence. Upload/edit/comment remain unsupported.
+        GET may perform authorized query-time catch-up rebuild but does not mutate
+        authoritative Document state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Documents projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentsApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: documents
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      documents: []
+                      summary:
+                        totalDocuments: 0
+                        isEmpty: true
+                      capabilities:
+                        upload: unsupported
+                        edit: unsupported
+                        comment: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: documents
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 2
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+                      documents:
+                        - documentId: document_1
+                          documentDefinitionId: document_1
+                          documentDefinitionVersion: "1"
+                          creationSequence: 1
+                          title: Project brief
+                          category: Briefing
+                          description: Read before kickoff
+                          contentType: plain_text
+                          body: "Line one\nLine two"
+                          status: available
+                          createdAt: "2026-07-26T12:04:00.000Z"
+                      summary:
+                        totalDocuments: 1
+                        isEmpty: false
+                      capabilities:
+                        upload: unsupported
+                        edit: unsupported
+                        comment: unsupported
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/performance:
+    get:
+      operationId: getPerformanceProjection
+      summary: Get learner-facing Performance projection
+      description: |
+        Authenticated read of the learner-safe Performance projection via
+        GetPerformanceProjection. Binds projection type `performance` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Evidence-only summary — no XP, mastery, achievements, or reflection.
+        GET may perform authorized query-time catch-up rebuild but does not mutate
+        authoritative SimulationRun state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Performance projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: performance
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      runSummary:
+                        simulationRunId: run_1
+                        status: active
+                        startedAt: "2026-07-26T00:00:00.000Z"
+                        completedAt: null
+                        currentChapterId: null
+                        currentDayId: null
+                        contentPackageVersionId: cpv_1
+                      projectSummary:
+                        status: active
+                        metrics: []
+                      decisionCounts:
+                        submitted: 0
+                        resolved: 0
+                      activityCounts:
+                        active: 0
+                        completed: 0
+                      meetingCounts:
+                        upcoming: 0
+                        active: 0
+                        completed: 0
+                        cancelled: 0
+                      documentCount: 0
+                      crisisSummary:
+                        activeCount: 0
+                        resolvedCount: 0
+                        activeCrisisIds: []
+                      recentlyResolvedDecisions: []
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/learner-progression:
+    get:
+      operationId: getLearnerProgressionProjection
+      summary: Get learner-facing Learner Progression projection
+      description: |
+        Authenticated read of the learner-safe Learner Progression projection via
+        GetLearnerProgressionProjection. Binds projection type `learner_progression`
+        internally. Clients cannot select projection type, tenant, schema version, or
+        force rebuild. Chapter requirement progress only — no XP, mastery,
+        achievements, or reflection. GET may perform authorized query-time catch-up
+        rebuild but does not mutate authoritative SimulationRun state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Learner Progression projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerProgressionApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: learner_progression
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      chapters: []
+                      summary:
+                        totalChapters: 0
+                        completedChapterCount: 0
+                        activeChapterId: null
+                        blockedChapterCount: 0
+                        lockedChapterCount: 0
+                        availableChapterCount: 0
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/achievements:
+    get:
+      operationId: getAchievementsProjection
+      summary: Get learner-facing Achievements projection
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Achievements projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AchievementsApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: achievements
+                      projectionSchemaVersion: 1
+                      awards: []
+                      xpSummary:
+                        availability: unavailable
+                        reason: xp_amounts_not_authored
+                        totalXp: 0
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/mastery:
+    get:
+      operationId: getMasteryProjection
+      summary: Get learner-facing Mastery projection
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Mastery projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasteryApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: mastery
+                      projectionSchemaVersion: 1
+                      competencies: []
+                      xpSummary:
+                        availability: unavailable
+                        reason: xp_amounts_not_authored
+                        totalXp: 0
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/coaching:
+    get:
+      operationId: getCoachingProjection
+      summary: Get learner-facing Coaching projection
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Coaching projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachingApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: coaching
+                      projectionSchemaVersion: 1
+                      interventions: []
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/notifications:
+    get:
+      operationId: getNotificationsProjection
+      summary: Get learner-facing Notifications projection
+      description: |
+        Authenticated read of the learner-safe Notifications projection via
+        GetNotificationsProjection. Binds projection type `notifications` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `notifications` means no authoritative Notifications initialized yet
+        (available empty), not unavailable. Items are ordered ascending by
+        authoritative creationSequence. markRead/dismiss/preferences remain unsupported.
+        GET may perform authorized query-time catch-up rebuild but does not mutate
+        authoritative Notification state. No severity field.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Notifications projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: notifications
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      notifications: []
+                      summary:
+                        totalNotifications: 0
+                        isEmpty: true
+                      capabilities:
+                        markRead: unsupported
+                        dismiss: unsupported
+                        preferences: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                populated:
+                  value:
+                    data:
+                      projectionType: notifications
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 4
+                      sourceStateVersion: 2
+                      sourceActionSequence: 2
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+                      notifications:
+                        - notificationId: notification_1
+                          creationSequence: 1
+                          title: Simulation started
+                          summary: Your simulation run has started.
+                          body: null
+                          source:
+                            kind: simulation
+                            sourceId: null
+                            reason: null
+                          status: active
+                          createdAt: "2026-07-26T12:04:00.000Z"
+                      summary:
+                        totalNotifications: 1
+                        isEmpty: false
+                      capabilities:
+                        markRead: unsupported
+                        dismiss: unsupported
+                        preferences: unsupported
+                    meta:
+                      requestId: req_2
+                      correlationId: corr_2
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 4
+                      freshness: current
+                      generatedAt: "2026-07-26T12:05:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/activities:
+    get:
+      operationId: getActivitiesProjection
+      summary: Get learner-facing Activities projection
+      description: |
+        Authenticated read of the learner-safe Activities projection via
+        GetActivitiesProjection. Binds projection type `activities` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `activities` means no authoritative Activities initialized yet
+        (available empty), not unavailable. Items are ordered ascending by
+        authoritative creationSequence (active only).
+        No Complete button in UI. No public mutation APIs.
+        GET may perform authorized query-time catch-up rebuild but does not mutate
+        authoritative Activity state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Activities projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivitiesApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: activities
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      activities: []
+                      summary:
+                        totalActivities: 0
+                        isEmpty: true
+                      capabilities:
+                        complete: unsupported
+                        reopen: unsupported
+                        assign: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/completed-history:
+    get:
+      operationId: getCompletedHistoryProjection
+      summary: Get learner-facing Completed History projection
+      description: |
+        Authenticated read of the learner-safe Completed History projection via
+        GetCompletedHistoryProjection. Binds projection type `completed_history` internally.
+        Clients cannot select projection type, tenant, schema version, or force rebuild.
+        Empty `items` means no completed Activities yet (available empty, not unavailable).
+        Items are ordered descending by completionSequence (most recently completed first).
+        No public mutation APIs.
+        GET may perform authorized query-time catch-up rebuild but does not mutate
+        authoritative Activity state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Completed History projection
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedHistoryApiResponse"
+              examples:
+                empty:
+                  value:
+                    data:
+                      projectionType: completed_history
+                      projectionSchemaVersion: 1
+                      simulationRunId: run_1
+                      learnerId: learner_1
+                      contentPackageVersionId: cpv_1
+                      sourceAggregateVersion: 2
+                      sourceStateVersion: 0
+                      sourceActionSequence: 0
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+                      items: []
+                      summary:
+                        totalCompleted: 0
+                        isEmpty: true
+                      capabilities:
+                        reopen: unsupported
+                        clear: unsupported
+                        export: unsupported
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+                      projectionSchemaVersion: 1
+                      sourceAggregateVersion: 2
+                      freshness: current
+                      generatedAt: "2026-07-26T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /simulation-runs/{simulationRunId}/commands/submit-decision:
+    post:
+      operationId: submitDecision
+      summary: Submit a Decision command
+      description: |
+        Typed SubmitDecision command. Requires Idempotency-Key equal to
+        commandId, If-Match equal to expectedAggregateVersion, and a current
+        projection source version. Returns an acceptance receipt; clients must
+        refresh the canonical projection until sourceAggregateVersion reaches
+        the receipt aggregateVersion.
+      parameters:
+        - $ref: "#/components/parameters/SimulationRunId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitDecisionRequest"
+            examples:
+              submit:
+                value:
+                  commandId: cmd_123
+                  commandType: SubmitDecision
+                  commandVersion: 1
+                  expectedAggregateVersion: 2
+                  payload:
+                    decisionId: decision_1
+                    optionId: option_b
+                    rationale: Selected based on stakeholder impact.
+      responses:
+        "200":
+          description: Accepted command receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitDecisionApiResponse"
+              examples:
+                accepted:
+                  value:
+                    data:
+                      commandId: cmd_123
+                      status: accepted
+                      aggregateVersion: 3
+                      simulationRunId: run_1
+                      correlationId: corr_1
+                    meta:
+                      requestId: req_1
+                      correlationId: corr_1
+                      apiVersion: v1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase user access token (never service-role).
+  parameters:
+    SimulationRunId:
+      name: simulationRunId
+      in: path
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Must equal body.commandId for SubmitDecision.
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Quoted expected aggregate version, e.g. "2".
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema:
+        type: string
+  schemas:
+    SubmitDecisionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - commandId
+        - commandType
+        - commandVersion
+        - expectedAggregateVersion
+        - payload
+      properties:
+        commandId:
+          type: string
+        commandType:
+          type: string
+          const: SubmitDecision
+        commandVersion:
+          type: integer
+          const: 1
+        expectedAggregateVersion:
+          type: integer
+          minimum: 0
+        simulationRunId:
+          type: string
+        payload:
+          type: object
+          additionalProperties: false
+          required: [decisionId, optionId]
+          properties:
+            decisionId:
+              type: string
+              description: DecisionDefinition identifier
+            optionId:
+              type: string
+            rationale:
+              type: string
+              maxLength: 4000
+    SubmitDecisionReceipt:
+      type: object
+      additionalProperties: false
+      required: [commandId, status, aggregateVersion, simulationRunId, correlationId]
+      properties:
+        commandId: { type: string }
+        status: { type: string, const: accepted }
+        aggregateVersion: { type: integer }
+        simulationRunId: { type: string }
+        correlationId: { type: string }
+    ClientSimulationProjection:
+      type: object
+      description: Learner-safe projection (server-only fingerprint fields omitted)
+      additionalProperties: true
+    ClientMissionControlProjection:
+      type: object
+      description: |
+        Learner-safe Mission Control projection. Empty collections mean no
+        learner-visible items; unavailable channel counts are explicit and must
+        not be treated as zero. Server-only fingerprint fields omitted.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - runSummary
+        - projectSummary
+        - counts
+        - nextRecommendedActions
+        - recentRevealedOutcome
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: mission_control }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        runSummary:
+          type: object
+          additionalProperties: true
+        projectSummary:
+          type: object
+          additionalProperties: true
+        counts:
+          type: object
+          additionalProperties: true
+        nextRecommendedActions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        recentRevealedOutcome:
+          nullable: true
+          type: object
+          additionalProperties: true
+    ProjectionApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientSimulationProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientDecisionLogProjection:
+      type: object
+      description: |
+        Learner-safe Decision Log projection. Empty entries mean no completed
+        learner-visible decisions; this is available empty, not unavailable.
+        Server-only fingerprint fields omitted. Entries are newest-first.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - entries
+        - summary
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: decision_log }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        entries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - entryId
+              - decisionRecordId
+              - decisionDefinitionId
+              - sequence
+              - decidedAt
+              - title
+              - selectedOption
+              - status
+              - revealedOutcome
+            properties:
+              entryId: { type: string }
+              decisionRecordId: { type: string }
+              decisionDefinitionId: { type: string }
+              sequence: { type: integer, minimum: 1 }
+              decidedAt: { type: string, format: date-time }
+              title: { type: string }
+              selectedOption:
+                type: object
+                additionalProperties: false
+                required: [optionId, label]
+                properties:
+                  optionId: { type: string }
+                  label: { type: string, nullable: true }
+              status: { type: string, enum: [submitted, resolved] }
+              revealedOutcome:
+                nullable: true
+                type: object
+                additionalProperties: false
+                required: [summary]
+                properties:
+                  summary: { type: string }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalEntries, isEmpty]
+          properties:
+            totalEntries: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+    DecisionLogApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientDecisionLogProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientInboxProjection:
+      type: object
+      description: |
+        Learner-safe Inbox projection. Empty messages mean no delivered
+        learner-visible messages; this is available empty, not unavailable.
+        Server-only fingerprint fields omitted. Messages are newest-first.
+        Read/archive/reply/compose are unsupported.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - messages
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: inbox }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        messages:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - messageId
+              - definitionId
+              - definitionVersion
+              - sequence
+              - deliveredAt
+              - sender
+              - subject
+              - preview
+              - body
+            properties:
+              messageId: { type: string }
+              definitionId: { type: string }
+              definitionVersion: { type: string }
+              sequence: { type: integer, minimum: 1 }
+              deliveredAt: { type: string, format: date-time, nullable: true }
+              sender:
+                type: object
+                additionalProperties: false
+                required: [senderId, displayName, roleLabel]
+                properties:
+                  senderId: { type: string, nullable: true }
+                  displayName: { type: string }
+                  roleLabel: { type: string, nullable: true }
+              subject: { type: string }
+              preview: { type: string }
+              body: { type: string }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalMessages, isEmpty]
+          properties:
+            totalMessages: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [readState, archive, reply, compose]
+          properties:
+            readState: { type: string, const: unsupported }
+            archive: { type: string, const: unsupported }
+            reply: { type: string, const: unsupported }
+            compose: { type: string, const: unsupported }
+    InboxApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientInboxProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientMeetingsProjection:
+      type: object
+      description: |
+        Learner-safe Meetings projection. Empty meetings mean no authoritative
+        Meeting occurrences; this is available empty, not unavailable.
+        Server-only fingerprint fields omitted. Meetings are ascending by
+        scheduleSequence. Start/complete/cancel/reschedule are unsupported.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - meetings
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: meetings }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        meetings:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - meetingOccurrenceId
+              - meetingDefinitionId
+              - meetingDefinitionVersion
+              - scheduleSequence
+              - scheduledFor
+              - durationMinutes
+              - title
+              - agenda
+              - participants
+              - channel
+              - location
+              - status
+              - scheduledAt
+              - availableAt
+              - startedAt
+              - completedAt
+              - cancelledAt
+            properties:
+              meetingOccurrenceId: { type: string }
+              meetingDefinitionId: { type: string }
+              meetingDefinitionVersion: { type: string }
+              scheduleSequence: { type: integer, minimum: 1 }
+              scheduledFor: { type: string, format: date-time }
+              durationMinutes: { type: integer, minimum: 1, nullable: true }
+              title: { type: string }
+              agenda: { type: string, nullable: true }
+              participants:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [stakeholderId, displayName]
+                  properties:
+                    stakeholderId: { type: string }
+                    displayName: { type: string }
+              channel: { type: string, nullable: true }
+              location: { type: string, nullable: true }
+              status:
+                type: string
+                enum: [scheduled, available, started, completed, cancelled]
+              scheduledAt: { type: string, format: date-time }
+              availableAt: { type: string, format: date-time, nullable: true }
+              startedAt: { type: string, format: date-time, nullable: true }
+              completedAt: { type: string, format: date-time, nullable: true }
+              cancelledAt: { type: string, format: date-time, nullable: true }
+        summary:
+          type: object
+          additionalProperties: false
+          required:
+            - totalMeetings
+            - upcomingCount
+            - activeCount
+            - completedCount
+            - cancelledCount
+            - isEmpty
+          properties:
+            totalMeetings: { type: integer, minimum: 0 }
+            upcomingCount: { type: integer, minimum: 0 }
+            activeCount: { type: integer, minimum: 0 }
+            completedCount: { type: integer, minimum: 0 }
+            cancelledCount: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [start, complete, cancel, reschedule]
+          properties:
+            start: { type: string, const: unsupported }
+            complete: { type: string, const: unsupported }
+            cancel: { type: string, const: unsupported }
+            reschedule: { type: string, const: unsupported }
+    MeetingsApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientMeetingsProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientStakeholdersProjection:
+      type: object
+      description: |
+        Learner-safe Stakeholders projection. Empty stakeholders mean no
+        authoritative runtime Stakeholders; this is available empty, not unavailable.
+        Server-only fingerprint fields omitted. Stakeholders are ascending by
+        initializationSequence. Conversation is null until opened. Message send and
+        profile edit are unsupported.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - stakeholders
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: stakeholders }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        stakeholders:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - stakeholderId
+              - stakeholderDefinitionId
+              - stakeholderDefinitionVersion
+              - initializationSequence
+              - profile
+              - conversation
+            properties:
+              stakeholderId: { type: string }
+              stakeholderDefinitionId: { type: string }
+              stakeholderDefinitionVersion: { type: string }
+              initializationSequence: { type: integer, minimum: 1 }
+              profile:
+                type: object
+                additionalProperties: false
+                required:
+                  - displayName
+                  - roleLabel
+                  - organization
+                  - department
+                  - biography
+                properties:
+                  displayName: { type: string }
+                  roleLabel: { type: string, nullable: true }
+                  organization: { type: string, nullable: true }
+                  department: { type: string, nullable: true }
+                  biography: { type: string, nullable: true }
+              conversation:
+                oneOf:
+                  - type: "null"
+                  - type: object
+                    additionalProperties: false
+                    required: [conversationId, messages]
+                    properties:
+                      conversationId: { type: string }
+                      messages:
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: false
+                          required:
+                            - messageId
+                            - conversationSequence
+                            - direction
+                            - author
+                            - body
+                            - occurredAt
+                          properties:
+                            messageId: { type: string }
+                            conversationSequence: { type: integer, minimum: 1 }
+                            direction:
+                              type: string
+                              enum: [learner_to_stakeholder]
+                            author:
+                              type: object
+                              additionalProperties: false
+                              required: [kind, label]
+                              properties:
+                                kind: { type: string, const: learner }
+                                label: { type: string, const: You }
+                            body: { type: string }
+                            occurredAt: { type: string, format: date-time }
+        summary:
+          type: object
+          additionalProperties: false
+          required:
+            - totalStakeholders
+            - stakeholdersWithConversation
+            - totalMessages
+            - isEmpty
+          properties:
+            totalStakeholders: { type: integer, minimum: 0 }
+            stakeholdersWithConversation: { type: integer, minimum: 0 }
+            totalMessages: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [sendMessage, editProfile]
+          properties:
+            sendMessage: { type: string, const: unsupported }
+            editProfile: { type: string, const: unsupported }
+    StakeholdersApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientStakeholdersProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientDocumentsProjection:
+      type: object
+      description: |
+        Learner-safe Documents projection. Empty documents mean no authoritative
+        runtime Documents; this is available empty, not unavailable. Server-only
+        fingerprint fields omitted. Documents are ascending by creationSequence.
+        Upload, edit, and comment are unsupported.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - documents
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: documents }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        documents:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - documentId
+              - documentDefinitionId
+              - documentDefinitionVersion
+              - creationSequence
+              - title
+              - category
+              - description
+              - contentType
+              - body
+              - status
+              - createdAt
+            properties:
+              documentId: { type: string }
+              documentDefinitionId: { type: string }
+              documentDefinitionVersion: { type: string }
+              creationSequence: { type: integer, minimum: 1 }
+              title: { type: string }
+              category: { type: string, nullable: true }
+              description: { type: string, nullable: true }
+              contentType: { type: string, const: plain_text }
+              body: { type: string }
+              status: { type: string, const: available }
+              createdAt: { type: string, format: date-time }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalDocuments, isEmpty]
+          properties:
+            totalDocuments: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [upload, edit, comment]
+          properties:
+            upload: { type: string, const: unsupported }
+            edit: { type: string, const: unsupported }
+            comment: { type: string, const: unsupported }
+    DocumentsApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientDocumentsProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientPerformanceProjection:
+      type: object
+      description: |
+        Learner-safe Performance projection. Evidence-only summary derived from the
+        authoritative SimulationRun aggregate. Server-only fingerprint fields omitted.
+        No XP, mastery, achievements, or reflection.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - runSummary
+        - projectSummary
+        - decisionCounts
+        - activityCounts
+        - meetingCounts
+        - documentCount
+        - crisisSummary
+        - recentlyResolvedDecisions
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: performance }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        runSummary:
+          type: object
+          additionalProperties: false
+          required:
+            - simulationRunId
+            - status
+            - startedAt
+            - completedAt
+            - currentChapterId
+            - currentDayId
+            - contentPackageVersionId
+          properties:
+            simulationRunId: { type: string }
+            status: { type: string }
+            startedAt: { type: string, format: date-time, nullable: true }
+            completedAt: { type: string, format: date-time, nullable: true }
+            currentChapterId: { type: string, nullable: true }
+            currentDayId: { type: string, nullable: true }
+            contentPackageVersionId: { type: string }
+        projectSummary:
+          type: object
+          additionalProperties: false
+          required: [status, metrics]
+          properties:
+            status: { type: string }
+            metrics:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [metricKey, value, unit]
+                properties:
+                  metricKey: { type: string }
+                  value: { type: number }
+                  unit: { type: string, nullable: true }
+        decisionCounts:
+          type: object
+          additionalProperties: false
+          required: [submitted, resolved]
+          properties:
+            submitted: { type: integer, minimum: 0 }
+            resolved: { type: integer, minimum: 0 }
+        activityCounts:
+          type: object
+          additionalProperties: false
+          required: [active, completed]
+          properties:
+            active: { type: integer, minimum: 0 }
+            completed: { type: integer, minimum: 0 }
+        meetingCounts:
+          type: object
+          additionalProperties: false
+          required: [upcoming, active, completed, cancelled]
+          properties:
+            upcoming: { type: integer, minimum: 0 }
+            active: { type: integer, minimum: 0 }
+            completed: { type: integer, minimum: 0 }
+            cancelled: { type: integer, minimum: 0 }
+        documentCount: { type: integer, minimum: 0 }
+        crisisSummary:
+          type: object
+          additionalProperties: false
+          required: [activeCount, resolvedCount, activeCrisisIds]
+          properties:
+            activeCount: { type: integer, minimum: 0 }
+            resolvedCount: { type: integer, minimum: 0 }
+            activeCrisisIds:
+              type: array
+              items: { type: string }
+        recentlyResolvedDecisions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - decisionRecordId
+              - decisionDefinitionId
+              - selectedOptionLabel
+              - publicResultSummary
+              - resolvedAt
+            properties:
+              decisionRecordId: { type: string }
+              decisionDefinitionId: { type: string }
+              selectedOptionLabel: { type: string, nullable: true }
+              publicResultSummary: { type: string }
+              resolvedAt: { type: string, format: date-time }
+    PerformanceApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientPerformanceProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientLearnerProgressionProjection:
+      type: object
+      description: |
+        Learner-safe Learner Progression projection. Chapter requirement progress
+        derived from authoritative SimulationRun state. Server-only fingerprint
+        fields omitted. No XP, mastery, achievements, or reflection.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - chapters
+        - summary
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: learner_progression }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        chapters:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - chapterId
+              - order
+              - title
+              - status
+              - requirements
+              - blockers
+            properties:
+              chapterId: { type: string }
+              order: { type: integer, minimum: 1 }
+              title: { type: string }
+              status:
+                type: string
+                enum: [locked, available, active, blocked, completed]
+              requirements:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [kind, targetId, status]
+                  properties:
+                    kind:
+                      type: string
+                      enum: [decision, activity, meeting]
+                    targetId: { type: string }
+                    status:
+                      type: string
+                      enum: [pending, completed]
+              blockers:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [code, kind, targetId, message]
+                  properties:
+                    code: { type: string }
+                    kind:
+                      type: string
+                      enum: [decision, activity, meeting, crisis]
+                    targetId: { type: string }
+                    message: { type: string }
+        summary:
+          type: object
+          additionalProperties: false
+          required:
+            - totalChapters
+            - completedChapterCount
+            - activeChapterId
+            - blockedChapterCount
+            - lockedChapterCount
+            - availableChapterCount
+          properties:
+            totalChapters: { type: integer, minimum: 0 }
+            completedChapterCount: { type: integer, minimum: 0 }
+            activeChapterId: { type: string, nullable: true }
+            blockedChapterCount: { type: integer, minimum: 0 }
+            lockedChapterCount: { type: integer, minimum: 0 }
+            availableChapterCount: { type: integer, minimum: 0 }
+    LearnerProgressionApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientLearnerProgressionProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    AchievementsApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required:
+            - projectionType
+            - projectionSchemaVersion
+            - awards
+            - xpSummary
+          properties:
+            projectionType: { type: string, const: achievements }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            awards: { type: array, items: { type: object } }
+            xpSummary:
+              type: object
+              required: [availability, reason, totalXp]
+              properties:
+                availability: { type: string, const: unavailable }
+                reason: { type: string, const: xp_amounts_not_authored }
+                totalXp: { type: integer, const: 0 }
+        meta:
+          $ref: "#/components/schemas/ProjectionApiMeta"
+    MasteryApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required:
+            - projectionType
+            - projectionSchemaVersion
+            - competencies
+            - xpSummary
+          properties:
+            projectionType: { type: string, const: mastery }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            competencies: { type: array, items: { type: object } }
+            xpSummary:
+              type: object
+              required: [availability, reason, totalXp]
+              properties:
+                availability: { type: string, const: unavailable }
+                reason: { type: string, const: xp_amounts_not_authored }
+                totalXp: { type: integer, const: 0 }
+        meta:
+          $ref: "#/components/schemas/ProjectionApiMeta"
+    CoachingApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required:
+            - projectionType
+            - projectionSchemaVersion
+            - interventions
+          properties:
+            projectionType: { type: string, const: coaching }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            interventions: { type: array, items: { type: object } }
+        meta:
+          $ref: "#/components/schemas/ProjectionApiMeta"
+    ClientNotificationsProjection:
+      type: object
+      description: |
+        Learner-safe Notifications projection. Empty notifications mean no authoritative
+        runtime Notifications; this is available empty, not unavailable. Server-only
+        fingerprint fields omitted. Notifications are ascending by creationSequence.
+        markRead, dismiss, and preferences are unsupported. No severity field.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - notifications
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: notifications }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        notifications:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - notificationId
+              - creationSequence
+              - title
+              - summary
+              - body
+              - source
+              - status
+              - createdAt
+            properties:
+              notificationId: { type: string }
+              creationSequence: { type: integer, minimum: 1 }
+              title: { type: string }
+              summary: { type: string }
+              body: { type: string, nullable: true }
+              source:
+                type: object
+                additionalProperties: false
+                required: [kind, sourceId, reason]
+                properties:
+                  kind:
+                    type: string
+                    enum:
+                      - simulation
+                      - meeting
+                      - stakeholder
+                      - document
+                      - decision
+                      - inbox
+                      - authored_consequence
+                  sourceId: { type: string, nullable: true }
+                  reason: { type: string, nullable: true }
+              status: { type: string, const: active }
+              createdAt: { type: string, format: date-time }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalNotifications, isEmpty]
+          properties:
+            totalNotifications: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [markRead, dismiss, preferences]
+          properties:
+            markRead: { type: string, const: unsupported }
+            dismiss: { type: string, const: unsupported }
+            preferences: { type: string, const: unsupported }
+    NotificationsApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientNotificationsProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientActivitiesProjection:
+      type: object
+      description: |
+        Learner-safe Activities projection. Empty activities mean no authoritative
+        runtime Activities; this is available empty, not unavailable. Server-only
+        fingerprint fields omitted. Activities are ascending by creationSequence (active only).
+        complete, reopen, and assign are unsupported.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - activities
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: activities }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        activities:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - activityId
+              - creationSequence
+              - title
+              - summary
+              - source
+              - status
+              - createdAt
+            properties:
+              activityId: { type: string }
+              creationSequence: { type: integer, minimum: 1 }
+              title: { type: string }
+              summary: { type: string }
+              body: { type: string, nullable: true }
+              source:
+                type: object
+                additionalProperties: false
+                required: [kind, sourceId, reason]
+                properties:
+                  kind:
+                    type: string
+                    enum:
+                      - simulation
+                      - meeting
+                      - stakeholder
+                      - document
+                      - decision
+                      - inbox
+                      - authored_consequence
+                  sourceId: { type: string, nullable: true }
+                  reason: { type: string, nullable: true }
+              status: { type: string, const: active }
+              createdAt: { type: string, format: date-time }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalActivities, isEmpty]
+          properties:
+            totalActivities: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [complete, reopen, assign]
+          properties:
+            complete: { type: string, const: unsupported }
+            reopen: { type: string, const: unsupported }
+            assign: { type: string, const: unsupported }
+    ActivitiesApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientActivitiesProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    ClientCompletedHistoryProjection:
+      type: object
+      description: |
+        Learner-safe Completed History projection. Empty items mean no completed
+        Activities yet; this is available empty, not unavailable. Server-only
+        fingerprint fields omitted. Items are descending by completionSequence
+        (most recently completed first). reopen, clear, and export are unsupported.
+        completingCommandId is authoritative but not public.
+      additionalProperties: false
+      required:
+        - projectionType
+        - projectionSchemaVersion
+        - tenantId
+        - simulationRunId
+        - learnerId
+        - contentPackageVersionId
+        - sourceAggregateVersion
+        - sourceStateVersion
+        - sourceActionSequence
+        - generatedAt
+        - items
+        - summary
+        - capabilities
+      properties:
+        projectionId: { type: string }
+        projectionType: { type: string, const: completed_history }
+        projectionSchemaVersion: { type: integer, const: 1 }
+        tenantId: { type: string }
+        simulationRunId: { type: string }
+        learnerId: { type: string }
+        contentPackageVersionId: { type: string }
+        sourceAggregateVersion: { type: integer }
+        sourceStateVersion: { type: integer }
+        sourceActionSequence: { type: integer }
+        generatedAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - activityId
+              - creationSequence
+              - completionSequence
+              - title
+              - summary
+              - source
+              - status
+              - createdAt
+              - completedAt
+            properties:
+              activityId: { type: string }
+              creationSequence: { type: integer, minimum: 1 }
+              completionSequence: { type: integer, minimum: 1 }
+              title: { type: string }
+              summary: { type: string }
+              body: { type: string, nullable: true }
+              source:
+                type: object
+                additionalProperties: false
+                required: [kind, sourceId, reason]
+                properties:
+                  kind:
+                    type: string
+                    enum:
+                      - simulation
+                      - meeting
+                      - stakeholder
+                      - document
+                      - decision
+                      - inbox
+                      - authored_consequence
+                  sourceId: { type: string, nullable: true }
+                  reason: { type: string, nullable: true }
+              status: { type: string, const: completed }
+              createdAt: { type: string, format: date-time }
+              completedAt: { type: string, format: date-time }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [totalCompleted, isEmpty]
+          properties:
+            totalCompleted: { type: integer, minimum: 0 }
+            isEmpty: { type: boolean }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [reopen, clear, export]
+          properties:
+            reopen: { type: string, const: unsupported }
+            clear: { type: string, const: unsupported }
+            export: { type: string, const: unsupported }
+    CompletedHistoryApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientCompletedHistoryProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    MissionControlApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClientMissionControlProjection"
+        meta:
+          type: object
+          required:
+            - requestId
+            - correlationId
+            - apiVersion
+            - projectionSchemaVersion
+            - sourceAggregateVersion
+            - freshness
+            - generatedAt
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+            projectionSchemaVersion: { type: integer, const: 1 }
+            sourceAggregateVersion: { type: integer }
+            freshness:
+              type: string
+              enum: [current, stale, rebuild_failed]
+            generatedAt: { type: string, format: date-time }
+    SubmitDecisionApiResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/SubmitDecisionReceipt"
+        meta:
+          type: object
+          required: [requestId, correlationId, apiVersion]
+          properties:
+            requestId: { type: string }
+            correlationId: { type: string }
+            apiVersion: { type: string, const: v1 }
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, retryable, requestId, correlationId]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            retryable: { type: boolean }
+            fieldErrors:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+            requestId: { type: string }
+            correlationId: { type: string }
+  responses:
+    BadRequest:
+      description: Malformed request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Forbidden:
+      description: Authenticated but not authorized
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    NotFound:
+      description: Run unavailable
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Conflict:
+      description: Idempotency or business conflict
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    PreconditionFailed:
+      description: Aggregate version conflict
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unprocessable:
+      description: Domain/business-rule rejection
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
