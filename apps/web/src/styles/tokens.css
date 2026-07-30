@@ -46,7 +46,8 @@
   --ps-border: oklch(0.95 0.012 250 / 14%);
   --ps-border-strong: oklch(0.95 0.012 250 / 26%);
   --ps-ring: oklch(0.62 0.13 246);
-  --ps-shadow: 0 1px 2px oklch(0.1 0.05 265 / 40%),
+  --ps-shadow:
+    0 1px 2px oklch(0.1 0.05 265 / 40%),
     0 12px 32px -20px oklch(0.05 0.04 265 / 80%);
 }
 
