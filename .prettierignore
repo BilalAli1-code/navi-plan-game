@@ -1,6 +1,9 @@
 # Never reformat documentation — it is the architectural source of truth.
 docs/
 
+# Archived visual reference — preserved verbatim from Navi Plan.
+legacy-ui/
+
 # Build + tooling output
 **/dist/
 **/coverage/
