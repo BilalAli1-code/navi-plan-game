@@ -96,19 +96,21 @@ export function WorkplaceShell() {
 
   return (
     <div className="workplace-shell" data-testid="workplace-shell">
-      <div className="workplace-context">
-        <div>
-          <p className="workplace-identity">Workplace</p>
-          <p className="workplace-run" data-testid="workplace-run-id">
-            Run {simulationRunId}
-          </p>
+      <aside className="workplace-sidebar">
+        <div className="workplace-context">
+          <div>
+            <p className="workplace-identity">ProjectSim</p>
+            <p className="workplace-run" data-testid="workplace-run-id">
+              Run {simulationRunId}
+            </p>
+          </div>
+          <Link className="workplace-home" to="/">
+            Home
+          </Link>
         </div>
-        <Link className="workplace-home" to="/">
-          Home
-        </Link>
-      </div>
 
-      <div className="workplace-nav-bar">
+        <div className="workplace-nav-bar">
+
         <button
           type="button"
           ref={menuToggleRef}
