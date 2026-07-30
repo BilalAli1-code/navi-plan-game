@@ -1,0 +1,101 @@
+/**
+ * ProjectSim visual tokens — "Navy Trust".
+ *
+ * Presentational only (BC-012 legacy visual transfer). Adapted from the
+ * preserved Navi Plan UI at legacy-ui/navi-plan-game. No runtime, domain,
+ * projection, or API behavior depends on this file.
+ *
+ * Palette: #0f1b3d  #1e3a5f  #3b6fa0  #e8edf3
+ * Type:    Libre Baskerville (display serif) + IBM Plex Sans (body)
+ */
+
+:root {
+  color-scheme: dark;
+
+  --ps-font-sans:
+    "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --ps-font-serif:
+    "Libre Baskerville", "Iowan Old Style", "Palatino Linotype", ui-serif,
+    Georgia, serif;
+  --ps-font-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  --ps-radius: 0.75rem;
+  --ps-radius-sm: 0.5rem;
+
+  --ps-background: oklch(0.2 0.08 265);
+  --ps-foreground: oklch(0.95 0.012 250);
+  --ps-surface: oklch(0.24 0.085 265);
+  --ps-surface-strong: oklch(0.28 0.09 262);
+
+  --ps-primary: oklch(0.62 0.13 246);
+  --ps-primary-foreground: oklch(0.98 0.005 250);
+  --ps-primary-soft: oklch(0.62 0.13 246 / 15%);
+
+  --ps-secondary: oklch(0.34 0.09 253);
+  --ps-muted: oklch(0.3 0.075 260);
+  --ps-muted-foreground: oklch(0.78 0.028 250);
+
+  --ps-success: oklch(0.78 0.14 160);
+  --ps-warning: oklch(0.84 0.14 82);
+  --ps-warning-surface: oklch(0.84 0.14 82 / 14%);
+  --ps-destructive: oklch(0.7 0.19 25);
+
+  --ps-border: oklch(0.95 0.012 250 / 14%);
+  --ps-border-strong: oklch(0.95 0.012 250 / 26%);
+  --ps-ring: oklch(0.62 0.13 246);
+  --ps-shadow: 0 1px 2px oklch(0.1 0.05 265 / 40%),
+    0 12px 32px -20px oklch(0.05 0.04 265 / 80%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      1200px 600px at 50% -20%,
+      var(--ps-surface),
+      transparent 70%
+    ),
+    var(--ps-background);
+  color: var(--ps-foreground);
+  font-family: var(--ps-font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2 {
+  font-family: var(--ps-font-serif);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--ps-foreground);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--ps-primary-foreground);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ps-ring);
+  outline-offset: 2px;
+  border-radius: var(--ps-radius-sm);
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--ps-font-mono);
+}
