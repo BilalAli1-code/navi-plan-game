@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .dlog-header h1 {
@@ -35,8 +35,8 @@
 }
 
 .dlog-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -54,7 +54,7 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.9rem 0;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--ps-border);
 }
 
 .dlog-entry:first-child {
@@ -94,7 +94,7 @@
 }
 
 .dlog-nav button {
-  border: 1px solid #0f766e;
+  border: 1px solid var(--ps-primary);
   background: transparent;
   color: inherit;
   border-radius: 0.35rem;

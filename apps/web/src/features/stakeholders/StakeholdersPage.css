@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .stakeholders-header h1 {
@@ -35,8 +35,8 @@
 }
 
 .stakeholders-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -64,20 +64,20 @@
 .stakeholders-list-item button {
   width: 100%;
   text-align: left;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--ps-border);
+  background: var(--ps-surface);
   padding: 0.75rem 0.9rem;
   cursor: pointer;
 }
 
 .stakeholders-list-item button[aria-pressed="true"] {
-  border-color: #0f766e;
-  background: #f0fdfa;
+  border-color: var(--ps-primary);
+  background: var(--ps-primary-soft);
   font-weight: 600;
 }
 
 .stakeholders-list-item button:focus-visible {
-  outline: 2px solid #0f766e;
+  outline: 2px solid var(--ps-primary);
   outline-offset: 2px;
 }
 
@@ -90,7 +90,7 @@
   margin-top: 0.2rem;
   font-size: 0.9rem;
   font-weight: 400;
-  color: #374151;
+  color: var(--ps-border);
 }
 
 .stakeholders-profile,
@@ -126,7 +126,7 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.85rem 0;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--ps-border);
 }
 
 .stakeholders-message:first-child {
@@ -155,5 +155,5 @@
 .stakeholders-message-time {
   margin: 0;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--ps-muted-foreground);
 }

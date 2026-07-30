@@ -24,7 +24,7 @@ import {
 } from "./routes";
 import "./WorkplaceShell.css";
 
-const NARROW_QUERY = "(max-width: 719px)";
+const NARROW_QUERY = "(max-width: 899px)";
 
 /**
  * Run-scoped Unified Workplace Shell (PS-ROADMAP-013).

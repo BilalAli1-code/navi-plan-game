@@ -12,7 +12,7 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.75rem;
-  color: #38bdf8;
+  color: var(--ps-primary);
 }
 
 .app-header h1 {
@@ -23,7 +23,7 @@
 
 .app-subtitle {
   margin: 0;
-  color: #94a3b8;
+  color: var(--ps-muted-foreground);
 }
 
 .app-actions {
@@ -40,16 +40,16 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  color: #0f172a;
-  background: #38bdf8;
+  color: var(--ps-background);
+  background: var(--ps-primary);
 }
 
 .app-actions button:hover {
-  background: #7dd3fc;
+  background: var(--ps-primary);
 }
 
 .app-status {
   margin: 0;
   font-weight: 600;
-  color: #4ade80;
+  color: var(--ps-success);
 }

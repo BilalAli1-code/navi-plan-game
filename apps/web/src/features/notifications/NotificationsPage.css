@@ -8,7 +8,7 @@
   word-wrap: break-word;
   overflow-wrap: anywhere;
   /* Explicit dark text: global shell uses a light foreground on dark body. */
-  color: #0f172a;
+  color: var(--ps-background);
 }
 
 .notifications-eyebrow {
@@ -16,7 +16,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #1d4ed8;
+  color: var(--ps-primary);
 }
 
 .notifications-header h1 {
@@ -38,8 +38,8 @@
 }
 
 .notifications-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -53,8 +53,8 @@
 }
 
 .notifications-item {
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--ps-border);
+  background: var(--ps-surface);
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -65,26 +65,26 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--ps-background);
 }
 
 .notifications-item-summary {
   margin: 0;
-  color: #374151;
+  color: var(--ps-border);
 }
 
 .notifications-item-body {
   margin: 0;
-  color: #374151;
+  color: var(--ps-border);
   white-space: pre-wrap;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--ps-border);
   padding-top: 0.5rem;
 }
 
 .notifications-item-meta {
   margin: 0;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--ps-muted-foreground);
 }
 
 .notifications-item-source {
@@ -92,6 +92,6 @@
 }
 
 .notifications-capabilities {
-  color: #4b5563;
+  color: var(--ps-muted-foreground);
   font-size: 0.9rem;
 }

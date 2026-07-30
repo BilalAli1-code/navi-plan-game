@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #0f766e;
+  color: var(--ps-primary);
 }
 
 .meetings-header h1 {
@@ -35,8 +35,8 @@
 }
 
 .meetings-stale {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--ps-warning);
+  background: var(--ps-warning-surface);
   padding: 0.75rem 1rem;
 }
 
@@ -54,7 +54,7 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.9rem 0;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--ps-border);
 }
 
 .meetings-item:first-child {
@@ -91,7 +91,7 @@
 
 .meetings-item-actions button {
   min-height: 44px;
-  border: 1px solid #0f766e;
+  border: 1px solid var(--ps-primary);
   background: transparent;
   color: inherit;
   border-radius: 0.35rem;
@@ -106,11 +106,11 @@
 
 .meetings-action-error {
   margin: 0;
-  color: #b91c1c;
+  color: var(--ps-destructive);
 }
 
 .meetings-action-status {
   margin: 0;
-  color: #0f766e;
+  color: var(--ps-primary);
   font-size: 0.875rem;
 }

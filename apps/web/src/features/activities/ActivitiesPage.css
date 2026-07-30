@@ -8,7 +8,7 @@
   word-wrap: break-word;
   overflow-wrap: anywhere;
   /* Explicit dark text: global shell uses a light foreground on dark body. */
-  color: #0f172a;
+  color: var(--ps-background);
 }
 
 .activities-eyebrow {
@@ -16,7 +16,7 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.75rem;
-  color: #1d4ed8;
+  color: var(--ps-primary);
 }
 
 .activities-header h1 {
@@ -31,23 +31,23 @@
 .activities-capabilities,
 .activities-empty {
   margin: 0;
-  color: #334155;
+  color: var(--ps-surface-strong);
 }
 
 .activities-freshness {
   font-size: 0.8125rem;
-  color: #15803d;
+  color: var(--ps-success);
 }
 
 .activities-stale {
   font-size: 0.8125rem;
-  color: #b45309;
+  color: var(--ps-warning);
 }
 
 .activities-run-id {
   font-family: monospace;
   font-size: 0.875em;
-  color: #475569;
+  color: var(--ps-muted-foreground);
 }
 
 .activities-list {
@@ -60,39 +60,39 @@
 }
 
 .activities-item {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-foreground);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  color: #0f172a;
+  color: var(--ps-background);
 }
 
 .activities-item-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--ps-background);
 }
 
 .activities-item-summary {
   margin: 0;
   font-size: 0.9375rem;
-  color: #334155;
+  color: var(--ps-surface-strong);
 }
 
 .activities-item-body {
   margin: 0;
   font-size: 0.9375rem;
-  color: #334155;
+  color: var(--ps-surface-strong);
 }
 
 .activities-item-meta {
   margin: 0;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--ps-muted-foreground);
 }
 
 .activities-capabilities {
@@ -108,9 +108,9 @@
 
 .activities-item-actions button {
   min-height: 44px;
-  border: 1px solid #1d4ed8;
+  border: 1px solid var(--ps-primary);
   background: transparent;
-  color: #1d4ed8;
+  color: var(--ps-primary);
   border-radius: 0.35rem;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
@@ -123,11 +123,11 @@
 
 .activities-action-error {
   margin: 0;
-  color: #b91c1c;
+  color: var(--ps-destructive);
 }
 
 .activities-action-status {
   margin: 0;
-  color: #15803d;
+  color: var(--ps-success);
   font-size: 0.875rem;
 }
