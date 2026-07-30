@@ -1,0 +1,93 @@
+.inbox-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.inbox-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #0f766e;
+}
+
+.inbox-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.inbox-subtitle,
+.inbox-freshness,
+.inbox-stale,
+.inbox-empty {
+  margin: 0;
+}
+
+.inbox-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.inbox-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.inbox-messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inbox-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid #d1d5db;
+}
+
+.inbox-message:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.inbox-message-subject {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.inbox-message-meta,
+.inbox-message-preview,
+.inbox-message-body p {
+  margin: 0;
+}
+
+.inbox-message-toggle {
+  align-self: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.inbox-message-body {
+  padding: 0.75rem 0 0;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inbox-page * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

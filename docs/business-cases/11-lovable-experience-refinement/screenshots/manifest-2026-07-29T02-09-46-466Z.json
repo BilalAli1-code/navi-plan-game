@@ -1,0 +1,576 @@
+{
+  "identity": {
+    "actorId": "actor_bc008_2026-07-29T02-09-46",
+    "tenantId": "tenant_bc008_2026-07-29T02-09-46",
+    "learnerId": "learner_bc008_2026-07-29T02-09-46",
+    "simulationRunId": "run_bc008_2026-07-29T02-09-46"
+  },
+  "stamp": "2026-07-29T02-09-46-466Z",
+  "manifest": [
+    {
+      "surface": "auth",
+      "viewport": "desktop",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/auth/catalog-unauthenticated-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "phone",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "phone",
+      "file": "catalog/catalog-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "phone",
+      "file": "mission-control/mission-control-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "phone",
+      "file": "responsive/mission-control-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "phone",
+      "file": "inbox/inbox-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "phone",
+      "file": "responsive/inbox-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "phone",
+      "file": "meetings/meetings-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "phone",
+      "file": "stakeholders/stakeholders-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "phone",
+      "file": "documents/documents-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "phone",
+      "file": "responsive/documents-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "phone",
+      "file": "activities/activities-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "phone",
+      "file": "decision/decision-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "phone",
+      "file": "responsive/decision-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "phone",
+      "file": "performance/performance-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "phone",
+      "file": "progress/progress-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "phone",
+      "file": "achievements/achievements-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "phone",
+      "file": "mastery/mastery-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "phone",
+      "file": "coaching/coaching-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "large-phone",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "large-phone",
+      "file": "catalog/catalog-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "large-phone",
+      "file": "mission-control/mission-control-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "large-phone",
+      "file": "responsive/mission-control-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "large-phone",
+      "file": "inbox/inbox-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "large-phone",
+      "file": "responsive/inbox-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "large-phone",
+      "file": "meetings/meetings-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "large-phone",
+      "file": "stakeholders/stakeholders-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "large-phone",
+      "file": "documents/documents-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "large-phone",
+      "file": "responsive/documents-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "large-phone",
+      "file": "activities/activities-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "large-phone",
+      "file": "decision/decision-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "large-phone",
+      "file": "responsive/decision-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "large-phone",
+      "file": "performance/performance-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "large-phone",
+      "file": "progress/progress-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "large-phone",
+      "file": "achievements/achievements-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "large-phone",
+      "file": "mastery/mastery-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "large-phone",
+      "file": "coaching/coaching-large-phone-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "tablet",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "tablet",
+      "file": "catalog/catalog-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "tablet",
+      "file": "mission-control/mission-control-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "tablet",
+      "file": "responsive/mission-control-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "tablet",
+      "file": "inbox/inbox-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "tablet",
+      "file": "responsive/inbox-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "tablet",
+      "file": "meetings/meetings-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "tablet",
+      "file": "stakeholders/stakeholders-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "tablet",
+      "file": "documents/documents-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "tablet",
+      "file": "responsive/documents-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "tablet",
+      "file": "activities/activities-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "tablet",
+      "file": "decision/decision-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "tablet",
+      "file": "responsive/decision-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "tablet",
+      "file": "performance/performance-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "tablet",
+      "file": "progress/progress-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "tablet",
+      "file": "achievements/achievements-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "tablet",
+      "file": "mastery/mastery-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "tablet",
+      "file": "coaching/coaching-tablet-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "laptop",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "laptop",
+      "file": "catalog/catalog-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "laptop",
+      "file": "mission-control/mission-control-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "laptop",
+      "file": "responsive/mission-control-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "laptop",
+      "file": "inbox/inbox-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "laptop",
+      "file": "responsive/inbox-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "laptop",
+      "file": "meetings/meetings-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "laptop",
+      "file": "stakeholders/stakeholders-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "laptop",
+      "file": "documents/documents-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "laptop",
+      "file": "responsive/documents-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "laptop",
+      "file": "activities/activities-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "laptop",
+      "file": "decision/decision-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "laptop",
+      "file": "responsive/decision-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "laptop",
+      "file": "performance/performance-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "laptop",
+      "file": "progress/progress-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "laptop",
+      "file": "achievements/achievements-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "laptop",
+      "file": "mastery/mastery-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "laptop",
+      "file": "coaching/coaching-laptop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "desktop",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "desktop",
+      "file": "catalog/catalog-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "desktop",
+      "file": "mission-control/mission-control-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "desktop",
+      "file": "responsive/mission-control-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "desktop",
+      "file": "inbox/inbox-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "desktop",
+      "file": "responsive/inbox-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "desktop",
+      "file": "meetings/meetings-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "desktop",
+      "file": "stakeholders/stakeholders-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "desktop",
+      "file": "documents/documents-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "desktop",
+      "file": "responsive/documents-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "desktop",
+      "file": "activities/activities-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "desktop",
+      "file": "decision/decision-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "desktop",
+      "file": "responsive/decision-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "desktop",
+      "file": "performance/performance-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "desktop",
+      "file": "progress/progress-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "desktop",
+      "file": "achievements/achievements-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "desktop",
+      "file": "mastery/mastery-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "desktop",
+      "file": "coaching/coaching-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "shell",
+      "viewport": "wide-desktop",
+      "file": "/workspace/docs/business-cases/11-lovable-experience-refinement/screenshots/shell/home-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "catalog",
+      "viewport": "wide-desktop",
+      "file": "catalog/catalog-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mission-control",
+      "viewport": "wide-desktop",
+      "file": "mission-control/mission-control-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "wide-desktop",
+      "file": "responsive/mission-control-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "inbox",
+      "viewport": "wide-desktop",
+      "file": "inbox/inbox-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "wide-desktop",
+      "file": "responsive/inbox-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "meetings",
+      "viewport": "wide-desktop",
+      "file": "meetings/meetings-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "stakeholders",
+      "viewport": "wide-desktop",
+      "file": "stakeholders/stakeholders-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "documents",
+      "viewport": "wide-desktop",
+      "file": "documents/documents-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "wide-desktop",
+      "file": "responsive/documents-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "activities",
+      "viewport": "wide-desktop",
+      "file": "activities/activities-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "decision",
+      "viewport": "wide-desktop",
+      "file": "decision/decision-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "responsive",
+      "viewport": "wide-desktop",
+      "file": "responsive/decision-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "performance",
+      "viewport": "wide-desktop",
+      "file": "performance/performance-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "progress",
+      "viewport": "wide-desktop",
+      "file": "progress/progress-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "achievements",
+      "viewport": "wide-desktop",
+      "file": "achievements/achievements-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "mastery",
+      "viewport": "wide-desktop",
+      "file": "mastery/mastery-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "coaching",
+      "viewport": "wide-desktop",
+      "file": "coaching/coaching-wide-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "states",
+      "viewport": "desktop",
+      "file": "states/completed-history-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "states",
+      "viewport": "desktop",
+      "file": "states/notifications-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "states",
+      "viewport": "desktop",
+      "file": "states/decision-log-desktop-2026-07-29T02-09-46-466Z.png"
+    },
+    {
+      "surface": "states",
+      "viewport": "desktop",
+      "file": "states/mission-control-expectVersion-desktop-2026-07-29T02-09-46-466Z.png"
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+.mc-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.mc-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #0f766e;
+}
+
+.mc-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.mc-subtitle,
+.mc-freshness,
+.mc-stale {
+  margin: 0;
+}
+
+.mc-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.mc-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.mc-summary {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.mc-summary div {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.5rem;
+}
+
+.mc-summary dt {
+  font-weight: 600;
+  margin: 0;
+}
+
+.mc-summary dd {
+  margin: 0;
+}
+
+.mc-metrics,
+.mc-counts,
+.mc-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mc-metrics li,
+.mc-counts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.mc-count-unavailable {
+  color: #64748b;
+  font-style: italic;
+}
+
+.mc-actions a,
+.mc-nav a,
+.mc-nav button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.mc-nav button {
+  border: 1px solid #0f766e;
+  background: transparent;
+  color: inherit;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.mc-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mc-chapter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.mc-chapter-actions button {
+  min-height: 44px;
+  border: 1px solid #0f766e;
+  background: transparent;
+  color: inherit;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.mc-chapter-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mc-chapter-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.mc-action-error {
+  margin: 0 0 0.5rem;
+  color: #b91c1c;
+}
+
+.mc-action-status {
+  margin: 0 0 0.5rem;
+  color: #0f766e;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 720px) {
+  .mc-page {
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .mc-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

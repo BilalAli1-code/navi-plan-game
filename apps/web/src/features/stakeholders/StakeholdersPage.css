@@ -1,0 +1,159 @@
+.stakeholders-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.stakeholders-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #0f766e;
+}
+
+.stakeholders-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.stakeholders-subtitle,
+.stakeholders-freshness,
+.stakeholders-stale,
+.stakeholders-empty {
+  margin: 0;
+}
+
+.stakeholders-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.stakeholders-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.stakeholders-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .stakeholders-layout {
+    grid-template-columns: minmax(12rem, 16rem) 1fr;
+    align-items: start;
+  }
+}
+
+.stakeholders-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stakeholders-list-item button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+}
+
+.stakeholders-list-item button[aria-pressed="true"] {
+  border-color: #0f766e;
+  background: #f0fdfa;
+  font-weight: 600;
+}
+
+.stakeholders-list-item button:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+
+.stakeholders-list-name {
+  display: block;
+}
+
+.stakeholders-list-role {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #374151;
+}
+
+.stakeholders-profile,
+.stakeholders-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stakeholders-profile h2,
+.stakeholders-conversation h2,
+.stakeholders-profile-section h3 {
+  margin: 0;
+}
+
+.stakeholders-profile-meta,
+.stakeholders-biography,
+.stakeholders-conversation-empty {
+  margin: 0;
+}
+
+.stakeholders-messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.stakeholders-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid #d1d5db;
+}
+
+.stakeholders-message:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.stakeholders-message-meta {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.stakeholders-message-author {
+  font-weight: 600;
+}
+
+.stakeholders-message-direction {
+  font-weight: 500;
+}
+
+.stakeholders-message-body {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.stakeholders-message-time {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4b5563;
+}

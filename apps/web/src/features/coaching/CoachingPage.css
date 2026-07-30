@@ -1,0 +1,91 @@
+.coaching-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.coaching-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+.coaching-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.coaching-subtitle,
+.coaching-freshness,
+.coaching-stale,
+.coaching-run-id {
+  margin: 0;
+}
+
+.coaching-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.coaching-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.coaching-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.coaching-counts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.coaching-counts li {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.coaching-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.coaching-list li {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.coaching-list h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.coaching-list p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coaching-page * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

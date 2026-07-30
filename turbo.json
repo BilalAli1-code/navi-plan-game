@@ -1,0 +1,44 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "DATABASE_ADMIN_URL"],
+      "passThroughEnv": ["DATABASE_URL", "DATABASE_ADMIN_URL"]
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "env": [
+        "DATABASE_URL",
+        "DATABASE_ADMIN_URL",
+        "SUPABASE_JWT_SECRET",
+        "E2E_API_BASE_URL",
+        "E2E_WEB_BASE_URL",
+        "CI"
+      ],
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "DATABASE_ADMIN_URL",
+        "SUPABASE_JWT_SECRET",
+        "E2E_API_BASE_URL",
+        "E2E_WEB_BASE_URL",
+        "CI"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

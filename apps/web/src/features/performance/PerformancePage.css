@@ -1,0 +1,60 @@
+.performance-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.performance-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+.performance-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.performance-subtitle,
+.performance-freshness,
+.performance-stale,
+.performance-run-id {
+  margin: 0;
+}
+
+.performance-run-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.performance-stale {
+  color: #92400e;
+  background: #fffbeb;
+  padding: 0.75rem 1rem;
+}
+
+.performance-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.performance-counts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.performance-counts li {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
