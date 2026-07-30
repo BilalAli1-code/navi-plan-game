@@ -1,11 +1,6 @@
 name: Import ProjectSim 2 and preserve Navi UI
 
 on:
-  push:
-    branches:
-      - agent/import-projectsim-2-preserve-ui
-    paths:
-      - .github/workflows/import-projectsim-2.yml
   pull_request:
     branches:
       - main
@@ -13,6 +8,8 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - .github/workflows/import-projectsim-2.yml
 
 permissions:
   contents: write
@@ -21,8 +18,8 @@ jobs:
   import:
     runs-on: ubuntu-latest
     env:
-      TARGET_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
-      SOURCE_ARTIFACT_URL: 'https://productionresultssa2.blob.core.windows.net/actions-results/54bc6104-b021-4e6c-97a4-9da5ec13bae0/workflow-job-run-4151ab6b-c948-574e-9dca-dec6fda93d5f/artifacts/78621092b41f8c330e7d27fd9913fe92379cf26b0794b0ec18f7df32e0517748.zip?rscd=attachment%3B+filename%3D%22projectsim-2-tar-transfer-30513667362.zip%22&rsct=application%2Fzip&se=2026-07-30T04%3A34%3A21Z&sig=Ykj3ChiJPpfAjDTEYQvyPaqIGPoYM7umFtQzvMcOevY%3D&ske=2026-07-30T07%3A45%3A10Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-07-30T03%3A45%3A10Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2026-07-30T04%3A24%3A16Z&sv=2025-11-05'
+      TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+      SOURCE_ARTIFACT_URL: 'https://productionresultssa2.blob.core.windows.net/actions-results/54bc6104-b021-4e6c-97a4-9da5ec13bae0/workflow-job-run-4151ab6b-c948-574e-9dca-dec6fda93d5f/artifacts/78621092b41f8c330e7d27fd9913fe92379cf26b0794b0ec18f7df32e0517748.zip?rscd=attachment%3B+filename%3D%22projectsim-2-tar-transfer-30513667362.zip%22&rsct=application%2Fzip&se=2026-07-30T04%3A35%3A04Z&sig=C7mgwzmWYYuKH1KK2gjXCkzMV5wO%2BFYw67KXsEDEAQI%3D&ske=2026-07-30T07%3A04%3A48Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-07-30T03%3A04%3A48Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2026-07-30T04%3A24%3A59Z&sv=2025-11-05'
       PROJECTSIM_SOURCE_SHA: '391ff03f491b199e540a3a02f4eb935c6c1e27d6'
       NAVI_SOURCE_SHA: '0eb6abfdafde14a6fedd06f3a8b0f75dc9f58870'
 
@@ -33,12 +30,13 @@ jobs:
           ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
 
-      - name: Preserve Navi Plan UI reference files
+      - name: Preserve Navi Plan UI reference files and importer
         shell: bash
         run: |
           set -euo pipefail
           preserve_root="${RUNNER_TEMP}/navi-ui"
           mkdir -p "${preserve_root}"
+          cp .github/workflows/import-projectsim-2.yml "${RUNNER_TEMP}/import-projectsim-2.yml"
 
           copy_path() {
             local path="$1"
@@ -97,6 +95,10 @@ jobs:
           test -d apps/web
           test -d packages
           test -d docs
+
+          rm -rf .github/workflows
+          mkdir -p .github/workflows
+          cp "${RUNNER_TEMP}/import-projectsim-2.yml" .github/workflows/import-projectsim-2.yml
 
       - name: Restore Navi Plan UI as isolated visual reference
         shell: bash
