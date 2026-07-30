@@ -200,7 +200,9 @@ export function WorkplaceShell() {
             </li>
           </ul>
         </nav>
-      </div>
+        </div>
+      </aside>
+
 
       <div
         className="workplace-content"
