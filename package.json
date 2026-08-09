@@ -10,7 +10,7 @@
   "packageManager": "pnpm@10.33.3",
   "scripts": {
     "build": "turbo run build",
-    "build:dev": "turbo run build",
+    "build:dev": "turbo run build && rm -rf dist && cp -r apps/web/dist dist",
     "dev": "turbo run dev --filter @projectsim/web --",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
